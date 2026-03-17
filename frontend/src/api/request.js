@@ -20,6 +20,11 @@ export function getAuthHeaders() {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  // 不输出 Token 内容，避免泄露；仅提示是否已附加认证头
+  try {
+    // eslint-disable-next-line no-console
+    console.debug('[request] Authorization attached:', Boolean(headers['Authorization']));
+  } catch (_) {}
   return headers;
 }
 
@@ -28,3 +33,6 @@ export async function authFetch(url, options = {}) {
   return fetch(url, { ...options, headers });
 }
 
+export const API_BASE = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
+  ? import.meta.env.VITE_API_BASE
+  : 'http://localhost:8081';

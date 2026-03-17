@@ -1,6 +1,6 @@
-import { getAuthHeaders } from './request';
-const COURSE_API_URL = 'http://localhost:8081/api/courses';
-const EXAM_API_URL = 'http://localhost:8081/api/exams';
+import { getAuthHeaders, API_BASE } from './request';
+const COURSE_API_URL = `${API_BASE}/api/courses`;
+const EXAM_API_URL = `${API_BASE}/api/exams`;
 
 export async function getExamsByCourse(courseId) {
   const response = await fetch(`${COURSE_API_URL}/${courseId}/exams`, {

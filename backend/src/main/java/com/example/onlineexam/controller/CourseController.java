@@ -2,14 +2,15 @@ package com.example.onlineexam.controller;
 
 import com.example.onlineexam.model.Course;
 import com.example.onlineexam.service.CourseService;
+import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
@@ -31,7 +32,16 @@ public class CourseController {
 
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public Course createCourse(@RequestBody Course course) {
+    public Course createCourse(@RequestBody Course course, @AuthenticationPrincipal UserDetailsImpl user) {
+        if (user != null) {
+            System.out.println("====== Extracted Teacher ID from @AuthenticationPrincipal: " + user.getId() + " ======");
+            if (course.getTeacherId() == null) {
+                course.setTeacherId(user.getId());
+                System.out.println("====== Set Course.teacherId in controller to: " + course.getTeacherId() + " ======");
+            }
+        } else {
+            System.out.println("====== @AuthenticationPrincipal is null in controller ======");
+        }
         return courseService.createCourse(course);
     }
 

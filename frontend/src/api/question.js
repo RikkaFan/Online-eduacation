@@ -1,6 +1,6 @@
-import { getAuthHeaders } from './request';
-const CATEGORY_API_URL = 'http://localhost:8081/api/question-categories';
-const QUESTION_API_URL = 'http://localhost:8081/api/questions';
+import { getAuthHeaders, API_BASE } from './request';
+const CATEGORY_API_URL = `${API_BASE}/api/question-categories`;
+const QUESTION_API_URL = `${API_BASE}/api/questions`;
 
 // ================= 分类管理 API =================
 

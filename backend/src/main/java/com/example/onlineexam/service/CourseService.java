@@ -2,8 +2,11 @@ package com.example.onlineexam.service;
 
 import com.example.onlineexam.model.Course;
 import com.example.onlineexam.repository.CourseRepository;
+import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +26,14 @@ public class CourseService {
     }
 
     public Course createCourse(Course course) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl user) {
+            System.out.println("====== Extracted Teacher ID from SecurityContext: " + user.getId() + " ======");
+            course.setTeacherId(user.getId());
+            System.out.println("====== Set Course.teacherId in service to: " + course.getTeacherId() + " ======");
+        } else {
+            System.out.println("====== SecurityContext principal is null or not UserDetailsImpl ======");
+        }
         return courseRepository.save(course);
     }
 
