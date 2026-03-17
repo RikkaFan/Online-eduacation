@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import Login from '@/views/Login.vue';
 import Dashboard from '@/views/Dashboard.vue';
+import CourseManagement from '@/views/CourseManagement.vue';
 
 const routes = [
   {
@@ -13,6 +14,12 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/courses',
+    name: 'CourseManagement',
+    component: CourseManagement,
     meta: { requiresAuth: true },
   },
   {
