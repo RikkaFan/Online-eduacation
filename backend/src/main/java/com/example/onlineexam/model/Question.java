@@ -11,21 +11,15 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+    private Long categoryId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column(nullable = false)
-    private String questionType; // e.g., "SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"
+    private String answer;
 
-    private String optionA;
-    private String optionB;
-    private String optionC;
-    private String optionD;
+    private String type;
 
-    @Column(nullable = false)
-    private String correctAnswer;
+    private String options;
 }

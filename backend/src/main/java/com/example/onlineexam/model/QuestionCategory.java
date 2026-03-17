@@ -5,17 +5,12 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "courses")
-public class Course {
+@Table(name = "question_categories")
+public class QuestionCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String courseName;
-
-    private Long teacherId;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    private String categoryName;
 }
