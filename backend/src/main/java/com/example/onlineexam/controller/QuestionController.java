@@ -11,38 +11,43 @@ import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/questions")
 public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
 
-    @GetMapping("/courses/{courseId}/questions")
-    public List<Question> getQuestionsByCourse(@PathVariable Long courseId) {
-        return questionService.getQuestionsByCourse(courseId);
+    @GetMapping
+    public List<Question> getAllQuestions() {
+        return questionService.getAllQuestions();
     }
 
-    @GetMapping("/questions/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Question> getQuestionById(@PathVariable Long id) {
         Question question = questionService.getQuestionById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
         return ResponseEntity.ok(question);
     }
 
-    @PostMapping("/courses/{courseId}/questions")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public Question createQuestion(@PathVariable Long courseId, @RequestBody Question question) {
-        return questionService.createQuestion(courseId, question);
+    @GetMapping("/category/{categoryId}")
+    public List<Question> getQuestionsByCategory(@PathVariable Long categoryId) {
+        return questionService.getQuestionsByCategoryId(categoryId);
     }
 
-    @PutMapping("/questions/{id}")
+    @PostMapping
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public Question createQuestion(@RequestBody Question question) {
+        return questionService.createQuestion(question);
+    }
+
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<Question> updateQuestion(@PathVariable Long id, @RequestBody Question questionDetails) {
         Question updatedQuestion = questionService.updateQuestion(id, questionDetails);
         return ResponseEntity.ok(updatedQuestion);
     }
 
-    @DeleteMapping("/questions/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
         questionService.deleteQuestion(id);

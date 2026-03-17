@@ -1,8 +1,6 @@
 package com.example.onlineexam.service;
 
-import com.example.onlineexam.model.Course;
 import com.example.onlineexam.model.Question;
-import com.example.onlineexam.repository.CourseRepository;
 import com.example.onlineexam.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,21 +14,19 @@ public class QuestionService {
     @Autowired
     private QuestionRepository questionRepository;
 
-    @Autowired
-    private CourseRepository courseRepository;
-
-    public List<Question> getQuestionsByCourse(Long courseId) {
-        return questionRepository.findByCourseId(courseId);
+    public List<Question> getAllQuestions() {
+        return questionRepository.findAll();
     }
 
     public Optional<Question> getQuestionById(Long id) {
         return questionRepository.findById(id);
     }
 
-    public Question createQuestion(Long courseId, Question question) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found with id: " + courseId));
-        question.setCourse(course);
+    public List<Question> getQuestionsByCategoryId(Long categoryId) {
+        return questionRepository.findByQuestionCategoryId(categoryId);
+    }
+
+    public Question createQuestion(Question question) {
         return questionRepository.save(question);
     }
 
@@ -44,6 +40,7 @@ public class QuestionService {
         question.setOptionC(questionDetails.getOptionC());
         question.setOptionD(questionDetails.getOptionD());
         question.setCorrectAnswer(questionDetails.getCorrectAnswer());
+        question.setQuestionCategory(questionDetails.getQuestionCategory());
 
         return questionRepository.save(question);
     }
