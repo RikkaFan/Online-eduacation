@@ -18,21 +18,6 @@
         <h1 class="title">欢迎登录</h1>
       </div>
 
-      <div class="segmented-control">
-        <div
-          class="segmented-control-slider"
-          :style="{ transform: `translateX(calc(100% * ${selectedIndex}))` }"
-        ></div>
-        <button
-          v-for="(role, index) in roles"
-          :key="role"
-          :class="{ active: selectedRole === role }"
-          @click="selectRole(role, index)"
-        >
-          {{ role }}
-        </button>
-      </div>
-
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="input-group">
           <div class="input-wrapper" :class="{ 'shake': isShaking }">
@@ -124,9 +109,6 @@ import { useAuthStore } from '@/store/auth';
 const username = ref('');
 const password = ref('');
 const passwordInput = ref(null);
-const roles = ['学生', '教师', '管理员'];
-const selectedRole = ref(roles[0]);
-const selectedIndex = ref(0);
 const passwordVisible = ref(false);
 const rememberMe = ref(false);
 const isShaking = ref(false);
@@ -151,11 +133,6 @@ const authStore = useAuthStore();
 const isLoginDisabled = computed(() => {
   return !username.value || !password.value || !isVerified.value || isLoading.value;
 });
-
-const selectRole = (role, index) => {
-  selectedRole.value = role;
-  selectedIndex.value = index;
-};
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;
@@ -230,43 +207,47 @@ const handleLogin = async () => {
   loginSuccess.value = '';
   isLoading.value = true;
 
-  // Simulate network request
-  setTimeout(() => {
-    // Mock login logic
-    if (username.value === 'admin' && password.value === '123456') {
-      // --- Mock Success Scenario ---
-      loginSuccess.value = '登录成功，即将跳转...';
-      
-      // In a real app, you would get a token and save it
-      // authStore.loginSuccess(mockUserData, rememberMe.value);
+  try {
+    // 构造发送给后端的参数
+    const credentials = {
+      username: username.value,
+      password: password.value
+    };
 
-      setTimeout(() => {
-        isLoading.value = false;
-        router.push('/dashboard');
-      }, 1000);
+    // 调用 auth.js 中的真实接口发送 HTTP 请求
+    await authStore.login(credentials, rememberMe.value);
 
-    } else {
-      // --- Mock Error Scenario ---
-      console.error('登录失败: 账号或密码错误');
-      loginError.value = '账号或密码错误，请重试';
-      triggerShake();
-      
-      // Reset states
-      password.value = '';
-      isVerified.value = false; // Reset slider verification
-      sliderValue.value = 0;    // Reset slider position
-      
-      // Focus password input
-      passwordInput.value?.focus();
-
-      // Hide error toast after 3 seconds
-      setTimeout(() => {
-        loginError.value = '';
-      }, 3000);
-      
+    // --- 登录成功 ---
+    loginSuccess.value = '登录成功，即将跳转...';
+    
+    setTimeout(() => {
       isLoading.value = false;
-    }
-  }, 1500);
+      // 暂时统一跳转到 dashboard，后续可根据 authStore.roles 动态路由
+      router.push('/dashboard'); 
+    }, 1000);
+
+  } catch (error) {
+    // --- 登录失败 ---
+    console.error('登录失败:', error);
+    // 展示后端返回的具体错误信息，如果没有则使用默认提示
+    loginError.value = error.message || '账号或密码错误，请重试';
+    triggerShake();
+    
+    // 重置状态
+    password.value = '';
+    isVerified.value = false; 
+    sliderValue.value = 0;    
+    
+    // 重新聚焦密码框
+    passwordInput.value?.focus();
+
+    // 3秒后隐藏错误提示
+    setTimeout(() => {
+      loginError.value = '';
+    }, 3000);
+    
+    isLoading.value = false;
+  }
 };
 </script>
 
@@ -383,45 +364,6 @@ const handleLogin = async () => {
   color: #1d1d1f;
   text-align: center;
   margin: 0;
-}
-
-/* Segmented Control */
-.segmented-control {
-  position: relative;
-  display: flex;
-  background-color: #e8e8ed;
-  border-radius: 12px;
-  padding: 4px;
-}
-
-.segmented-control-slider {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: calc((100% - 8px) / 3);
-  height: calc(100% - 8px);
-  background-color: white;
-  border-radius: 9px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.segmented-control button {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 8px 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  z-index: 1;
-  transition: color 0.3s ease;
-}
-
-.segmented-control button.active {
-  color: #1d1d1f;
-  font-weight: 600;
 }
 
 /* Form */
