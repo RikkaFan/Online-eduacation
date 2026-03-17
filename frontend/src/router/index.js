@@ -26,15 +26,17 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
 
   if (requiresAuth && !authStore.isAuthenticated) {
-    next('/login');
-  } else {
-    next();
+    // Redirect to the login page if authentication is required and the user is not authenticated
+    return '/login';
   }
+
+  // Otherwise, allow navigation
+  return true;
 });
 
 export default router;

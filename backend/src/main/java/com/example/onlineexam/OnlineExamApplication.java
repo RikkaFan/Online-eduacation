@@ -42,6 +42,26 @@ public class OnlineExamApplication {
 				admin.setRoles(Set.of(adminRole));
 				userRepository.save(admin);
 			}
+
+			if (userRepository.findByUsername("teacher").isEmpty()) {
+				User teacher = new User();
+				teacher.setUsername("teacher");
+				teacher.setPassword(passwordEncoder.encode("123456"));
+				Role teacherRole = roleRepository.findByName("ROLE_TEACHER")
+						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+				teacher.setRoles(Set.of(teacherRole));
+				userRepository.save(teacher);
+			}
+
+			if (userRepository.findByUsername("student").isEmpty()) {
+				User student = new User();
+				student.setUsername("student");
+				student.setPassword(passwordEncoder.encode("123456"));
+				Role studentRole = roleRepository.findByName("ROLE_STUDENT")
+						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+				student.setRoles(Set.of(studentRole));
+				userRepository.save(student);
+			}
 		};
 	}
 }
