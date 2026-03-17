@@ -19,13 +19,20 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error(errorData.message || '登录失败');
     }
 
-    const userData = await response.json();
-    user.value = userData;
+    const raw = await response.json();
+    const normalized = {
+      ...raw,
+      accessToken: raw.accessToken || raw.token || '',
+      token: raw.token || raw.accessToken || '',
+      roles: Array.isArray(raw.roles) ? raw.roles : [],
+      username: raw.username || raw.user || raw.name || ''
+    };
+    user.value = normalized;
 
     if (rememberMe) {
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(normalized));
     } else {
-      sessionStorage.setItem('user', JSON.stringify(userData));
+      sessionStorage.setItem('user', JSON.stringify(normalized));
     }
   }
 

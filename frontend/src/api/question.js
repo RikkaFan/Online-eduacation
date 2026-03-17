@@ -14,6 +14,10 @@ function getAuthHeaders() {
     }
   }
 
+  if (!token) {
+    console.warn("未获取到有效 Token，请求可能被后端拒绝(401)。请检查登录状态与 user 存储结构。");
+  }
+
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})

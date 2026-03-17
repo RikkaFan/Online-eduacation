@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/store/auth';
 import Login from '@/views/Login.vue';
 import Dashboard from '@/views/Dashboard.vue';
@@ -21,13 +22,13 @@ const routes = [
     path: '/courses',
     name: 'CourseManagement',
     component: CourseManagement,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
   },
   {
     path: '/questions',
     name: 'QuestionManagement',
     component: QuestionManagement,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -42,11 +43,20 @@ const router = createRouter({
 
 router.beforeEach((to, from) => {
   const authStore = useAuthStore();
+  const { isAuthenticated, roles } = storeToRefs(authStore);
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const allowedRoles = to.matched.flatMap(record => (record.meta && record.meta.roles) ? record.meta.roles : []);
 
-  if (requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to the login page if authentication is required and the user is not authenticated
-    return '/login';
+  if (requiresAuth && !isAuthenticated.value) {
+    return { path: '/login', query: { redirect: to.fullPath } };
+  }
+
+  if (allowedRoles.length > 0) {
+    const userRoles = roles.value || [];
+    const hasAccess = userRoles.some(r => allowedRoles.includes(r));
+    if (!hasAccess) {
+      return { path: '/dashboard' };
+    }
   }
 
   // Otherwise, allow navigation

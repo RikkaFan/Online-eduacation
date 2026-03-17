@@ -25,6 +25,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import AdminView from './AdminView.vue';
@@ -33,10 +34,11 @@ import StudentView from './StudentView.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const { roles } = storeToRefs(authStore);
 
-const isAdmin = computed(() => authStore.roles.includes('ROLE_ADMIN'));
-const isTeacher = computed(() => authStore.roles.includes('ROLE_TEACHER'));
-const isStudent = computed(() => authStore.roles.includes('ROLE_STUDENT'));
+const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
+const isTeacher = computed(() => roles.value.includes('ROLE_TEACHER'));
+const isStudent = computed(() => roles.value.includes('ROLE_STUDENT'));
 
 const handleLogout = () => {
   authStore.logout();
