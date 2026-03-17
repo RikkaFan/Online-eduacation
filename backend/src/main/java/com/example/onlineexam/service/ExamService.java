@@ -38,10 +38,11 @@ public class ExamService {
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + courseId));
         exam.setCourse(course);
 
-        List<Question> questions = questionRepository.findByCourseId(courseId);
-        Collections.shuffle(questions);
-        List<Question> selectedQuestions = questions.subList(0, Math.min(numberOfQuestions, questions.size()));
-        exam.setQuestions(selectedQuestions);
+        // List<Question> questions = questionRepository.findByCourseId(courseId);
+        // Collections.shuffle(questions);
+        // List<Question> selectedQuestions = questions.subList(0, Math.min(numberOfQuestions, questions.size()));
+        // exam.setQuestions(selectedQuestions);
+        exam.setQuestions(Collections.emptyList());
 
         return examRepository.save(exam);
     }

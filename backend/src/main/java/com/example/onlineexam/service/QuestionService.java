@@ -23,7 +23,7 @@ public class QuestionService {
     }
 
     public List<Question> getQuestionsByCategoryId(Long categoryId) {
-        return questionRepository.findByQuestionCategoryId(categoryId);
+        return questionRepository.findByCategoryId(categoryId);
     }
 
     public Question createQuestion(Question question) {
@@ -35,12 +35,9 @@ public class QuestionService {
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
 
         question.setContent(questionDetails.getContent());
-        question.setOptionA(questionDetails.getOptionA());
-        question.setOptionB(questionDetails.getOptionB());
-        question.setOptionC(questionDetails.getOptionC());
-        question.setOptionD(questionDetails.getOptionD());
-        question.setCorrectAnswer(questionDetails.getCorrectAnswer());
-        question.setQuestionCategory(questionDetails.getQuestionCategory());
+        question.setOptions(questionDetails.getOptions());
+        question.setAnswer(questionDetails.getAnswer());
+        question.setCategoryId(questionDetails.getCategoryId());
 
         return questionRepository.save(question);
     }

@@ -35,7 +35,7 @@ public class ExamResultService {
         for (StudentAnswer answer : answers) {
             Question question = questionRepository.findById(answer.getQuestion().getId())
                     .orElseThrow(() -> new RuntimeException("Question not found with id: " + answer.getQuestion().getId()));
-            if (question.getCorrectAnswer().equals(answer.getSelectedAnswer())) {
+            if (question.getAnswer().equals(answer.getSelectedAnswer())) {
                 score++;
             }
             answer.setStudent(student);

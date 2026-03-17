@@ -30,7 +30,7 @@ public class QuestionCategoryService {
         QuestionCategory category = questionCategoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("QuestionCategory not found with id: " + id));
         
-        category.setName(categoryDetails.getName());
+        category.setCategoryName(categoryDetails.getCategoryName());
         
         return questionCategoryRepository.save(category);
     }
