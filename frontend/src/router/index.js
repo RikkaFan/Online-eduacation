@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/auth';
 import Login from '@/views/Login.vue';
 import Dashboard from '@/views/Dashboard.vue';
 import CourseManagement from '@/views/CourseManagement.vue';
+import QuestionManagement from '@/views/QuestionManagement.vue';
 
 const routes = [
   {
@@ -20,6 +21,12 @@ const routes = [
     path: '/courses',
     name: 'CourseManagement',
     component: CourseManagement,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/questions',
+    name: 'QuestionManagement',
+    component: QuestionManagement,
     meta: { requiresAuth: true },
   },
   {
