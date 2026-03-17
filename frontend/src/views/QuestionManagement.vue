@@ -8,14 +8,14 @@
           <el-button type="primary" size="small" @click="showAddCategoryDialog">新增分类</el-button>
         </div>
         <div class="category-list">
-          <el-menu :default-active="activeCategoryId?.toString()" @select="handleCategorySelect" class="el-menu-vertical">
+          <el-menu :default-active="activeCategoryId?.toString()" @select="handleCategorySelect" class="el-menu-vertical apple-menu">
             <el-menu-item 
               v-for="category in categories" 
               :key="category.id" 
               :index="category.id.toString()"
             >
               <div class="category-item-content">
-                <span>{{ category.name }}</span>
+                <span class="category-name" :title="category.categoryName || category.name">{{ category.categoryName || category.name }}</span>
                 <el-button 
                   type="danger" 
                   icon="Delete" 
@@ -142,7 +142,7 @@ const loadingQuestions = ref(false);
 const activeCategoryName = computed(() => {
   if (!activeCategoryId.value) return '';
   const category = categories.value.find(c => c.id === activeCategoryId.value);
-  return category ? category.name : '';
+  return category ? (category.categoryName || category.name || '') : '';
 });
 
 // ================= 生命周期 =================
@@ -300,7 +300,7 @@ const submitQuestionForm = async () => {
       try {
         const payload = {
           ...questionForm.value,
-          questionCategory: { id: activeCategoryId.value }
+          categoryId: activeCategoryId.value
         };
         // 如果是判断题，不需要 options 字段
         if (payload.type === 'TRUE_FALSE') {
@@ -343,6 +343,8 @@ const handleDeleteQuestion = async (id) => {
 .question-management-container {
   padding: 20px;
   height: calc(100vh - 100px); /* 视具体项目布局调整 */
+  background: #f5f5f7; /* Apple 浅灰背景 */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
 .full-height {
@@ -365,12 +367,13 @@ const handleDeleteQuestion = async (id) => {
 }
 
 .category-panel {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: #ffffffcc;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   height: 100%;
   overflow-y: auto;
+  backdrop-filter: saturate(180%) blur(10px);
 }
 
 .category-list {
@@ -384,12 +387,39 @@ const handleDeleteQuestion = async (id) => {
   width: 100%;
 }
 
+.category-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1d1d1f;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
 .category-item-content .delete-btn {
   visibility: hidden;
 }
 
 .el-menu-item:hover .category-item-content .delete-btn {
   visibility: visible;
+}
+
+.apple-menu :deep(.el-menu-item) {
+  height: 46px;
+  line-height: 46px;
+  border-radius: 10px;
+  margin: 4px 6px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.apple-menu :deep(.el-menu-item.is-active) {
+  background: #e8f0fe;
+  color: #0a84ff;
+}
+
+.apple-menu :deep(.el-menu-item:hover) {
+  background: #f2f2f7;
 }
 
 .empty-tip {
@@ -400,12 +430,13 @@ const handleDeleteQuestion = async (id) => {
 }
 
 .question-panel {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: #ffffffcc;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   height: 100%;
   overflow-y: auto;
+  backdrop-filter: saturate(180%) blur(10px);
 }
 
 .form-help {
@@ -417,7 +448,7 @@ const handleDeleteQuestion = async (id) => {
 
 /* 覆盖el-menu-item的高度，确保按钮对齐 */
 :deep(.el-menu-item) {
-  height: 50px;
-  line-height: 50px;
+  height: 46px;
+  line-height: 46px;
 }
 </style>

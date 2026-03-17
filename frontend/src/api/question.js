@@ -19,10 +19,15 @@ export async function getCategories() {
 }
 
 export async function createCategory(data) {
+  // 兼容后端实体字段 categoryName，容错将入参的 name 映射为 categoryName
+  const payload = {
+    ...(data || {}),
+    ...(data?.name && !data?.categoryName ? { categoryName: data.name } : {})
+  };
   const response = await fetch(CATEGORY_API_URL, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
