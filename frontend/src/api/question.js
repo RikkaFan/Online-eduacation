@@ -1,28 +1,6 @@
+import { getAuthHeaders } from './request';
 const CATEGORY_API_URL = 'http://localhost:8081/api/question-categories';
 const QUESTION_API_URL = 'http://localhost:8081/api/questions';
-
-function getAuthHeaders() {
-  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-  let token = '';
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      // Spring Security JwtResponse 通常把 token 放在 accessToken 或 token 字段中
-      token = user.accessToken || user.token;
-    } catch (e) {
-      console.error('Failed to parse user info', e);
-    }
-  }
-
-  if (!token) {
-    console.warn("未获取到有效 Token，请求可能被后端拒绝(401)。请检查登录状态与 user 存储结构。");
-  }
-
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
-}
 
 // ================= 分类管理 API =================
 

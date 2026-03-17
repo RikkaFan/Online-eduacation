@@ -5,6 +5,7 @@ import Login from '@/views/Login.vue';
 import Dashboard from '@/views/Dashboard.vue';
 import CourseManagement from '@/views/CourseManagement.vue';
 import QuestionManagement from '@/views/QuestionManagement.vue';
+import ExamManagement from '@/views/ExamManagement.vue';
 
 const routes = [
   {
@@ -28,6 +29,12 @@ const routes = [
     path: '/questions',
     name: 'QuestionManagement',
     component: QuestionManagement,
+    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: '/exams',
+    name: 'ExamManagement',
+    component: ExamManagement,
     meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
   },
   {

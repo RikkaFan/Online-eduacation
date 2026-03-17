@@ -1,23 +1,5 @@
+import { getAuthHeaders } from './request';
 const API_URL = 'http://localhost:8081/api/courses';
-
-function getAuthHeaders() {
-  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-  let token = '';
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      // Spring Security JwtResponse 通常把 token 放在 accessToken 或 token 字段中
-      token = user.accessToken || user.token;
-    } catch (e) {
-      console.error('Failed to parse user info', e);
-    }
-  }
-
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
-}
 
 export async function getCourses() {
   const response = await fetch(API_URL, {
