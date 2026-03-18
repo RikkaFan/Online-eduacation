@@ -6,15 +6,15 @@
       </div>
       <el-menu :default-active="$route.path" router class="apple-menu">
         <el-menu-item index="/dashboard">
-          <el-icon><HomeFilled /></el-icon>
+          <el-icon><DataBoard /></el-icon>
           <span>控制台首页</span>
         </el-menu-item>
         <el-menu-item index="/student/exams">
-          <el-icon><HomeFilled /></el-icon>
+          <el-icon><EditPen /></el-icon>
           <span>考试列表</span>
         </el-menu-item>
         <el-menu-item index="/student/scores">
-          <el-icon><HomeFilled /></el-icon>
+          <el-icon><DataLine /></el-icon>
           <span>我的成绩</span>
         </el-menu-item>
       </el-menu>
@@ -147,7 +147,70 @@
 </template>
 
 <script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { DataBoard, Reading, EditPen, DataLine } from '@element-plus/icons-vue';
+import { getCourses } from '@/api/course';
+import { getAllExamsByAllCourses } from '@/api/examTaking';
+import { useAuthStore } from '@/store/auth';
+import { getMyScores } from '@/api/score';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const recentCourses = ref([]);
+const upcomingExams = ref([]);
+const examsAll = ref([]);
+const recentScores = ref([]);
+
+onMounted(async () => {
+  try {
+    const courses = await getCourses();
+    recentCourses.value = (courses || []).slice(-5).reverse();
+    const exams = await getAllExamsByAllCourses();
+    examsAll.value = exams || [];
+    const now = Date.now();
+    upcomingExams.value = (exams || []).filter(e => {
+      const start = e.startTime ? new Date(e.startTime).getTime() : 0;
+      const end = e.endTime ? new Date(e.endTime).getTime() : 0;
+      return (!start || now >= start) && (!end || now < end);
+    }).slice(0, 5);
+  } catch (e) {
+    ElMessage.error(e.message || '加载学生仪表盘数据失败');
+  }
+  try {
+    const scores = await getMyScores();
+    recentScores.value = (scores || []).slice(-5).reverse();
+  } catch (e) {}
+});
+
+const courseCount = computed(() => recentCourses.value.length);
+const examsCount = computed(() => examsAll.value.length);
+
+function goCourses() {
+  router.push('/student/courses');
+}
+function goExams() {
+  router.push('/student/exams');
+}
+function goScores() {
+  router.push('/student/scores');
+}
+function enterExam(id) {
+  router.push(`/student/exam/${id}`);
+}
+function formatDateTime(v) {
+  if (!v) return '-';
+  const d = typeof v === 'string' ? new Date(v) : v;
+  if (Number.isNaN(d.getTime())) return v;
+  return d.toLocaleString();
+}
+function goProfile() {}
+function logout() {
+  authStore.logout();
+  router.push('/login');
+}
 </script>
 
 <style scoped>
