@@ -61,6 +61,7 @@ const routes = [
     component: StudentView,
     meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
     children: [
+      { path: '', redirect: 'dashboard' },
       { path: 'dashboard', name: 'StudentDashboard', component: StudentDashboard, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'courses', name: 'StudentCourseList', component: StudentCourseList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'exams', name: 'StudentExamsAlias', component: StudentExamList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
