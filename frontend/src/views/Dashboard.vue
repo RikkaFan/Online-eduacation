@@ -1,47 +1,43 @@
 <template>
-  <div class="dashboard-container">
+  <StudentView v-if="isStudent" />
+  <div v-else class="dashboard-container">
     <el-container>
       <el-main>
-        <div v-if="!isStudent">
-          <el-card class="welcome-card" shadow="never">
-            <div class="welcome-row">
-              <div class="welcome-text">
-                <div class="title">欢迎使用在线教育测评系统</div>
-                <div class="sub">当前角色：{{ roleLabel }}</div>
-              </div>
+        <el-card class="welcome-card" shadow="never">
+          <div class="welcome-row">
+            <div class="welcome-text">
+              <div class="title">欢迎使用在线教育测评系统</div>
+              <div class="sub">当前角色：{{ roleLabel }}</div>
             </div>
-          </el-card>
-          <el-row :gutter="12" class="stats-row">
-            <el-col :span="6">
-              <el-card shadow="never" class="stat-card">
-                <el-statistic title="总课程数" :value="stats.courses" />
-              </el-card>
-            </el-col>
-            <el-col :span="6">
-              <el-card shadow="never" class="stat-card">
-                <el-statistic title="题库总量" :value="stats.questions" />
-              </el-card>
-            </el-col>
-            <el-col :span="6">
-              <el-card shadow="never" class="stat-card">
-                <el-statistic title="考试场次" :value="stats.exams" />
-              </el-card>
-            </el-col>
-            <el-col :span="6">
-              <el-card shadow="never" class="stat-card">
-                <el-statistic title="参与学生" :value="stats.students" />
-              </el-card>
-            </el-col>
-          </el-row>
-        </div>
+          </div>
+        </el-card>
+        <el-row :gutter="12" class="stats-row">
+          <el-col :span="6">
+            <el-card shadow="never" class="stat-card">
+              <el-statistic title="总课程数" :value="stats.courses" />
+            </el-card>
+          </el-col>
+          <el-col :span="6">
+            <el-card shadow="never" class="stat-card">
+              <el-statistic title="题库总量" :value="stats.questions" />
+            </el-card>
+          </el-col>
+          <el-col :span="6">
+            <el-card shadow="never" class="stat-card">
+              <el-statistic title="考试场次" :value="stats.exams" />
+            </el-card>
+          </el-col>
+          <el-col :span="6">
+            <el-card shadow="never" class="stat-card">
+              <el-statistic title="参与学生" :value="stats.students" />
+            </el-card>
+          </el-col>
+        </el-row>
         <div v-if="isAdmin">
           <AdminView />
         </div>
         <div v-else-if="isTeacher">
           <TeacherView />
-        </div>
-        <div v-else-if="isStudent">
-          <StudentView />
         </div>
         <div v-else>
           <p>未知的用户角色。</p>
@@ -54,7 +50,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import AdminView from './AdminView.vue';
 import TeacherView from './TeacherView.vue';
@@ -65,7 +60,6 @@ import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getScoresByExam } from '@/api/score';
 
 const authStore = useAuthStore();
-const router = useRouter();
 const { roles } = storeToRefs(authStore);
 
 const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));

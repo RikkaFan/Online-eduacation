@@ -13,6 +13,10 @@
           <el-icon><EditPen /></el-icon>
           <span>考试列表</span>
         </el-menu-item>
+        <el-menu-item index="/student/scores">
+          <el-icon><DataLine /></el-icon>
+          <span>我的成绩</span>
+        </el-menu-item>
         <el-menu-item index="/student/practice">
           <el-icon><Notebook /></el-icon>
           <span>错题本</span>
@@ -156,35 +160,6 @@
           </el-col>
         </el-row>
       </el-main>
-        <!-- 新增：成绩查询 与 通知/日历（比例一致 16:8） -->
-        <el-row :gutter="24">
-          <el-col :span="16">
-            <el-card class="apple-card list-card" shadow="never">
-              <div class="card-header">
-                <div class="card-title">成绩查询</div>
-                <el-button link type="primary" @click="goScores">查看历史成绩</el-button>
-              </div>
-              <div class="empty">在此查看所有历史考试的分数与记录</div>
-            </el-card>
-          </el-col>
-          <el-col :span="8">
-            <el-card class="apple-card list-card" shadow="never">
-              <div class="card-header">
-                <div class="card-title">
-                  通知 / 日历
-                  <el-badge :value="notificationCount" class="item" style="margin-left:8px;" />
-                </div>
-              </div>
-              <ul class="exam-list" v-if="notifications.length">
-                <li v-for="n in notifications" :key="n.id" class="exam-item">
-                  <div class="exam-title">{{ n.title }}</div>
-                  <div class="exam-sub">{{ n.timeText }}</div>
-                </li>
-              </ul>
-              <div v-else class="empty">暂无待办或新成绩通知</div>
-            </el-card>
-          </el-col>
-        </el-row>
 
     </el-container>
   </el-container>
@@ -195,7 +170,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { DataBoard, Reading, EditPen, Notebook } from '@element-plus/icons-vue';
+import { DataBoard, EditPen, DataLine, Notebook } from '@element-plus/icons-vue';
 import { getCourses } from '@/api/course';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { useAuthStore } from '@/store/auth';
@@ -232,23 +207,6 @@ onMounted(async () => {
 
 const courseCount = computed(() => recentCourses.value.length);
 const examsCount = computed(() => examsAll.value.length);
-const notifications = computed(() => {
-  const items = [];
-  const now = Date.now();
-  const soon = 48 * 60 * 60 * 1000; // 48小时
-  (examsAll.value || []).forEach(e => {
-    const end = e.endTime ? new Date(e.endTime).getTime() : 0;
-    if (end && end - now > 0 && end - now <= soon) {
-      items.push({ id: `exam-${e.id}`, title: `考试将截止：${e.title}`, timeText: new Date(e.endTime).toLocaleString() });
-    }
-  });
-  (recentScores.value || []).forEach(s => {
-    items.push({ id: `score-${s.id}`, title: `新成绩：${s.exam?.title || '考试'}`, timeText: (s.submittedAt || s.createdAt) ? new Date(s.submittedAt || s.createdAt).toLocaleString() : '' });
-  });
-  return items.slice(0, 6);
-});
-const notificationCount = computed(() => notifications.value.length);
-
 function goCourses() {
   router.push('/student/courses');
 }
