@@ -6,6 +6,8 @@ import Dashboard from '@/views/Dashboard.vue';
 import CourseManagement from '@/views/CourseManagement.vue';
 import QuestionManagement from '@/views/QuestionManagement.vue';
 import ExamManagement from '@/views/ExamManagement.vue';
+import StudentExamList from '@/views/StudentExamList.vue';
+import ExamTaking from '@/views/ExamTaking.vue';
 
 const routes = [
   {
@@ -36,6 +38,18 @@ const routes = [
     name: 'ExamManagement',
     component: ExamManagement,
     meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: '/student/exams',
+    name: 'StudentExamList',
+    component: StudentExamList,
+    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
+  },
+  {
+    path: '/student/exam/:id',
+    name: 'ExamTaking',
+    component: ExamTaking,
+    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
   },
   {
     path: '/:pathMatch(.*)*',

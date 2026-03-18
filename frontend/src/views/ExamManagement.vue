@@ -25,7 +25,9 @@
 
     <el-card shadow="never" class="mt-12">
       <el-table :data="exams" v-loading="loading" empty-text="暂无考试数据">
-        <el-table-column prop="name" label="考试名称" min-width="180" />
+        <el-table-column prop="title" label="考试名称" min-width="180">
+          <template #default="{ row }">{{ row.title || row.name }}</template>
+        </el-table-column>
         <el-table-column prop="startTime" label="开始时间" min-width="180">
           <template #default="{ row }">
             {{ formatDateTime(row.startTime) }}
@@ -65,8 +67,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="考试名称" prop="name">
-          <el-input v-model="createForm.name" placeholder="请输入考试名称" />
+        <el-form-item label="考试名称" prop="title">
+          <el-input v-model="createForm.title" placeholder="请输入考试名称" />
         </el-form-item>
         <el-form-item label="开始时间" prop="startTime">
           <el-date-picker
@@ -115,7 +117,7 @@ const formRef = ref(null);
 
 const createForm = reactive({
   courseId: null,
-  name: '',
+  title: '',
   startTime: '',
   endTime: '',
   numberOfQuestions: 10
@@ -123,7 +125,7 @@ const createForm = reactive({
 
 const rules = {
   courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
-  name: [{ required: true, message: '请输入考试名称', trigger: 'blur' }],
+  title: [{ required: true, message: '请输入考试名称', trigger: 'blur' }],
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
   numberOfQuestions: [{ required: true, message: '请输入题目数量', trigger: 'change' }],
@@ -174,7 +176,7 @@ function handleCourseChange() {
 
 function openCreateDialog() {
   createForm.courseId = selectedCourseId.value || null;
-  createForm.name = '';
+  createForm.title = '';
   createForm.startTime = '';
   createForm.endTime = '';
   createForm.numberOfQuestions = 10;
@@ -191,7 +193,7 @@ async function submitCreate() {
   submitting.value = true;
   try {
     const examPayload = {
-      name: createForm.name,
+      title: createForm.title,
       startTime: createForm.startTime,
       endTime: createForm.endTime
     };
@@ -234,4 +236,3 @@ onMounted(async () => {
   margin-top: 12px;
 }
 </style>
-

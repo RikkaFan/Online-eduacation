@@ -26,7 +26,7 @@ public class ExamService {
     private QuestionRepository questionRepository;
 
     public List<Exam> getExamsByCourse(Long courseId) {
-        return examRepository.findByCourseId(courseId);
+        return examRepository.findByCourse_Id(courseId);
     }
 
     public Optional<Exam> getExamById(Long id) {
