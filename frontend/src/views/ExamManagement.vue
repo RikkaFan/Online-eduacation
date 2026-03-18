@@ -19,7 +19,7 @@
             <el-option
               v-for="c in courses"
               :key="c.id"
-              :label="c.name || c.title || `课程#${c.id}`"
+              :label="c.courseName || c.name || c.title || `课程#${c.id}`"
               :value="c.id"
             />
           </el-select>
@@ -66,7 +66,7 @@
             <el-option
               v-for="c in courses"
               :key="c.id"
-              :label="c.name || c.title || `课程#${c.id}`"
+              :label="c.courseName || c.name || c.title || `课程#${c.id}`"
               :value="c.id"
             />
           </el-select>
@@ -92,8 +92,33 @@
             :default-time="defaultEndTime"
           />
         </el-form-item>
-        <el-form-item label="题目数量" prop="numberOfQuestions">
+        <el-form-item label="出题方式">
+          <el-radio-group v-model="createForm.questionMode">
+            <el-radio label="random">随机组卷</el-radio>
+            <el-radio label="manual">题库选题</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="createForm.questionMode === 'random'" label="题目数量" prop="numberOfQuestions">
           <el-input-number v-model="createForm.numberOfQuestions" :min="1" :max="500" />
+        </el-form-item>
+        <el-form-item v-else label="选择题目">
+          <el-select
+            v-model="createForm.selectedQuestionIds"
+            multiple
+            filterable
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="从题库中选择题目"
+            style="width: 100%;"
+          >
+            <el-option
+              v-for="q in questionOptions"
+              :key="q.id"
+              :label="`#${q.id} ${q.content || '未命名题目'}`"
+              :value="q.id"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -109,11 +134,13 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { getCourses } from '@/api/course';
 import { getExamsByCourse, createExam, deleteExam } from '@/api/exam';
+import { getCategories, getQuestionsByCategory } from '@/api/question';
 
 const courses = ref([]);
 const selectedCourseId = ref(null);
 const exams = ref([]);
 const loading = ref(false);
+const questionOptions = ref([]);
 
 const createDialogVisible = ref(false);
 const submitting = ref(false);
@@ -124,7 +151,9 @@ const createForm = reactive({
   title: '',
   startTime: '',
   endTime: '',
-  numberOfQuestions: 10
+  numberOfQuestions: 10,
+  questionMode: 'random',
+  selectedQuestionIds: []
 });
 
 const rules = {
@@ -184,7 +213,25 @@ function openCreateDialog() {
   createForm.startTime = '';
   createForm.endTime = '';
   createForm.numberOfQuestions = 10;
+  createForm.questionMode = 'random';
+  createForm.selectedQuestionIds = [];
   createDialogVisible.value = true;
+}
+
+async function loadQuestionOptions() {
+  try {
+    const categories = await getCategories();
+    const tasks = (categories || []).map(c => getQuestionsByCategory(c.id).catch(() => []));
+    const chunks = await Promise.all(tasks);
+    const all = chunks.flat();
+    const uniqMap = new Map();
+    all.forEach(q => {
+      if (q && q.id != null) uniqMap.set(q.id, q);
+    });
+    questionOptions.value = Array.from(uniqMap.values());
+  } catch (e) {
+    ElMessage.error(e.message || '加载题库题目失败');
+  }
 }
 
 async function submitCreate() {
@@ -196,12 +243,21 @@ async function submitCreate() {
   }
   submitting.value = true;
   try {
+    if (createForm.questionMode === 'manual' && (!createForm.selectedQuestionIds || createForm.selectedQuestionIds.length === 0)) {
+      ElMessage.warning('请选择至少一道题目');
+      submitting.value = false;
+      return;
+    }
     const examPayload = {
       title: createForm.title,
       startTime: createForm.startTime,
       endTime: createForm.endTime
     };
-    await createExam(createForm.courseId, examPayload, createForm.numberOfQuestions);
+    if (createForm.questionMode === 'manual') {
+      examPayload.questions = createForm.selectedQuestionIds.map(id => ({ id }));
+    }
+    const count = createForm.questionMode === 'random' ? createForm.numberOfQuestions : 0;
+    await createExam(createForm.courseId, examPayload, count);
     ElMessage.success('发布考试成功');
     createDialogVisible.value = false;
     await loadExams();
@@ -224,6 +280,7 @@ async function onDelete(row) {
 
 onMounted(async () => {
   await loadCourses();
+  await loadQuestionOptions();
 });
 </script>
 

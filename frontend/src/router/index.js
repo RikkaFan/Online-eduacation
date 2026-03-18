@@ -14,6 +14,9 @@ import StudentView from '@/views/StudentView.vue';
 import StudentDashboard from '@/views/StudentDashboard.vue';
 import StudentCourseList from '@/views/StudentCourseList.vue';
 import StudentPractice from '@/views/StudentPractice.vue';
+import TeacherView from '@/views/TeacherView.vue';
+import TeacherDashboard from '@/views/TeacherDashboard.vue';
+import AdminView from '@/views/AdminView.vue';
 
 const routes = [
   {
@@ -29,21 +32,15 @@ const routes = [
   },
   {
     path: '/courses',
-    name: 'CourseManagement',
-    component: CourseManagement,
-    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+    redirect: '/teacher/courses',
   },
   {
     path: '/questions',
-    name: 'QuestionManagement',
-    component: QuestionManagement,
-    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+    redirect: '/teacher/questions',
   },
   {
     path: '/exams',
-    name: 'ExamManagement',
-    component: ExamManagement,
-    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+    redirect: '/teacher/exams',
   },
   {
     path: '/student/exams',
@@ -71,10 +68,18 @@ const routes = [
     ],
   },
   {
-    path: '/teacher/scores',
-    name: 'ScoreAnalysis',
-    component: ScoreAnalysis,
+    path: '/teacher',
+    component: TeacherView,
     meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+    children: [
+      { path: '', redirect: 'dashboard' },
+      { path: 'dashboard', name: 'TeacherDashboard', component: TeacherDashboard, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'courses', name: 'CourseManagement', component: CourseManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'admin/users', name: 'AdminUsers', component: AdminView, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
+    ],
   },
   {
     path: '/student/scores',
@@ -98,19 +103,31 @@ router.beforeEach((to, from) => {
   const { isAuthenticated, roles } = storeToRefs(authStore);
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const allowedRoles = to.matched.flatMap(record => (record.meta && record.meta.roles) ? record.meta.roles : []);
+  const rawRoles = roles.value || [];
+  const normalized = rawRoles.map(r => (r && r.startsWith('ROLE_')) ? r : `ROLE_${r}`);
 
   if (requiresAuth && !isAuthenticated.value) {
     return { path: '/login', query: { redirect: to.fullPath } };
   }
 
+  if (to.path === '/dashboard' && normalized.length > 0) {
+    if (normalized.includes('ROLE_STUDENT')) {
+      return { path: '/student/dashboard' };
+    }
+    if (normalized.includes('ROLE_TEACHER') || normalized.includes('ROLE_ADMIN')) {
+      return { path: '/teacher/dashboard' };
+    }
+  }
+
   if (allowedRoles.length > 0) {
-    const rawRoles = roles.value || [];
-    const normalized = rawRoles.map(r => (r && r.startsWith('ROLE_')) ? r : `ROLE_${r}`);
     const hasAccess = normalized.some(r => allowedRoles.includes(r));
     if (!hasAccess) {
       // 学生端受限时优先送到学生仪表盘，其它角色回到主仪表盘
       if (normalized.includes('ROLE_STUDENT')) {
         return { path: '/student/dashboard' };
+      }
+      if (normalized.includes('ROLE_TEACHER') || normalized.includes('ROLE_ADMIN')) {
+        return { path: '/teacher/dashboard' };
       }
       return { path: '/dashboard' };
     }

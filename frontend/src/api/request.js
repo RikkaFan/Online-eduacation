@@ -33,6 +33,10 @@ export async function authFetch(url, options = {}) {
   return fetch(url, { ...options, headers });
 }
 
-export const API_BASE = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
-  ? import.meta.env.VITE_API_BASE
-  : 'http://localhost:8081';
+const envApiBase = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
+  ? String(import.meta.env.VITE_API_BASE).trim()
+  : '';
+
+export const API_BASE = (import.meta && import.meta.env && import.meta.env.DEV)
+  ? ''
+  : envApiBase.replace(/\/$/, '');

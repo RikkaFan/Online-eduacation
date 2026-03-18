@@ -20,4 +20,19 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
               )
             """)
     List<StudentAnswer> findMistakesByStudentId(@Param("studentId") Long studentId);
+
+    @Query("""
+            select count(sa)
+            from StudentAnswer sa
+            join sa.question q
+            where sa.student.id = :studentId
+              and (
+                sa.selectedAnswer is null
+                or sa.selectedAnswer = ''
+                or sa.selectedAnswer <> q.answer
+              )
+            """)
+    long countMistakesByStudentId(@Param("studentId") Long studentId);
+
+    void deleteByExam_Id(Long examId);
 }

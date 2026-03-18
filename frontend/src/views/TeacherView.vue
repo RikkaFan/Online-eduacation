@@ -1,90 +1,169 @@
 <template>
-  <div class="teacher-view">
-    <div class="header">
-      <h1>教师面板</h1>
-      <p>欢迎，教师！您可以在这里管理课程和考试。</p>
-    </div>
+  <el-container class="apple-layout">
+    <el-aside width="240px" class="apple-sidebar">
+      <div class="logo-area">
+        <h2>在线测评系统</h2>
+      </div>
+      <el-menu :default-active="$route.path" router class="apple-menu">
+        <el-menu-item index="/teacher/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <span>控制台首页</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/courses">
+          <el-icon><Reading /></el-icon>
+          <span>课程管理</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/questions">
+          <el-icon><Folder /></el-icon>
+          <span>题库管理</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/exams">
+          <el-icon><EditPen /></el-icon>
+          <span>考试管理</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/scores">
+          <el-icon><DataLine /></el-icon>
+          <span>成绩分析</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/admin/users" v-if="isAdmin">
+          <el-icon><Setting /></el-icon>
+          <span>系统管理</span>
+        </el-menu-item>
+      </el-menu>
+      <div class="nav-bottom">
+        <el-dropdown placement="right-end">
+          <div class="user-profile">
+            <el-avatar size="small" />
+            <span style="margin-left: 8px;">账户</span>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
+              <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </el-aside>
 
-    <el-row :gutter="20" class="module-cards">
-      <el-col :span="8" :xs="24" :sm="12" :md="8">
-        <el-card shadow="hover" class="feature-card" @click="goTo('/courses')">
-          <div class="card-content">
-            <h3>课程管理</h3>
-            <p>管理您的课程信息和内容</p>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8" :xs="24" :sm="12" :md="8">
-        <el-card shadow="hover" class="feature-card" @click="goTo('/questions')">
-          <div class="card-content">
-            <h3>题库管理</h3>
-            <p>维护和组织题目资源</p>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8" :xs="24" :sm="12" :md="8">
-        <el-card shadow="hover" class="feature-card" @click="goTo('/exams')">
-          <div class="card-content">
-            <h3>考试管理</h3>
-            <p>发布和批改在线考试</p>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-  </div>
+    <el-container>
+      <el-header class="apple-header">
+        <div class="header-left">欢迎回来！</div>
+        <div class="header-right">
+          <el-dropdown>
+            <span class="user-profile">
+              <el-avatar size="small" />
+              <span style="margin-left: 8px;">{{ roleLabel }}</span>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
+                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+
+      <el-main class="apple-main">
+        <router-view />
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/store/auth';
+import { DataBoard, Reading, Folder, EditPen, DataLine, Setting } from '@element-plus/icons-vue';
 
-const router = useRouter()
+const router = useRouter();
+const authStore = useAuthStore();
+const { roles } = storeToRefs(authStore);
 
-const goTo = (path) => {
-  router.push(path)
+const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
+const roleLabel = computed(() => (isAdmin.value ? '管理员' : '教师'));
+
+function goProfile() {}
+
+function handleLogout() {
+  authStore.logout();
+  router.push('/login');
 }
 </script>
 
 <style scoped>
-.teacher-view {
-  padding: 20px;
+.apple-layout {
+  height: 100vh;
+  background-color: #F5F5F7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
-
-.header {
-  margin-bottom: 30px;
-}
-
-.module-cards {
-  margin-top: 20px;
-}
-
-.feature-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 150px;
+.apple-sidebar {
+  background-color: transparent;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+.logo-area {
+  padding: 24px 0;
+  margin-bottom: 16px;
+  width: 100%;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  background-color: #f5f7fa;
-}
-
-.card-content {
-  text-align: center;
-}
-
-.card-content h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  color: #303133;
-  font-size: 1.2rem;
-}
-
-.card-content p {
-  color: #606266;
+.logo-area h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1D1D1F;
   margin: 0;
-  font-size: 0.9rem;
+}
+.apple-menu {
+  border-right: none !important;
+  background: transparent;
+}
+::v-deep(.apple-menu .el-menu-item) {
+  border-radius: 12px;
+  margin-bottom: 4px;
+  color: #515154;
+  height: 48px;
+  line-height: 48px;
+}
+::v-deep(.apple-menu .el-menu-item.is-active) {
+  background-color: #E8F0FE;
+  color: #1967D2;
+  font-weight: 600;
+}
+::v-deep(.apple-menu .el-menu-item:hover) {
+  background-color: rgba(0,0,0,0.04);
+}
+.apple-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  height: 60px;
+}
+.apple-main {
+  padding: 24px;
+}
+.user-profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #1D1D1F;
+  font-weight: 500;
+}
+.nav-bottom {
+  width: 100%;
+  margin-bottom: 16px;
+}
+:deep(.el-tooltip__trigger:focus-visible) {
+  outline: none;
 }
 </style>

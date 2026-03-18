@@ -29,7 +29,7 @@
           </el-col>
           <el-col :span="6">
             <el-card shadow="never" class="stat-card">
-              <el-statistic title="参与学生" :value="stats.students" />
+              <el-statistic title="系统用户" :value="stats.users" />
             </el-card>
           </el-col>
         </el-row>
@@ -54,10 +54,7 @@ import { useAuthStore } from '@/store/auth';
 import AdminView from './AdminView.vue';
 import TeacherView from './TeacherView.vue';
 import StudentView from './StudentView.vue';
-import { getCourses } from '@/api/course';
-import { getCategories, getQuestionsByCategory } from '@/api/question';
-import { getAllExamsByAllCourses } from '@/api/examTaking';
-import { getScoresByExam } from '@/api/score';
+import { getAdminStats } from '@/api/stats';
 
 const authStore = useAuthStore();
 const { roles } = storeToRefs(authStore);
@@ -73,31 +70,18 @@ const roleLabel = computed(() => {
   return '未知';
 });
 
-const stats = ref({ courses: 0, questions: 0, exams: 0, students: 0 });
+const stats = ref({ courses: 0, questions: 0, exams: 0, users: 0 });
 
 onMounted(async () => {
+  if (isStudent.value) return;
   try {
-    // 课程数
-    const courses = await getCourses();
-    stats.value.courses = Array.isArray(courses) ? courses.length : 0;
-    // 题目总量：遍历分类并累加各分类题目数
-    const categories = await getCategories();
-    const qTasks = (categories || []).map(c => getQuestionsByCategory(c.id).then(list => Array.isArray(list) ? list.length : 0));
-    const qCounts = await Promise.all(qTasks);
-    stats.value.questions = qCounts.reduce((a, b) => a + b, 0);
-    // 考试场次
-    const exams = await getAllExamsByAllCourses();
-    stats.value.exams = Array.isArray(exams) ? exams.length : 0;
-    // 参与学生：汇总所有考试成绩中的去重学生数（教师/管理员角色可获取）
-    if (isTeacher.value || isAdmin.value) {
-      const resultTasks = (exams || []).map(e => getScoresByExam(e.id).catch(() => []));
-      const allResultsChunks = await Promise.all(resultTasks);
-      const allResults = allResultsChunks.flat();
-      const uniq = new Set((allResults || []).map(r => r.student?.id).filter(Boolean));
-      stats.value.students = uniq.size;
-    } else {
-      stats.value.students = 0;
-    }
+    const data = await getAdminStats();
+    stats.value = {
+      courses: data?.totalCourses ?? 0,
+      questions: data?.totalQuestions ?? 0,
+      exams: data?.totalExams ?? 0,
+      users: data?.totalUsers ?? 0
+    };
   } catch (e) {
     // 忽略统计失败，不影响主功能
     console.debug('统计数据加载失败', e);

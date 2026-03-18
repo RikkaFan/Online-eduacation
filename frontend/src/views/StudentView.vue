@@ -68,28 +68,22 @@
 
         <!-- 统计卡片 -->
         <el-row :gutter="24" class="stats-row">
-          <el-col :span="6">
+          <el-col :span="8">
             <el-card class="apple-card stat-card" shadow="never">
-              <div class="stat-title">课程数</div>
-              <div class="stat-number">{{ courseCount }}</div>
+              <div class="stat-title">已考场次</div>
+              <div class="stat-number">{{ studentStats.attendedExams }}</div>
             </el-card>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="8">
             <el-card class="apple-card stat-card" shadow="never">
-              <div class="stat-title">待办考试</div>
-              <div class="stat-number">{{ upcomingExams.length }}</div>
+              <div class="stat-title">错题总数</div>
+              <div class="stat-number">{{ studentStats.totalMistakes }}</div>
             </el-card>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="8">
             <el-card class="apple-card stat-card" shadow="never">
-              <div class="stat-title">全部考试</div>
-              <div class="stat-number">{{ examsCount }}</div>
-            </el-card>
-          </el-col>
-          <el-col :span="6">
-            <el-card class="apple-card stat-card" shadow="never">
-              <div class="stat-title">近期课程</div>
-              <div class="stat-number">{{ recentCourses.length }}</div>
+              <div class="stat-title">平均分</div>
+              <div class="stat-number">{{ averageScoreText }}</div>
             </el-card>
           </el-col>
         </el-row>
@@ -168,6 +162,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { DataBoard, EditPen, DataLine, Notebook } from '@element-plus/icons-vue';
@@ -175,16 +170,32 @@ import { getCourses } from '@/api/course';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { useAuthStore } from '@/store/auth';
 import { getMyScores } from '@/api/score';
+import { getStudentStats } from '@/api/stats';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 
 const recentCourses = ref([]);
 const upcomingExams = ref([]);
 const examsAll = ref([]);
 const recentScores = ref([]);
+const studentStats = ref({
+  attendedExams: 0,
+  totalMistakes: 0,
+  averageScore: 0
+});
 
 onMounted(async () => {
+  const studentId = user.value?.id;
+  if (studentId) {
+    try {
+      const data = await getStudentStats(studentId);
+      studentStats.value = { ...studentStats.value, ...(data || {}) };
+    } catch (e) {
+      ElMessage.error(e.message || '加载学生统计失败');
+    }
+  }
   try {
     const courses = await getCourses();
     recentCourses.value = (courses || []).slice(-5).reverse();
@@ -205,8 +216,7 @@ onMounted(async () => {
   } catch (e) {}
 });
 
-const courseCount = computed(() => recentCourses.value.length);
-const examsCount = computed(() => examsAll.value.length);
+const averageScoreText = computed(() => Number(studentStats.value.averageScore || 0).toFixed(1));
 function goCourses() {
   router.push('/student/courses');
 }
