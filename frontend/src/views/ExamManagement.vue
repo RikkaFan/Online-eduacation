@@ -132,10 +132,13 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import { useRoute, useRouter } from 'vue-router';
 import { getCourses } from '@/api/course';
 import { getExamsByCourse, createExam, deleteExam } from '@/api/exam';
 import { getCategories, getQuestionsByCategory } from '@/api/question';
 
+const route = useRoute();
+const router = useRouter();
 const courses = ref([]);
 const selectedCourseId = ref(null);
 const exams = ref([]);
@@ -280,7 +283,17 @@ async function onDelete(row) {
 
 onMounted(async () => {
   await loadCourses();
+  if (!selectedCourseId.value && courses.value.length > 0) {
+    selectedCourseId.value = courses.value[0].id;
+    await loadExams();
+  }
   await loadQuestionOptions();
+  if (route.query.create === '1') {
+    openCreateDialog();
+    const nextQuery = { ...route.query };
+    delete nextQuery.create;
+    router.replace({ path: route.path, query: nextQuery });
+  }
 });
 </script>
 
