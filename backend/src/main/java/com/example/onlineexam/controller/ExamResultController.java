@@ -40,4 +40,10 @@ public class ExamResultController {
     public List<ExamResult> getResultsByStudent(@PathVariable Long studentId) {
         return examResultService.getResultsByStudent(studentId);
     }
+
+    @GetMapping("/students/{studentId}/mistakes")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or #studentId == authentication.principal.id")
+    public List<StudentAnswer> getMistakesByStudent(@PathVariable Long studentId) {
+        return examResultService.getMistakesByStudent(studentId);
+    }
 }

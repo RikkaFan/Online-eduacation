@@ -58,4 +58,8 @@ public class ExamResultService {
     public List<ExamResult> getResultsByStudent(Long studentId) {
         return examResultRepository.findByStudentId(studentId);
     }
+
+    public List<StudentAnswer> getMistakesByStudent(Long studentId) {
+        return studentAnswerRepository.findMistakesByStudentId(studentId);
+    }
 }

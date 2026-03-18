@@ -4,7 +4,6 @@ import com.example.onlineexam.model.Role;
 import com.example.onlineexam.model.User;
 import com.example.onlineexam.repository.RoleRepository;
 import com.example.onlineexam.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,35 +32,24 @@ public class OnlineExamApplication {
 				roleRepository.save(new Role("ROLE_ADMIN"));
 			}
 
-			if (userRepository.findByUsername("admin").isEmpty()) {
-				User admin = new User();
-				admin.setUsername("admin");
-				admin.setPassword(passwordEncoder.encode("123456"));
-				Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-				admin.setRoles(Set.of(adminRole));
-				userRepository.save(admin);
-			}
+			Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+			Role teacherRole = roleRepository.findByName("ROLE_TEACHER")
+					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+			Role studentRole = roleRepository.findByName("ROLE_STUDENT")
+					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
-			if (userRepository.findByUsername("teacher").isEmpty()) {
-				User teacher = new User();
-				teacher.setUsername("teacher");
-				teacher.setPassword(passwordEncoder.encode("123456"));
-				Role teacherRole = roleRepository.findByName("ROLE_TEACHER")
-						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-				teacher.setRoles(Set.of(teacherRole));
-				userRepository.save(teacher);
-			}
-
-			if (userRepository.findByUsername("student").isEmpty()) {
-				User student = new User();
-				student.setUsername("student");
-				student.setPassword(passwordEncoder.encode("123456"));
-				Role studentRole = roleRepository.findByName("ROLE_STUDENT")
-						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-				student.setRoles(Set.of(studentRole));
-				userRepository.save(student);
-			}
+			ensureUserWithRole(userRepository, passwordEncoder, "admin", "123456", adminRole);
+			ensureUserWithRole(userRepository, passwordEncoder, "teacher", "123456", teacherRole);
+			ensureUserWithRole(userRepository, passwordEncoder, "student", "123456", studentRole);
 		};
+	}
+
+	private void ensureUserWithRole(UserRepository userRepository, PasswordEncoder passwordEncoder, String username, String rawPassword, Role role) {
+		User user = userRepository.findByUsername(username).orElseGet(User::new);
+		user.setUsername(username);
+		user.setPassword(passwordEncoder.encode(rawPassword));
+		user.setRoles(Set.of(role));
+		userRepository.save(user);
 	}
 }
