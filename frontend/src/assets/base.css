@@ -1,63 +1,17 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
-
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
-
-  --vt-c-indigo: #2c3e50;
-
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
-
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
-}
-
-/* Element Plus override — Apple design tokens */
-:root {
+  --color-background: #F4F7FC;
+  --color-background-soft: #F8FAFC;
+  --color-border: rgba(226, 232, 240, 0.8);
+  --color-text: #334155;
+  --color-text-strong: #0F172A;
+  --brand-bg-active: #E0E7FF;
+  --brand-text-active: #4F46E5;
   --el-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  --el-bg-color-page: #F5F5F7;
+  --el-bg-color-page: #F4F7FC;
   --el-border-radius-base: 12px;
-  --el-border-radius-box: 16px;
-  --el-box-shadow-light: 0 4px 24px rgba(0, 0, 0, 0.04);
-  --el-border-color-light: rgba(0, 0, 0, 0.05);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  --el-border-radius-box: 20px;
+  --el-box-shadow-light: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  --el-border-color-light: rgba(226, 232, 240, 0.8);
 }
 
 *,
@@ -83,44 +37,50 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Apple-like global layout refinements */
 .el-container {
   background-color: var(--el-bg-color-page);
 }
 .el-header {
-  background-color: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: none;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(12px);
 }
 .el-aside {
-  background: transparent;
+  background: #FFFFFF;
   border-right: none;
 }
 .el-card {
-  border: none;
-  border-radius: var(--el-border-radius-box);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 20px;
   box-shadow: var(--el-box-shadow-light);
+  background: #FFFFFF;
 }
-/* Sidebar & menu overrides (Apple style) */
 .el-menu {
   border-right: none !important;
   background: transparent !important;
 }
 .el-menu-item {
-  color: #333 !important;
+  color: #334155 !important;
+  border-radius: 12px;
 }
 .el-menu-item.is-active {
-  background-color: #E8F0FE !important;
-  color: #1967D2 !important;
+  background-color: var(--brand-bg-active) !important;
+  color: var(--brand-text-active) !important;
   border-radius: 12px !important;
-  margin: 4px 12px !important;
+  font-weight: 600;
 }
 
-/* Apple Card utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+}
+
 .apple-card {
-  border: none !important;
-  border-radius: 20px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
   background: #FFFFFF;
-  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
 }

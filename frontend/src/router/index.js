@@ -16,7 +16,7 @@ import StudentCourseList from '@/views/StudentCourseList.vue';
 import StudentPractice from '@/views/StudentPractice.vue';
 import TeacherView from '@/views/TeacherView.vue';
 import TeacherDashboard from '@/views/TeacherDashboard.vue';
-import AdminView from '@/views/AdminView.vue';
+import AdminUserManagement from '@/views/AdminUserManagement.vue';
 
 const routes = [
   {
@@ -78,14 +78,8 @@ const routes = [
       { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
       { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
       { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: 'admin/users', name: 'AdminUsers', component: AdminView, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
+      { path: '/admin/users', name: 'AdminUsers', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
     ],
-  },
-  {
-    path: '/student/scores',
-    name: 'StudentScoreHistory',
-    component: StudentScoreHistory,
-    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
   },
   {
     path: '/:pathMatch(.*)*',

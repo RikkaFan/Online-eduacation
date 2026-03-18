@@ -35,4 +35,5 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
     long countMistakesByStudentId(@Param("studentId") Long studentId);
 
     void deleteByExam_Id(Long examId);
+    void deleteByStudent_Id(Long studentId);
 }

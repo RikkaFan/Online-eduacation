@@ -11,6 +11,7 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
     List<ExamResult> findByExamId(Long examId);
     List<ExamResult> findByStudentId(Long studentId);
     void deleteByExamId(Long examId);
+    void deleteByStudent_Id(Long studentId);
     long countByStudentId(Long studentId);
 
     @Query("select avg(er.score) from ExamResult er where er.student.id = :studentId")

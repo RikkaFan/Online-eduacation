@@ -1,6 +1,6 @@
 <template>
   <el-container class="apple-layout">
-    <el-aside width="240px" class="apple-sidebar">
+    <el-aside width="240px" class="apple-sidebar glass-card">
       <div class="logo-area">
         <h2>在线测评系统</h2>
       </div>
@@ -25,7 +25,7 @@
           <el-icon><DataLine /></el-icon>
           <span>成绩分析</span>
         </el-menu-item>
-        <el-menu-item index="/teacher/admin/users" v-if="isAdmin">
+        <el-menu-item index="/admin/users" v-if="isAdmin">
           <el-icon><Setting /></el-icon>
           <span>系统管理</span>
         </el-menu-item>
@@ -70,23 +70,28 @@
       </el-main>
     </el-container>
   </el-container>
+  <UserProfileDialog v-model="profileDialogVisible" />
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import { DataBoard, Reading, Folder, EditPen, DataLine, Setting } from '@element-plus/icons-vue';
+import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { roles } = storeToRefs(authStore);
+const profileDialogVisible = ref(false);
 
 const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
 const roleLabel = computed(() => (isAdmin.value ? '管理员' : '教师'));
 
-function goProfile() {}
+function goProfile() {
+  profileDialogVisible.value = true;
+}
 
 function handleLogout() {
   authStore.logout();
@@ -97,15 +102,17 @@ function handleLogout() {
 <style scoped>
 .apple-layout {
   height: 100vh;
-  background-color: #F5F5F7;
+  background-color: #F4F7FC;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 .apple-sidebar {
-  background-color: transparent;
+  background-color: #FFFFFF;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  margin: 12px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
 }
 .logo-area {
   padding: 24px 0;
@@ -128,29 +135,32 @@ function handleLogout() {
 ::v-deep(.apple-menu .el-menu-item) {
   border-radius: 12px;
   margin-bottom: 4px;
-  color: #515154;
+  color: #334155;
   height: 48px;
   line-height: 48px;
 }
 ::v-deep(.apple-menu .el-menu-item.is-active) {
-  background-color: #E8F0FE;
-  color: #1967D2;
+  background-color: #E0E7FF;
+  color: #4F46E5;
   font-weight: 600;
 }
 ::v-deep(.apple-menu .el-menu-item:hover) {
-  background-color: rgba(0,0,0,0.04);
+  background-color: rgba(79, 70, 229, 0.08);
 }
 .apple-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   height: 60px;
+  border-radius: 20px;
+  margin: 12px 12px 0 0;
+  padding: 0 16px;
 }
 .apple-main {
-  padding: 24px;
+  padding: 20px;
 }
 .user-profile {
   display: flex;
