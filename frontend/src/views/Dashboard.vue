@@ -1,10 +1,6 @@
 <template>
   <div class="dashboard-container">
     <el-container>
-      <el-header class="dashboard-header">
-        <span>在线教育测评系统</span>
-        <el-button type="danger" @click="handleLogout">登出</el-button>
-      </el-header>
       <el-main>
         <div v-if="!isStudent">
           <el-card class="welcome-card" shadow="never">
@@ -114,21 +110,10 @@ onMounted(async () => {
   }
 });
 
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
+// 顶部页头已移除，无需单独登出按钮；登出逻辑仍保留于布局或其他处
 </script>
 
 <style scoped>
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #409EFF;
-  color: white;
-  padding: 0 20px;
-}
 .welcome-card { margin: 12px 0; }
 .welcome-row { display: flex; align-items: center; justify-content: space-between; }
 .welcome-text .title { font-size: 18px; font-weight: 600; }
