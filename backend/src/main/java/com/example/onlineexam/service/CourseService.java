@@ -2,6 +2,7 @@ package com.example.onlineexam.service;
 
 import com.example.onlineexam.model.Course;
 import com.example.onlineexam.repository.CourseRepository;
+import com.example.onlineexam.repository.ExamRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ public class CourseService {
 
     @Autowired
     private CourseRepository courseRepository;
+    @Autowired
+    private ExamRepository examRepository;
 
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
@@ -30,13 +33,8 @@ public class CourseService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl user) {
             System.out.println("====== Extracted Teacher ID from SecurityContext: " + user.getId() + " ======");
-            System.out.println("====== Incoming Course.teacherId: " + course.getTeacherId() + " ======");
-            if (course.getTeacherId() == null) {
-                course.setTeacherId(user.getId());
-                System.out.println("====== teacherId was null, set to current user id: " + course.getTeacherId() + " ======");
-            } else {
-                System.out.println("====== teacherId provided by client will be respected: " + course.getTeacherId() + " ======");
-            }
+            course.setTeacherId(user.getId());
+            System.out.println("====== Set Course.teacherId to current user id: " + course.getTeacherId() + " ======");
         } else {
             System.out.println("====== SecurityContext principal is null or not UserDetailsImpl ======");
         }
@@ -59,6 +57,8 @@ public class CourseService {
         if (!courseRepository.existsById(id)) {
             throw new RuntimeException("Course not found with id: " + id);
         }
+        // 删除课程前，清理关联考试，避免外键约束阻止删除
+        examRepository.deleteByCourse_Id(id);
         courseRepository.deleteById(id);
         // 再次校验，确保数据库层面确实删除成功
         if (courseRepository.existsById(id)) {

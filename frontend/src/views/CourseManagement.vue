@@ -1,93 +1,48 @@
 <template>
   <div class="course-management">
-    <div class="header-actions">
-      <h2>课程管理</h2>
-      <button class="btn btn-primary" @click="showAddForm = !showAddForm">
-        {{ showAddForm ? '取消新增' : '新增课程' }}
-      </button>
-    </div>
-
-    <!-- 新增课程表单 -->
-    <div v-if="showAddForm" class="add-course-panel">
-      <h3>新增课程</h3>
-      <form @submit.prevent="handleAddCourse" class="course-form">
-        <div class="form-group">
-          <label for="courseName">课程名称：</label>
-          <input 
-            type="text" 
-            id="courseName" 
-            v-model="newCourse.courseName" 
-            required
-            placeholder="请输入课程名称"
-          />
+    <el-card class="page-card" shadow="never">
+      <div class="action-bar">
+        <h2>课程管理</h2>
+        <div class="actions-right">
+          <el-button type="primary" @click="showAddForm = !showAddForm">
+            {{ showAddForm ? '取消新增' : '新增课程' }}
+          </el-button>
         </div>
-        
-        <div class="form-group">
-          <label for="teacherId">任课教师ID：</label>
-          <input 
-            type="number" 
-            id="teacherId" 
-            v-model.number="newCourse.teacherId" 
-            required
-            placeholder="请输入教师ID"
-          />
-        </div>
-        
-        <div class="form-group">
-          <label for="description">课程简介：</label>
-          <textarea 
-            id="description" 
-            v-model="newCourse.description" 
-            rows="3"
-            placeholder="请输入课程简介"
-          ></textarea>
-        </div>
-        
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" @click="resetForm">取消</button>
-          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-            {{ isSubmitting ? '提交中...' : '提交' }}
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- 数据展示区 -->
-    <div class="course-list">
-      <div v-if="isLoading" class="loading-state">加载中...</div>
-      
-      <div v-else-if="courses.length === 0" class="empty-state">
-        暂无课程数据
       </div>
 
-      <table v-else class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>课程名称</th>
-            <th>任课教师ID</th>
-            <th>课程简介</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="course in courses" :key="course.id">
-            <td>{{ course.id }}</td>
-            <td>{{ course.courseName }}</td>
-            <td>{{ course.teacherId }}</td>
-            <td class="description-cell">{{ course.description || '-' }}</td>
-            <td>
-              <button 
-                class="btn btn-danger btn-sm" 
-                @click="handleDeleteCourse(course.id, course.courseName)"
-              >
-                删除
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <el-card v-if="showAddForm" class="inner-card" shadow="never">
+        <el-form @submit.prevent="handleAddCourse" :model="newCourse" label-width="110px">
+          <el-form-item label="课程名称">
+            <el-input v-model="newCourse.courseName" placeholder="请输入课程名称" />
+          </el-form-item>
+          <!-- 教师ID由后端根据当前登录用户自动注入，前端不再填写 -->
+          <el-form-item label="课程简介">
+            <el-input v-model="newCourse.description" type="textarea" rows="3" placeholder="请输入课程简介" />
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="resetForm">取消</el-button>
+            <el-button type="primary" native-type="submit" :loading="isSubmitting">提交</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+
+      <el-table v-loading="isLoading" :data="courses" stripe style="width: 100%">
+        <el-table-column prop="id" label="ID" width="100" />
+        <el-table-column prop="courseName" label="课程名称" min-width="200" />
+        <el-table-column prop="teacherId" label="任课教师ID" width="160" />
+        <el-table-column label="课程简介" min-width="240">
+          <template #default="{ row }">{{ row.description || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="{ row }">
+            <el-button link type="danger" @click="handleDeleteCourse(row.id, row.courseName)">删除</el-button>
+          </template>
+        </el-table-column>
+        <template #empty>
+          <div class="empty-state">暂无课程数据</div>
+        </template>
+      </el-table>
+    </el-card>
   </div>
 </template>
 
@@ -102,7 +57,6 @@ const isSubmitting = ref(false);
 
 const newCourse = ref({
   courseName: '',
-  teacherId: null,
   description: ''
 });
 
@@ -132,7 +86,7 @@ const resetForm = () => {
 
 // 处理新增课程
 const handleAddCourse = async () => {
-  if (!newCourse.value.courseName || !newCourse.value.teacherId) {
+  if (!newCourse.value.courseName) {
     alert('请填写完整必填信息');
     return;
   }
@@ -178,160 +132,20 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
-
-.header-actions {
+.page-card {
+  padding: 16px;
+}
+.action-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 16px;
 }
-
-.header-actions h2 {
-  margin: 0;
-  color: #333;
-}
-
-/* 按钮通用样式 */
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #45a049;
-}
-
-.btn-secondary {
-  background-color: #f1f1f1;
-  color: #333;
-  border: 1px solid #ccc;
-}
-
-.btn-secondary:hover {
-  background-color: #e1e1e1;
-}
-
-.btn-danger {
-  background-color: #f44336;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #da190b;
-}
-
-.btn-sm {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-/* 表单面板样式 */
-.add-course-panel {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 25px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #eee;
-}
-
-.add-course-panel h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #333;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-  font-size: 14px;
-  color: #555;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
-}
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-/* 表格样式 */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.data-table th,
-.data-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.data-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #333;
-}
-
-.data-table tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-.description-cell {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.loading-state,
+.action-bar h2 { margin: 0; }
+.inner-card { margin-bottom: 16px; }
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: 24px;
   color: #666;
-  background-color: #f9f9f9;
-  border-radius: 4px;
 }
 </style>
