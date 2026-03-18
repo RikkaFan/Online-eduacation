@@ -32,8 +32,14 @@ const colors = ['#34495E', '#16A085', '#2980B9', '#8E44AD'];
 </script>
 
 <style>
+.lms-dashboard {
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+}
 .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #C7CDD1; padding-bottom: 16px; margin-bottom: 24px; }
 .dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 400; color: #2D3B45; }
+.course-grid { margin: 0 !important; }
 .lms-course-card { border-radius: 4px; border: 1px solid #C7CDD1; transition: box-shadow 0.2s; cursor: pointer; background: white; }
 .lms-course-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .card-color-header { height: 140px; position: relative; }
