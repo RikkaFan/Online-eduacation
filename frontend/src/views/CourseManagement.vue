@@ -27,7 +27,7 @@
       </el-card>
 
       <el-table v-loading="isLoading" :data="courses" stripe style="width: 100%">
-        <el-table-column prop="id" label="ID" width="100" />
+        <el-table-column type="index" label="#" width="80" />
         <el-table-column prop="courseName" label="课程名称" min-width="200" />
         <el-table-column prop="teacherId" label="任课教师ID" width="160" />
         <el-table-column label="课程简介" min-width="240">
