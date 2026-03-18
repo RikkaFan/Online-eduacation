@@ -8,6 +8,8 @@ import QuestionManagement from '@/views/QuestionManagement.vue';
 import ExamManagement from '@/views/ExamManagement.vue';
 import StudentExamList from '@/views/StudentExamList.vue';
 import ExamTaking from '@/views/ExamTaking.vue';
+import ScoreAnalysis from '@/views/ScoreAnalysis.vue';
+import StudentScoreHistory from '@/views/StudentScoreHistory.vue';
 
 const routes = [
   {
@@ -49,6 +51,18 @@ const routes = [
     path: '/student/exam/:id',
     name: 'ExamTaking',
     component: ExamTaking,
+    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
+  },
+  {
+    path: '/teacher/scores',
+    name: 'ScoreAnalysis',
+    component: ScoreAnalysis,
+    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: '/student/scores',
+    name: 'StudentScoreHistory',
+    component: StudentScoreHistory,
     meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
   },
   {
