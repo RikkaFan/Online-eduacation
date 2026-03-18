@@ -222,8 +222,15 @@ const handleLogin = async () => {
     
     setTimeout(() => {
       isLoading.value = false;
-      // 暂时统一跳转到 dashboard，后续可根据 authStore.roles 动态路由
-      router.push('/dashboard'); 
+      const roles = authStore.roles || [];
+      const roleList = Array.isArray(roles.value) ? roles.value : roles;
+      if (roleList.includes('ROLE_STUDENT')) {
+        router.push('/student/dashboard');
+      } else if (roleList.includes('ROLE_TEACHER') || roleList.includes('ROLE_ADMIN')) {
+        router.push('/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     }, 1000);
 
   } catch (error) {
