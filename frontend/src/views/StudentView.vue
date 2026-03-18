@@ -17,7 +17,25 @@
           <el-icon><DataLine /></el-icon>
           <span>我的成绩</span>
         </el-menu-item>
+        <el-menu-item index="/student/practice">
+          <el-icon><Notebook /></el-icon>
+          <span>错题本</span>
+        </el-menu-item>
       </el-menu>
+      <div class="nav-bottom">
+        <el-dropdown placement="right-end">
+          <div class="user-profile">
+            <el-avatar size="small" />
+            <span style="margin-left: 8px;">账户</span>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item>个人中心</el-dropdown-item>
+              <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
     </el-aside>
 
     <el-container>
@@ -150,7 +168,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { DataBoard, Reading, EditPen, DataLine } from '@element-plus/icons-vue';
+import { DataBoard, Reading, EditPen, DataLine, Notebook } from '@element-plus/icons-vue';
 import { getCourses } from '@/api/course';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { useAuthStore } from '@/store/auth';
@@ -211,6 +229,9 @@ function logout() {
   authStore.logout();
   router.push('/login');
 }
+function handleLogout() {
+  logout();
+}
 </script>
 
 <style scoped>
@@ -223,10 +244,17 @@ function logout() {
 .apple-sidebar {
   background-color: transparent;
   padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .logo-area {
-  padding: 12px 16px;
+  padding: 24px 0;
   margin-bottom: 16px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .logo-area h2 {
   font-size: 18px;
@@ -272,6 +300,8 @@ function logout() {
   color: #1D1D1F;
   font-weight: 500;
 }
+.nav-bottom { width: 100%; margin-bottom: 16px; }
+:deep(.el-tooltip__trigger:focus-visible) { outline: none; }
 
 /* Apple Card 通用类（也在全局定义，局部保留以确保生效） */
 .apple-card {

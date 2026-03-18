@@ -13,6 +13,7 @@ import StudentScoreHistory from '@/views/StudentScoreHistory.vue';
 import StudentView from '@/views/StudentView.vue';
 import StudentDashboard from '@/views/StudentDashboard.vue';
 import StudentCourseList from '@/views/StudentCourseList.vue';
+import StudentPractice from '@/views/StudentPractice.vue';
 
 const routes = [
   {
@@ -66,6 +67,7 @@ const routes = [
       { path: 'courses', name: 'StudentCourseList', component: StudentCourseList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'exams', name: 'StudentExamsAlias', component: StudentExamList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'scores', name: 'StudentScoresAlias', component: StudentScoreHistory, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'practice', name: 'StudentPractice', component: StudentPractice, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
     ],
   },
   {
