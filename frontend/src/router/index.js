@@ -102,9 +102,14 @@ router.beforeEach((to, from) => {
   }
 
   if (allowedRoles.length > 0) {
-    const userRoles = roles.value || [];
-    const hasAccess = userRoles.some(r => allowedRoles.includes(r));
+    const rawRoles = roles.value || [];
+    const normalized = rawRoles.map(r => (r && r.startsWith('ROLE_')) ? r : `ROLE_${r}`);
+    const hasAccess = normalized.some(r => allowedRoles.includes(r));
     if (!hasAccess) {
+      // 学生端受限时优先送到学生仪表盘，其它角色回到主仪表盘
+      if (normalized.includes('ROLE_STUDENT')) {
+        return { path: '/student/dashboard' };
+      }
       return { path: '/dashboard' };
     }
   }
