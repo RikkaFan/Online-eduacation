@@ -5,6 +5,7 @@ import com.example.onlineexam.repository.CourseRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -48,7 +49,15 @@ public class CourseService {
         return courseRepository.save(course);
     }
 
+    @Transactional
     public void deleteCourse(Long id) {
+        if (!courseRepository.existsById(id)) {
+            throw new RuntimeException("Course not found with id: " + id);
+        }
         courseRepository.deleteById(id);
+        // 再次校验，确保数据库层面确实删除成功
+        if (courseRepository.existsById(id)) {
+            throw new RuntimeException("Failed to delete course with id: " + id);
+        }
     }
 }
