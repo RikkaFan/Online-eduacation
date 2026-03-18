@@ -10,6 +10,9 @@ import StudentExamList from '@/views/StudentExamList.vue';
 import ExamTaking from '@/views/ExamTaking.vue';
 import ScoreAnalysis from '@/views/ScoreAnalysis.vue';
 import StudentScoreHistory from '@/views/StudentScoreHistory.vue';
+import StudentView from '@/views/StudentView.vue';
+import StudentDashboard from '@/views/StudentDashboard.vue';
+import StudentCourseList from '@/views/StudentCourseList.vue';
 
 const routes = [
   {
@@ -52,6 +55,17 @@ const routes = [
     name: 'ExamTaking',
     component: ExamTaking,
     meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
+  },
+  {
+    path: '/student',
+    component: StudentView,
+    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
+    children: [
+      { path: 'dashboard', name: 'StudentDashboard', component: StudentDashboard, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'courses', name: 'StudentCourseList', component: StudentCourseList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'exams', name: 'StudentExamsAlias', component: StudentExamList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'scores', name: 'StudentScoresAlias', component: StudentScoreHistory, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+    ],
   },
   {
     path: '/teacher/scores',
