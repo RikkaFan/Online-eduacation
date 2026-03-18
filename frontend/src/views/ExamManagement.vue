@@ -2,29 +2,33 @@
   <div class="exam-management">
     <el-card class="toolbar" shadow="never">
       <div class="toolbar-row">
-        <el-select
-          v-model="selectedCourseId"
-          placeholder="选择课程"
-          filterable
-          clearable
-          @change="handleCourseChange"
-          style="width: 260px"
-        >
-          <el-option
-            v-for="c in courses"
-            :key="c.id"
-            :label="c.name || c.title || `课程#${c.id}`"
-            :value="c.id"
-          />
-        </el-select>
-        <el-button type="primary" :disabled="!selectedCourseId" @click="openCreateDialog">
-          发布新考试
-        </el-button>
+        <div class="actions-left">
+          <el-button type="primary" :disabled="!selectedCourseId" @click="openCreateDialog">
+            发布新考试
+          </el-button>
+        </div>
+        <div class="actions-right">
+          <el-select
+            v-model="selectedCourseId"
+            placeholder="选择课程"
+            filterable
+            clearable
+            @change="handleCourseChange"
+            style="width: 260px"
+          >
+            <el-option
+              v-for="c in courses"
+              :key="c.id"
+              :label="c.name || c.title || `课程#${c.id}`"
+              :value="c.id"
+            />
+          </el-select>
+        </div>
       </div>
     </el-card>
 
     <el-card shadow="never" class="mt-12">
-      <el-table :data="exams" v-loading="loading" empty-text="暂无考试数据">
+      <el-table :data="exams" v-loading="loading" empty-text="暂无考试数据" stripe>
         <el-table-column prop="title" label="考试名称" min-width="180">
           <template #default="{ row }">{{ row.title || row.name }}</template>
         </el-table-column>
@@ -47,7 +51,7 @@
               @confirm="onDelete(row)"
             >
               <template #reference>
-                <el-button type="danger" size="small">删除</el-button>
+                <el-button link type="danger" size="small">删除</el-button>
               </template>
             </el-popconfirm>
           </template>

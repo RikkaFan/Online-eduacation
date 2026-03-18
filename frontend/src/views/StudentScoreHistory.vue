@@ -2,7 +2,7 @@
   <div class="student-score-history">
     <div class="page-header"><h2>我的成绩</h2></div>
     <el-card shadow="never">
-      <el-table :data="scores" v-loading="loading" empty-text="暂无成绩记录">
+      <el-table :data="scores" v-loading="loading" empty-text="暂无成绩记录" stripe>
         <el-table-column label="考试名称" min-width="180">
           <template #default="{ row }">{{ row.exam?.title || '-' }}</template>
         </el-table-column>
@@ -39,4 +39,3 @@ onMounted(async () => {
 .student-score-history { padding: 20px; }
 .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 </style>
-

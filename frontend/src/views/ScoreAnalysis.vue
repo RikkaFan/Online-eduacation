@@ -1,6 +1,6 @@
 <template>
   <div class="score-analysis">
-    <div class="page-header">
+    <div class="action-bar">
       <h2>成绩分析</h2>
       <el-select v-model="selectedExamId" placeholder="选择考试" filterable clearable @change="onExamChange" style="width: 320px">
         <el-option v-for="e in exams" :key="e.id" :label="examLabel(e)" :value="e.id" />
@@ -14,7 +14,7 @@
     </div>
 
     <el-card shadow="never">
-      <el-table :data="scores" v-loading="loadingScores" empty-text="请选择考试后查看成绩">
+      <el-table :data="scores" v-loading="loadingScores" empty-text="请选择考试后查看成绩" stripe>
         <el-table-column label="学生" min-width="160">
           <template #default="{ row }">{{ row.student?.username || '-' }}</template>
         </el-table-column>
@@ -87,8 +87,8 @@ const stat = computed(() => {
 
 <style scoped>
 .score-analysis { padding: 20px; }
-.page-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+.action-bar {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
 }
 .stat-cards { display: flex; gap: 12px; margin-bottom: 12px; }
 .stat-card { width: 200px; text-align: center; }
