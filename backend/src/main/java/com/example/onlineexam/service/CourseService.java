@@ -30,8 +30,13 @@ public class CourseService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl user) {
             System.out.println("====== Extracted Teacher ID from SecurityContext: " + user.getId() + " ======");
-            course.setTeacherId(user.getId());
-            System.out.println("====== Set Course.teacherId in service to: " + course.getTeacherId() + " ======");
+            System.out.println("====== Incoming Course.teacherId: " + course.getTeacherId() + " ======");
+            if (course.getTeacherId() == null) {
+                course.setTeacherId(user.getId());
+                System.out.println("====== teacherId was null, set to current user id: " + course.getTeacherId() + " ======");
+            } else {
+                System.out.println("====== teacherId provided by client will be respected: " + course.getTeacherId() + " ======");
+            }
         } else {
             System.out.println("====== SecurityContext principal is null or not UserDetailsImpl ======");
         }
