@@ -52,3 +52,14 @@ export async function submitExam(examId, answers) {
   return res.json();
 }
 
+export async function getStudentMistakes(studentId) {
+  const res = await fetch(`${EXAM_API}/students/${studentId}/mistakes`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取错题本失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
