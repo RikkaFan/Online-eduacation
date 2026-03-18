@@ -22,41 +22,10 @@
           <span>错题本</span>
         </el-menu-item>
       </el-menu>
-      <div class="nav-bottom">
-        <el-dropdown placement="right-end">
-          <div class="user-profile">
-            <el-avatar size="small" />
-            <span style="margin-left: 8px;">账户</span>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item>个人中心</el-dropdown-item>
-              <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
+      <!-- nav-bottom removed per request -->
     </el-aside>
 
     <el-container>
-      <el-header class="apple-header">
-        <div class="header-left">欢迎回来！</div>
-        <div class="header-right">
-          <el-dropdown>
-            <span class="user-profile">
-              <el-avatar size="small" />
-              <span style="margin-left: 8px;">学生</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
-                <el-dropdown-item divided @click="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </el-header>
-
       <el-main class="apple-main">
         <!-- 欢迎 Banner -->
         <el-card class="apple-card banner-card" shadow="never">
@@ -296,8 +265,8 @@ function handleLogout() {
   justify-content: space-between;
 }
 .logo-area {
-  padding: 24px 0;
-  margin-bottom: 16px;
+  padding: 8px 0;
+  margin-bottom: 8px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -327,15 +296,6 @@ function handleLogout() {
 }
 ::v-deep(.apple-menu .el-menu-item:hover) {
   background-color: rgba(0,0,0,0.04);
-}
-.apple-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  height: 60px;
 }
 .apple-main {
   padding: 24px;
