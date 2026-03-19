@@ -37,14 +37,24 @@
       <el-col :span="18" class="question-panel">
         <div class="panel-header">
           <h3>题目列表 <span v-if="activeCategoryName">- {{ activeCategoryName }}</span></h3>
-          <el-button 
-            type="primary" 
-            size="small" 
-            :disabled="!activeCategoryId" 
-            @click="showAddQuestionDialog"
-          >
-            新增题目
-          </el-button>
+          <div class="action-buttons">
+            <el-button size="small" @click="handleDownloadTemplate">下载导入模板</el-button>
+            <el-upload
+              accept=".xlsx,.xls"
+              :show-file-list="false"
+              :before-upload="handleImport"
+            >
+              <el-button type="success" size="small">批量导入题目</el-button>
+            </el-upload>
+            <el-button 
+              type="primary" 
+              size="small" 
+              :disabled="!activeCategoryId" 
+              @click="showAddQuestionDialog"
+            >
+              新增题目
+            </el-button>
+          </div>
         </div>
         
         <el-table :data="questions" v-loading="loadingQuestions" style="width: 100%" border stripe>
@@ -122,7 +132,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import { 
   getCategories, 
@@ -130,7 +140,9 @@ import {
   deleteCategory, 
   getQuestionsByCategory, 
   createQuestion, 
-  deleteQuestion 
+  deleteQuestion,
+  downloadTemplate,
+  importQuestions
 } from '@/api/question';
 
 // ================= 状态数据 =================
@@ -337,6 +349,45 @@ const handleDeleteQuestion = async (id) => {
     }
   }
 };
+
+const handleDownloadTemplate = async () => {
+  try {
+    const blob = await downloadTemplate();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Question_Template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    ElMessage.success('模板下载成功');
+  } catch (error) {
+    ElMessage.error(error.message || '下载模板失败');
+  }
+};
+
+const handleImport = async (file) => {
+  if (!activeCategoryId.value) {
+    ElMessage.warning('请先选择要把题目导入到哪门课程');
+    return false;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: '正在导入题目，请稍候...',
+    background: 'rgba(255, 255, 255, 0.6)',
+  });
+  try {
+    await importQuestions(activeCategoryId.value, file);
+    ElMessage.success('导入成功');
+    await loadQuestions(activeCategoryId.value);
+  } catch (error) {
+    ElMessage.error(error.message || '导入失败');
+  } finally {
+    loading.close();
+  }
+  return false;
+};
 </script>
 
 <style scoped>
@@ -364,6 +415,12 @@ const handleDeleteQuestion = async (id) => {
   margin: 0;
   font-size: 18px;
   color: #303133;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .category-panel {

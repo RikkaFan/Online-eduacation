@@ -106,3 +106,43 @@ export async function deleteQuestion(id) {
     return response.text();
   }
 }
+
+export async function downloadTemplate() {
+  const response = await fetch(`${QUESTION_API_URL}/import/template`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`下载导入模板失败: ${response.status} ${errText}`);
+  }
+
+  return response.blob();
+}
+
+export async function importQuestions(courseId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('categoryId', courseId);
+
+  const headers = getAuthHeaders();
+  delete headers['Content-Type'];
+
+  const response = await fetch(`${QUESTION_API_URL}/import`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`批量导入失败: ${response.status} ${errText}`);
+  }
+
+  const contentType = response.headers.get("content-type") || '';
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+  return response.text();
+}
