@@ -35,6 +35,7 @@
         <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click="openChapterDrawer(row)">章节管理</el-button>
+            <el-button link type="warning" @click="openEvaluationDrawer(row)">查看评价</el-button>
             <el-button link type="danger" @click="handleDeleteCourse(row.id, row.courseName)">删除</el-button>
           </template>
         </el-table-column>
@@ -90,6 +91,48 @@
         </div>
       </el-card>
     </el-drawer>
+
+    <el-drawer
+      v-model="evaluationDrawerVisible"
+      title="课程评价与反馈"
+      direction="rtl"
+      size="52%"
+      :destroy-on-close="false"
+      class="chapter-drawer"
+    >
+      <div class="drawer-head">
+        <div class="drawer-title">{{ currentEvaluationCourse?.courseName || '未选择课程' }}</div>
+      </div>
+      <div class="evaluation-stats">
+        <el-card class="glass-card stat-card" shadow="never">
+          <div class="stat-label">平均评分</div>
+          <div class="stat-rate-row">
+            <el-rate :model-value="Number(evaluationStats.averageRating || 0)" disabled allow-half show-score />
+          </div>
+        </el-card>
+        <el-card class="glass-card stat-card" shadow="never">
+          <div class="stat-label">总评价数</div>
+          <div class="stat-value">{{ evaluationStats.totalElements || 0 }}</div>
+        </el-card>
+      </div>
+
+      <el-card class="glass-card drawer-card" shadow="never">
+        <template #header>
+          <div class="list-header">学生评价详情</div>
+        </template>
+        <div v-if="evaluationLoading" class="empty-state">正在加载评价...</div>
+        <div v-else-if="evaluations.length === 0" class="empty-state">暂无评价记录</div>
+        <div v-else class="evaluation-list">
+          <div v-for="item in evaluations" :key="item.id" class="evaluation-item">
+            <div class="evaluation-top">
+              <el-rate :model-value="Number(item.rating || 0)" disabled />
+              <div class="evaluation-time">{{ formatDateTime(item.createTime) }}</div>
+            </div>
+            <div class="evaluation-comment">{{ item.comment || '该用户未填写评语' }}</div>
+          </div>
+        </div>
+      </el-card>
+    </el-drawer>
   </div>
 </template>
 
@@ -98,6 +141,7 @@ import { ref, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCourses, createCourse, deleteCourse } from '@/api/course';
 import { getChapters, addChapter, deleteChapter } from '@/api/chapter';
+import { getEvaluations, getEvaluationStats } from '@/api/evaluation';
 
 const courses = ref([]);
 const isLoading = ref(true);
@@ -108,6 +152,14 @@ const chapterLoading = ref(false);
 const chapterSubmitting = ref(false);
 const currentCourse = ref(null);
 const chapters = ref([]);
+const evaluationDrawerVisible = ref(false);
+const evaluationLoading = ref(false);
+const currentEvaluationCourse = ref(null);
+const evaluations = ref([]);
+const evaluationStats = ref({
+  totalElements: 0,
+  averageRating: 0,
+});
 
 const chapterForm = ref({
   title: '',
@@ -206,6 +258,33 @@ async function openChapterDrawer(course) {
   await loadChapters(course.id);
 }
 
+async function openEvaluationDrawer(course) {
+  currentEvaluationCourse.value = course;
+  evaluationDrawerVisible.value = true;
+  await loadEvaluations(course.id);
+}
+
+async function loadEvaluations(courseId) {
+  evaluationLoading.value = true;
+  try {
+    const [stats, list] = await Promise.all([
+      getEvaluationStats(courseId),
+      getEvaluations(courseId),
+    ]);
+    evaluationStats.value = {
+      totalElements: Number(stats?.totalElements || 0),
+      averageRating: Number(stats?.averageRating || 0),
+    };
+    evaluations.value = Array.isArray(list) ? list : [];
+  } catch (e) {
+    evaluationStats.value = { totalElements: 0, averageRating: 0 };
+    evaluations.value = [];
+    ElMessage.error(e.message || '加载课程评价失败');
+  } finally {
+    evaluationLoading.value = false;
+  }
+}
+
 async function handleAddChapter() {
   if (!currentCourse.value?.id) return;
   if (!chapterForm.value.title?.trim()) {
@@ -253,6 +332,13 @@ async function handleDeleteChapter(chapter) {
 onMounted(() => {
   fetchCourses();
 });
+
+function formatDateTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString();
+}
 </script>
 
 <style scoped>
@@ -291,6 +377,28 @@ onMounted(() => {
 .drawer-card {
   margin-bottom: 14px;
 }
+.evaluation-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  padding: 14px;
+}
+.stat-label {
+  color: #64748B;
+  font-size: 13px;
+}
+.stat-value {
+  margin-top: 8px;
+  font-size: 26px;
+  color: #0F172A;
+  font-weight: 700;
+}
+.stat-rate-row {
+  margin-top: 8px;
+}
 .list-header {
   color: #1E293B;
   font-weight: 600;
@@ -319,6 +427,32 @@ onMounted(() => {
 .chapter-item-content {
   margin-top: 6px;
   color: #64748B;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.evaluation-list {
+  display: grid;
+  gap: 10px;
+}
+.evaluation-item {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.evaluation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.evaluation-time {
+  font-size: 12px;
+  color: #64748B;
+}
+.evaluation-comment {
+  margin-top: 8px;
+  color: #334155;
+  line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
 }

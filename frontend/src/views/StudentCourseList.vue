@@ -35,6 +35,12 @@
       size="62%"
       class="learning-drawer"
     >
+      <div class="drawer-tools">
+        <el-button type="warning" plain @click="openEvaluationDialog">
+          <el-icon><StarFilled /></el-icon>
+          评价本课程
+        </el-button>
+      </div>
       <div v-if="chapterLoading" class="drawer-empty">正在加载课时内容...</div>
       <div v-else-if="activeChapters.length === 0" class="drawer-empty">当前课程暂未发布课时</div>
       <div v-else class="chapter-grid">
@@ -59,15 +65,36 @@
         </div>
       </div>
     </el-drawer>
+
+    <el-dialog v-model="evaluationDialogVisible" title="课程评价" width="520px">
+      <el-form label-width="80px">
+        <el-form-item label="星级评分">
+          <el-rate v-model="evaluationForm.rating" show-text />
+        </el-form-item>
+        <el-form-item label="课程评语">
+          <el-input
+            v-model="evaluationForm.comment"
+            type="textarea"
+            :rows="4"
+            placeholder="说说你对这门课的看法吧..."
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="evaluationDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submittingEvaluation" @click="submitCourseEvaluation">提交评价</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Select } from '@element-plus/icons-vue';
+import { Select, StarFilled } from '@element-plus/icons-vue';
 import { getCourses } from '@/api/course';
 import { getChapters, completeChapter, getCourseProgress } from '@/api/chapter';
+import { submitEvaluation } from '@/api/evaluation';
 
 const courses = ref([]);
 const learningDrawerVisible = ref(false);
@@ -76,6 +103,12 @@ const activeCourse = ref(null);
 const activeChapters = ref([]);
 const completingChapterId = ref(null);
 const completedChapterIds = ref(new Set());
+const evaluationDialogVisible = ref(false);
+const submittingEvaluation = ref(false);
+const evaluationForm = ref({
+  rating: 5,
+  comment: '',
+});
 
 function progressDefaults() {
   return { total: 0, completed: 0, percentage: 0 };
@@ -156,6 +189,39 @@ async function handleCompleteChapter(chapter) {
     completingChapterId.value = null;
   }
 }
+
+function openEvaluationDialog() {
+  if (!activeCourse.value?.id) {
+    ElMessage.warning('请先选择课程');
+    return;
+  }
+  evaluationForm.value = {
+    rating: 5,
+    comment: '',
+  };
+  evaluationDialogVisible.value = true;
+}
+
+async function submitCourseEvaluation() {
+  if (!activeCourse.value?.id) return;
+  if (!evaluationForm.value.rating) {
+    ElMessage.warning('请先完成星级评分');
+    return;
+  }
+  submittingEvaluation.value = true;
+  try {
+    await submitEvaluation(activeCourse.value.id, {
+      rating: evaluationForm.value.rating,
+      comment: evaluationForm.value.comment?.trim() || '',
+    });
+    ElMessage.success('感谢您的评价');
+    evaluationDialogVisible.value = false;
+  } catch (e) {
+    ElMessage.error(e.message || '提交评价失败');
+  } finally {
+    submittingEvaluation.value = false;
+  }
+}
 </script>
 
 <style>
@@ -174,6 +240,9 @@ async function handleCompleteChapter(chapter) {
 .progress-text { margin-top: 8px; color: #64748B; font-size: 12px; }
 .card-actions { margin-top: 4px; }
 .learning-drawer :deep(.el-drawer__body) { background: rgba(248, 250, 252, 0.72); }
+.drawer-tools {
+  margin-bottom: 12px;
+}
 .drawer-empty { color: #64748B; padding: 12px 4px; }
 .chapter-grid { display: grid; gap: 12px; }
 .chapter-card {
