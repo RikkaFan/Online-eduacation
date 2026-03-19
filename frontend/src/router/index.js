@@ -71,14 +71,14 @@ const routes = [
   {
     path: '/teacher',
     component: TeacherView,
-    meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] },
+    meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] },
     children: [
       { path: '', redirect: 'dashboard' },
-      { path: 'dashboard', name: 'TeacherDashboard', component: TeacherDashboard, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: 'courses', name: 'CourseManagement', component: CourseManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
+      { path: 'dashboard', name: 'TeacherDashboard', component: TeacherDashboard, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
+      { path: 'courses', name: 'CourseManagement', component: CourseManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
+      { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
+      { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
+      { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
     ],
   },
   {
@@ -86,7 +86,8 @@ const routes = [
     component: AdminView,
     meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] },
     children: [
-      { path: '', redirect: 'users' },
+      { path: '', redirect: 'dashboard' },
+      { path: 'dashboard', name: 'AdminDashboard', component: Dashboard, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
       { path: 'users', name: 'AdminUsers', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
       { path: 'logs', component: () => import('../views/AdminLogManagement.vue'), meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
     ],
@@ -118,8 +119,11 @@ router.beforeEach((to, from) => {
     if (normalized.includes('ROLE_STUDENT')) {
       return { path: '/student/dashboard' };
     }
-    if (normalized.includes('ROLE_TEACHER') || normalized.includes('ROLE_ADMIN')) {
+    if (normalized.includes('ROLE_TEACHER')) {
       return { path: '/teacher/dashboard' };
+    }
+    if (normalized.includes('ROLE_ADMIN')) {
+      return { path: '/admin/dashboard' };
     }
   }
 
@@ -130,8 +134,11 @@ router.beforeEach((to, from) => {
       if (normalized.includes('ROLE_STUDENT')) {
         return { path: '/student/dashboard' };
       }
-      if (normalized.includes('ROLE_TEACHER') || normalized.includes('ROLE_ADMIN')) {
+      if (normalized.includes('ROLE_TEACHER')) {
         return { path: '/teacher/dashboard' };
+      }
+      if (normalized.includes('ROLE_ADMIN')) {
+        return { path: '/admin/dashboard' };
       }
       return { path: '/dashboard' };
     }

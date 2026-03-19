@@ -5,6 +5,10 @@
         <h2>管理控制台</h2>
       </div>
       <el-menu :default-active="$route.path" router class="apple-menu">
+        <el-menu-item index="/admin/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <span>控制台首页</span>
+        </el-menu-item>
         <el-menu-item index="/admin/users">
           <el-icon><UserFilled /></el-icon>
           <span>用户管理</span>
@@ -43,7 +47,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { UserFilled, Monitor } from '@element-plus/icons-vue';
+import { DataBoard, UserFilled, Monitor } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();

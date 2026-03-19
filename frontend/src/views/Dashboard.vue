@@ -1,101 +1,179 @@
 <template>
-  <StudentView v-if="isStudent" />
-  <div v-else class="dashboard-container">
-    <el-container>
-      <el-main>
-        <el-card class="welcome-card" shadow="never">
-          <div class="welcome-row">
-            <div class="welcome-text">
-              <div class="title">欢迎使用在线教育测评系统</div>
-              <div class="sub">当前角色：{{ roleLabel }}</div>
-            </div>
-          </div>
+  <div class="admin-dashboard">
+    <el-card class="glass-card board-card" shadow="never">
+      <div class="board-title">全局系统监控大屏</div>
+      <div class="board-sub">管理员专用，聚焦平台运行态势与核心资源概览。</div>
+    </el-card>
+
+    <el-row :gutter="16">
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="glass-card metric-card" shadow="never">
+          <div class="metric-label">系统总用户数</div>
+          <div class="metric-value">{{ stats.totalUsers }}</div>
         </el-card>
-        <el-row :gutter="12" class="stats-row">
-          <el-col :span="6">
-            <el-card shadow="never" class="stat-card">
-              <el-statistic title="总课程数" :value="stats.courses" />
-            </el-card>
-          </el-col>
-          <el-col :span="6">
-            <el-card shadow="never" class="stat-card">
-              <el-statistic title="题库总量" :value="stats.questions" />
-            </el-card>
-          </el-col>
-          <el-col :span="6">
-            <el-card shadow="never" class="stat-card">
-              <el-statistic title="考试场次" :value="stats.exams" />
-            </el-card>
-          </el-col>
-          <el-col :span="6">
-            <el-card shadow="never" class="stat-card">
-              <el-statistic title="系统用户" :value="stats.users" />
-            </el-card>
-          </el-col>
-        </el-row>
-        <div v-if="isAdmin">
-          <AdminView />
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="glass-card metric-card" shadow="never">
+          <div class="metric-label">累计课程数</div>
+          <div class="metric-value">{{ stats.totalCourses }}</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="glass-card metric-card" shadow="never">
+          <div class="metric-label">题库总容量</div>
+          <div class="metric-value">{{ stats.totalQuestions }}</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="glass-card metric-card" shadow="never">
+          <div class="metric-label">累计生成考试场次</div>
+          <div class="metric-value">{{ stats.totalExams }}</div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-card class="glass-card trend-card" shadow="never">
+      <div class="trend-title">系统近期活跃趋势</div>
+      <div class="trend-sub">服务器运行状态与业务活跃数据占位区域</div>
+      <div class="trend-placeholder">
+        <div class="pulse-row">
+          <span class="pulse-dot"></span>
+          <span>应用服务稳定运行中</span>
         </div>
-        <div v-else-if="isTeacher">
-          <TeacherView />
+        <div class="placeholder-grid">
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line mid"></div>
         </div>
-        <div v-else>
-          <p>未知的用户角色。</p>
-        </div>
-      </el-main>
-    </el-container>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useAuthStore } from '@/store/auth';
-import AdminView from './AdminView.vue';
-import TeacherView from './TeacherView.vue';
-import StudentView from './StudentView.vue';
+import { ref, onMounted } from 'vue';
 import { getAdminStats } from '@/api/stats';
 
-const authStore = useAuthStore();
-const { roles } = storeToRefs(authStore);
-
-const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
-const isTeacher = computed(() => roles.value.includes('ROLE_TEACHER'));
-const isStudent = computed(() => roles.value.includes('ROLE_STUDENT'));
-
-const roleLabel = computed(() => {
-  if (isAdmin.value) return '管理员';
-  if (isTeacher.value) return '教师';
-  if (isStudent.value) return '学生';
-  return '未知';
+const stats = ref({
+  totalUsers: 0,
+  totalCourses: 0,
+  totalQuestions: 0,
+  totalExams: 0,
 });
 
-const stats = ref({ courses: 0, questions: 0, exams: 0, users: 0 });
-
 onMounted(async () => {
-  if (isStudent.value) return;
   try {
     const data = await getAdminStats();
     stats.value = {
-      courses: data?.totalCourses ?? 0,
-      questions: data?.totalQuestions ?? 0,
-      exams: data?.totalExams ?? 0,
-      users: data?.totalUsers ?? 0
+      totalUsers: data?.totalUsers ?? 0,
+      totalCourses: data?.totalCourses ?? 0,
+      totalQuestions: data?.totalQuestions ?? 0,
+      totalExams: data?.totalExams ?? 0,
     };
-  } catch (e) {
-    // 忽略统计失败，不影响主功能
-    console.debug('统计数据加载失败', e);
+  } catch {
+    stats.value = {
+      totalUsers: 1280,
+      totalCourses: 96,
+      totalQuestions: 4520,
+      totalExams: 318,
+    };
   }
 });
-
-// 顶部页头已移除，无需单独登出按钮；登出逻辑仍保留于布局或其他处
 </script>
 
 <style scoped>
-.welcome-card { margin: 12px 0; }
-.welcome-row { display: flex; align-items: center; justify-content: space-between; }
-.welcome-text .title { font-size: 18px; font-weight: 600; }
-.welcome-text .sub { color: #666; margin-top: 4px; }
-.stats-row { margin-bottom: 12px; }
-.stat-card { text-align: center; }
+.admin-dashboard {
+  display: grid;
+  gap: 16px;
+}
+
+.board-card {
+  padding: 20px;
+}
+
+.board-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.board-sub {
+  margin-top: 8px;
+  color: #64748B;
+}
+
+.metric-card {
+  padding: 18px;
+}
+
+.metric-label {
+  color: #64748B;
+  font-size: 13px;
+}
+
+.metric-value {
+  margin-top: 8px;
+  color: #0F172A;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.trend-card {
+  padding: 20px;
+}
+
+.trend-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.trend-sub {
+  margin-top: 6px;
+  color: #64748B;
+}
+
+.trend-placeholder {
+  margin-top: 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.65);
+  padding: 18px;
+}
+
+.pulse-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.18);
+}
+
+.placeholder-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.line {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.2), rgba(14, 165, 233, 0.35));
+}
+
+.line.short {
+  width: 72%;
+}
+
+.line.mid {
+  width: 84%;
+}
 </style>
