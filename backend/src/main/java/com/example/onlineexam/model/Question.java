@@ -13,6 +13,8 @@ public class Question {
 
     private Long categoryId;
 
+    private Long courseId;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 

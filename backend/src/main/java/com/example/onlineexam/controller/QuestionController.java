@@ -3,9 +3,10 @@ package com.example.onlineexam.controller;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.read.listener.PageReadListener;
 import com.example.onlineexam.annotation.LogAction;
+import com.example.onlineexam.model.Course;
 import com.example.onlineexam.model.Question;
 import com.example.onlineexam.payload.request.QuestionExcelDTO;
-import com.example.onlineexam.repository.QuestionCategoryRepository;
+import com.example.onlineexam.repository.CourseRepository;
 import com.example.onlineexam.repository.QuestionRepository;
 import com.example.onlineexam.service.QuestionService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,7 +37,7 @@ public class QuestionController {
     private QuestionRepository questionRepository;
 
     @Autowired
-    private QuestionCategoryRepository questionCategoryRepository;
+    private CourseRepository courseRepository;
 
     @GetMapping
     public List<Question> getAllQuestions() {
@@ -55,9 +56,17 @@ public class QuestionController {
         return questionService.getQuestionsByCategoryId(categoryId);
     }
 
+    @GetMapping("/course/{courseId}")
+    public List<Question> getQuestionsByCourse(@PathVariable Long courseId) {
+        return questionService.getQuestionsByCourseId(courseId);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public Question createQuestion(@RequestBody Question question) {
+        if (question.getCourseId() == null && question.getCategoryId() != null) {
+            question.setCourseId(question.getCategoryId());
+        }
         return questionService.createQuestion(question);
     }
 
@@ -89,14 +98,13 @@ public class QuestionController {
     @LogAction("批量导入了题库")
     public ResponseEntity<?> importQuestions(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("categoryId") Long categoryId
+            @RequestParam("courseId") Long courseId
     ) {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "上传文件不能为空"));
         }
-        if (!questionCategoryRepository.existsById(categoryId)) {
-            return ResponseEntity.badRequest().body(Map.of("message", "分类不存在: " + categoryId));
-        }
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("课程不存在: " + courseId));
 
         List<Question> toSave = new ArrayList<>();
         try {
@@ -106,7 +114,8 @@ public class QuestionController {
                         continue;
                     }
                     Question question = new Question();
-                    question.setCategoryId(categoryId);
+                    question.setCategoryId(course.getId());
+                    question.setCourseId(course.getId());
                     question.setContent(row.getContent().trim());
                     question.setType(resolveType(row.getAnswer()));
                     question.setAnswer(row.getAnswer().trim().toUpperCase());

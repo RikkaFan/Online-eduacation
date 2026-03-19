@@ -1,103 +1,63 @@
 <template>
   <div class="question-management-container">
     <el-row :gutter="20" class="full-height">
-      <!-- 左侧：分类栏 -->
       <el-col :span="6" class="category-panel">
         <div class="panel-header">
-          <h3>题库分类</h3>
-          <el-button type="primary" size="small" @click="showAddCategoryDialog">新增分类</el-button>
+          <h3>课程题库</h3>
         </div>
         <div class="category-list">
-          <el-menu :default-active="activeCategoryId?.toString()" @select="handleCategorySelect" class="el-menu-vertical apple-menu">
-            <el-menu-item 
-              v-for="category in categories" 
-              :key="category.id" 
-              :index="category.id.toString()"
+          <el-menu :default-active="selectedCourseId?.toString()" @select="handleCourseSelect" class="el-menu-vertical apple-menu">
+            <el-menu-item
+              v-for="course in courses"
+              :key="course.id"
+              :index="course.id.toString()"
             >
               <div class="category-item-content">
-                <span class="category-name" :title="category.categoryName || category.name">{{ category.categoryName || category.name }}</span>
-                <el-button 
-                  type="danger" 
-                  icon="Delete" 
-                  circle 
-                  size="small" 
-                  @click.stop="handleDeleteCategory(category.id)"
-                  class="delete-btn"
-                />
+                <span class="category-name" :title="course.courseName || `课程#${course.id}`">{{ course.courseName || `课程#${course.id}` }}</span>
               </div>
             </el-menu-item>
           </el-menu>
-          <div v-if="categories.length === 0" class="empty-tip">
-            暂无分类，请先添加。
+          <div v-if="courses.length === 0" class="empty-tip">
+            暂无课程，请先在课程管理中创建。
           </div>
         </div>
       </el-col>
 
-      <!-- 右侧：题目展示区 -->
       <el-col :span="18" class="question-panel">
         <div class="panel-header">
-          <h3>题目列表 <span v-if="activeCategoryName">- {{ activeCategoryName }}</span></h3>
+          <h3>题目列表 <span v-if="activeCourseName">- {{ activeCourseName }}</span></h3>
           <div class="action-buttons">
             <el-button size="small" @click="handleDownloadTemplate">下载导入模板</el-button>
-            <el-upload
-              accept=".xlsx,.xls"
-              :show-file-list="false"
-              :before-upload="handleImport"
-            >
+            <el-upload accept=".xlsx,.xls" :show-file-list="false" :before-upload="handleImport">
               <el-button type="success" size="small">批量导入题目</el-button>
             </el-upload>
-            <el-button 
-              type="primary" 
-              size="small" 
-              :disabled="!activeCategoryId" 
-              @click="showAddQuestionDialog"
-            >
-              新增题目
-            </el-button>
+            <el-button type="primary" size="small" :disabled="!selectedCourseId" @click="showAddQuestionDialog">新增题目</el-button>
           </div>
         </div>
-        
+
         <el-table :data="questions" v-loading="loadingQuestions" style="width: 100%" border stripe>
           <el-table-column prop="id" label="ID" width="60" align="center" />
           <el-table-column prop="content" label="题干" min-width="250" show-overflow-tooltip />
           <el-table-column prop="type" label="题型" width="100">
-            <template #default="scope">
-              <el-tag :type="getTypeTag(scope.row.type)">{{ getTypeName(scope.row.type) }}</el-tag>
+            <template #default="{ row }">
+              <el-tag :type="getTypeTag(row.type)">{{ getTypeName(row.type) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="options" label="选项" min-width="150" show-overflow-tooltip />
           <el-table-column prop="answer" label="正确答案" width="100" align="center" />
           <el-table-column label="操作" width="100" align="center">
-            <template #default="scope">
-              <el-button link type="danger" @click="handleDeleteQuestion(scope.row.id)">删除</el-button>
+            <template #default="{ row }">
+              <el-button link type="danger" @click="handleDeleteQuestion(row.id)">删除</el-button>
             </template>
           </el-table-column>
           <template #empty>
-            <div v-if="!activeCategoryId">请先在左侧选择一个分类</div>
-            <div v-else>该分类下暂无题目</div>
+            <div v-if="!selectedCourseId">请先在左侧选择课程</div>
+            <div v-else>该课程下暂无题目</div>
           </template>
         </el-table>
       </el-col>
     </el-row>
 
-    <!-- 新增分类弹窗 -->
-    <el-dialog v-model="categoryDialogVisible" title="新增分类" width="30%">
-      <el-form :model="categoryForm" :rules="categoryRules" ref="categoryFormRef" @submit.prevent>
-        <el-form-item label="分类名称" prop="name">
-          <el-input v-model="categoryForm.name" placeholder="请输入分类名称" @keyup.enter="submitCategoryForm" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="categoryDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitCategoryForm" :loading="submittingCategory">
-            确认
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 新增题目弹窗 -->
     <el-dialog v-model="questionDialogVisible" title="新增题目" width="50%">
       <el-form :model="questionForm" :rules="questionRules" ref="questionFormRef" label-width="100px">
         <el-form-item label="题型" prop="type">
@@ -121,9 +81,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="questionDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitQuestionForm" :loading="submittingQuestion">
-            确认
-          </el-button>
+          <el-button type="primary" @click="submitQuestionForm" :loading="submittingQuestion">确认</el-button>
         </span>
       </template>
     </el-dialog>
@@ -133,64 +91,57 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus';
-import { Delete } from '@element-plus/icons-vue';
-import { 
-  getCategories, 
-  createCategory, 
-  deleteCategory, 
-  getQuestionsByCategory, 
-  createQuestion, 
+import { getCourses } from '@/api/course';
+import {
+  getQuestionsByCourse,
+  createQuestion,
   deleteQuestion,
   downloadTemplate,
   importQuestions
 } from '@/api/question';
 
-// ================= 状态数据 =================
-const categories = ref([]);
-const activeCategoryId = ref(null);
+const courses = ref([]);
+const selectedCourseId = ref(null);
 const questions = ref([]);
 const loadingQuestions = ref(false);
 
-const activeCategoryName = computed(() => {
-  if (!activeCategoryId.value) return '';
-  const category = categories.value.find(c => c.id === activeCategoryId.value);
-  return category ? (category.categoryName || category.name || '') : '';
+const activeCourseName = computed(() => {
+  if (!selectedCourseId.value) return '';
+  const course = courses.value.find(c => c.id === selectedCourseId.value);
+  return course ? (course.courseName || '') : '';
 });
 
-// ================= 生命周期 =================
 onMounted(async () => {
-  await loadCategories();
+  await loadCourses();
 });
 
-// ================= 分类管理逻辑 =================
-const loadCategories = async () => {
+const loadCourses = async () => {
   try {
-    categories.value = await getCategories();
-    // 默认选中第一个分类并加载其题目
-    if (categories.value.length > 0 && !activeCategoryId.value) {
-      activeCategoryId.value = categories.value[0].id;
-      await loadQuestions(activeCategoryId.value);
-    } else if (categories.value.length === 0) {
-      activeCategoryId.value = null;
+    const data = await getCourses();
+    courses.value = Array.isArray(data) ? data : [];
+    if (courses.value.length > 0 && !selectedCourseId.value) {
+      selectedCourseId.value = courses.value[0].id;
+      await loadQuestions(selectedCourseId.value);
+    } else if (courses.value.length === 0) {
+      selectedCourseId.value = null;
       questions.value = [];
     }
   } catch (error) {
-    ElMessage.error(error.message || '加载分类失败');
+    ElMessage.error(error.message || '加载课程失败');
   }
 };
 
-const handleCategorySelect = async (index) => {
-  const categoryId = parseInt(index, 10);
-  activeCategoryId.value = categoryId;
-  await loadQuestions(categoryId);
+const handleCourseSelect = async (index) => {
+  const courseId = Number(index);
+  selectedCourseId.value = Number.isNaN(courseId) ? null : courseId;
+  await loadQuestions(selectedCourseId.value);
 };
 
-// ================= 题目管理逻辑 =================
-const loadQuestions = async (categoryId) => {
-  if (!categoryId) return;
+const loadQuestions = async (courseId) => {
+  if (!courseId) return;
   loadingQuestions.value = true;
   try {
-    questions.value = await getQuestionsByCategory(categoryId);
+    questions.value = await getQuestionsByCourse(courseId);
   } catch (error) {
     ElMessage.error(error.message || '加载题目失败');
     questions.value = [];
@@ -201,80 +152,22 @@ const loadQuestions = async (categoryId) => {
 
 const getTypeName = (type) => {
   const map = {
-    'SINGLE_CHOICE': '单选题',
-    'MULTIPLE_CHOICE': '多选题',
-    'TRUE_FALSE': '判断题'
+    SINGLE_CHOICE: '单选题',
+    MULTIPLE_CHOICE: '多选题',
+    TRUE_FALSE: '判断题'
   };
   return map[type] || type;
 };
 
 const getTypeTag = (type) => {
   const map = {
-    'SINGLE_CHOICE': '',
-    'MULTIPLE_CHOICE': 'success',
-    'TRUE_FALSE': 'warning'
+    SINGLE_CHOICE: '',
+    MULTIPLE_CHOICE: 'success',
+    TRUE_FALSE: 'warning'
   };
   return map[type] || 'info';
 };
 
-// ================= 弹窗与表单：新增分类 =================
-const categoryDialogVisible = ref(false);
-const submittingCategory = ref(false);
-const categoryFormRef = ref(null);
-const categoryForm = ref({ name: '' });
-const categoryRules = {
-  name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }]
-};
-
-const showAddCategoryDialog = () => {
-  categoryForm.value = { name: '' };
-  categoryDialogVisible.value = true;
-};
-
-const submitCategoryForm = async () => {
-  if (!categoryFormRef.value) return;
-  await categoryFormRef.value.validate(async (valid) => {
-    if (valid) {
-      submittingCategory.value = true;
-      try {
-        await createCategory(categoryForm.value);
-        ElMessage.success('分类创建成功');
-        categoryDialogVisible.value = false;
-        await loadCategories(); // 重新加载分类列表
-      } catch (error) {
-        ElMessage.error(error.message || '创建分类失败');
-      } finally {
-        submittingCategory.value = false;
-      }
-    }
-  });
-};
-
-const handleDeleteCategory = async (id) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该分类吗？关联的题目也会一并受到影响。', '警告', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    });
-    
-    await deleteCategory(id);
-    ElMessage.success('分类删除成功');
-    
-    // 如果删除的是当前选中的分类，重置选中状态
-    if (activeCategoryId.value === id) {
-      activeCategoryId.value = null;
-      questions.value = [];
-    }
-    await loadCategories();
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除分类失败');
-    }
-  }
-};
-
-// ================= 弹窗与表单：新增题目 =================
 const questionDialogVisible = ref(false);
 const submittingQuestion = ref(false);
 const questionFormRef = ref(null);
@@ -291,8 +184,8 @@ const questionRules = {
 };
 
 const showAddQuestionDialog = () => {
-  if (!activeCategoryId.value) {
-    ElMessage.warning('请先选择一个分类');
+  if (!selectedCourseId.value) {
+    ElMessage.warning('请先选择一门课程');
     return;
   }
   questionForm.value = {
@@ -312,17 +205,15 @@ const submitQuestionForm = async () => {
       try {
         const payload = {
           ...questionForm.value,
-          categoryId: activeCategoryId.value
+          courseId: selectedCourseId.value
         };
-        // 如果是判断题，不需要 options 字段
         if (payload.type === 'TRUE_FALSE') {
           payload.options = null;
         }
-        
         await createQuestion(payload);
         ElMessage.success('题目创建成功');
         questionDialogVisible.value = false;
-        await loadQuestions(activeCategoryId.value); // 重新加载当前分类的题目列表
+        await loadQuestions(selectedCourseId.value);
       } catch (error) {
         ElMessage.error(error.message || '创建题目失败');
       } finally {
@@ -339,10 +230,9 @@ const handleDeleteQuestion = async (id) => {
       cancelButtonText: '取消',
       type: 'warning',
     });
-    
     await deleteQuestion(id);
     ElMessage.success('题目删除成功');
-    await loadQuestions(activeCategoryId.value);
+    await loadQuestions(selectedCourseId.value);
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除题目失败');
@@ -368,7 +258,7 @@ const handleDownloadTemplate = async () => {
 };
 
 const handleImport = async (file) => {
-  if (!activeCategoryId.value) {
+  if (!selectedCourseId.value) {
     ElMessage.warning('请先选择要把题目导入到哪门课程');
     return false;
   }
@@ -378,9 +268,9 @@ const handleImport = async (file) => {
     background: 'rgba(255, 255, 255, 0.6)',
   });
   try {
-    await importQuestions(activeCategoryId.value, file);
+    await importQuestions(selectedCourseId.value, file);
     ElMessage.success('导入成功');
-    await loadQuestions(activeCategoryId.value);
+    await loadQuestions(selectedCourseId.value);
   } catch (error) {
     ElMessage.error(error.message || '导入失败');
   } finally {

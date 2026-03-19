@@ -26,6 +26,10 @@ public class QuestionService {
         return questionRepository.findByCategoryId(categoryId);
     }
 
+    public List<Question> getQuestionsByCourseId(Long courseId) {
+        return questionRepository.findByCourseId(courseId);
+    }
+
     public Question createQuestion(Question question) {
         return questionRepository.save(question);
     }
@@ -38,6 +42,7 @@ public class QuestionService {
         question.setOptions(questionDetails.getOptions());
         question.setAnswer(questionDetails.getAnswer());
         question.setCategoryId(questionDetails.getCategoryId());
+        question.setCourseId(questionDetails.getCourseId());
 
         return questionRepository.save(question);
     }

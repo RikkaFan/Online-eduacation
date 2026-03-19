@@ -73,6 +73,20 @@ export async function getQuestionsByCategory(categoryId) {
   return response.json();
 }
 
+export async function getQuestionsByCourse(courseId) {
+  const response = await fetch(`${QUESTION_API_URL}/course/${courseId}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`获取课程题库失败: ${response.status} ${errText}`);
+  }
+
+  return response.json();
+}
+
 export async function createQuestion(data) {
   const response = await fetch(QUESTION_API_URL, {
     method: 'POST',
@@ -124,7 +138,7 @@ export async function downloadTemplate() {
 export async function importQuestions(courseId, file) {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('categoryId', courseId);
+  formData.append('courseId', courseId);
 
   const headers = getAuthHeaders();
   delete headers['Content-Type'];

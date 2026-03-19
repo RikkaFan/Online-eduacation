@@ -59,7 +59,7 @@ public class ExamService {
                 selectedQuestions = questionRepository.findAllById(ids);
             }
         } else if (numberOfQuestions > 0) {
-            List<Question> allQuestions = questionRepository.findAll();
+            List<Question> allQuestions = questionRepository.findByCourseId(courseId);
             Collections.shuffle(allQuestions);
             selectedQuestions = allQuestions.subList(0, Math.min(numberOfQuestions, allQuestions.size()));
         }

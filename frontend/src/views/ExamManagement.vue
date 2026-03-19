@@ -130,12 +130,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { getCourses } from '@/api/course';
 import { getExamsByCourse, createExam, deleteExam } from '@/api/exam';
-import { getCategories, getQuestionsByCategory } from '@/api/question';
+import { getQuestionsByCourse } from '@/api/question';
 
 const route = useRoute();
 const router = useRouter();
@@ -208,6 +208,7 @@ async function loadExams() {
 
 function handleCourseChange() {
   loadExams();
+  loadQuestionOptions(selectedCourseId.value);
 }
 
 function openCreateDialog() {
@@ -221,19 +222,17 @@ function openCreateDialog() {
   createDialogVisible.value = true;
 }
 
-async function loadQuestionOptions() {
+async function loadQuestionOptions(courseId) {
+  if (!courseId) {
+    questionOptions.value = [];
+    return;
+  }
   try {
-    const categories = await getCategories();
-    const tasks = (categories || []).map(c => getQuestionsByCategory(c.id).catch(() => []));
-    const chunks = await Promise.all(tasks);
-    const all = chunks.flat();
-    const uniqMap = new Map();
-    all.forEach(q => {
-      if (q && q.id != null) uniqMap.set(q.id, q);
-    });
-    questionOptions.value = Array.from(uniqMap.values());
+    const data = await getQuestionsByCourse(courseId);
+    questionOptions.value = Array.isArray(data) ? data : [];
   } catch (e) {
     ElMessage.error(e.message || '加载题库题目失败');
+    questionOptions.value = [];
   }
 }
 
@@ -287,13 +286,18 @@ onMounted(async () => {
     selectedCourseId.value = courses.value[0].id;
     await loadExams();
   }
-  await loadQuestionOptions();
+  await loadQuestionOptions(selectedCourseId.value);
   if (route.query.create === '1') {
     openCreateDialog();
     const nextQuery = { ...route.query };
     delete nextQuery.create;
     router.replace({ path: route.path, query: nextQuery });
   }
+});
+
+watch(() => createForm.courseId, (val) => {
+  loadQuestionOptions(val);
+  createForm.selectedQuestionIds = [];
 });
 </script>
 
