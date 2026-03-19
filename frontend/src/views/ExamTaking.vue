@@ -2,7 +2,10 @@
   <div class="exam-taking">
     <div class="exam-header">
       <div class="title">{{ exam?.title || '-' }}</div>
-      <div class="countdown">剩余时间：{{ countdownText }}</div>
+      <div class="header-center">
+        <span class="countdown">剩余时间：{{ countdownText }}</span>
+        <el-tag v-if="switchCount > 0" type="danger" effect="dark" style="margin-left: 16px;">切屏警告: {{ switchCount }} / 3 次</el-tag>
+      </div>
       <el-button type="danger" size="small" @click="confirmSubmit" :loading="submitting">主动交卷</el-button>
     </div>
 
@@ -33,7 +36,7 @@
 import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getExamDetail, submitExam } from '@/api/examTaking';
+import { getExamDetail, submitExam as submitExamApi } from '@/api/examTaking';
 
 const route = useRoute();
 const router = useRouter();
@@ -43,6 +46,8 @@ const exam = ref(null);
 const examQuestions = ref([]);
 const loading = ref(false);
 const submitting = ref(false);
+const switchCount = ref(0);
+const MAX_SWITCHES = 3;
 
 // 单选/判断：直接以 key 存储；多选：数组，提交时用逗号连接
 const studentAnswers = reactive({});
@@ -67,6 +72,7 @@ onMounted(async () => {
     examQuestions.value = Array.isArray(data.questions) ? data.questions : [];
     setupInitialAnswers(examQuestions.value);
     startCountdown(data.endTime);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   } catch (e) {
     ElMessage.error(e.message || '加载考试详情失败');
   } finally {
@@ -76,7 +82,44 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
+
+function handleVisibilityChange() {
+  if (!document.hidden) return;
+  switchCount.value += 1;
+
+  if (switchCount.value < MAX_SWITCHES) {
+    if (typeof ElMessageBox.warning === 'function') {
+      ElMessageBox.warning(
+        `【在线监考系统警告】您已离开考试页面！这是第 ${switchCount.value} 次警告。离开页面达到 3 次将强制交卷！`,
+        '在线监考警告'
+      );
+    } else {
+      ElMessageBox.alert(
+        `【在线监考系统警告】您已离开考试页面！这是第 ${switchCount.value} 次警告。离开页面达到 3 次将强制交卷！`,
+        '在线监考警告',
+        { type: 'warning' }
+      );
+    }
+    return;
+  }
+
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  ElMessageBox.alert(
+    '您已超过最大切屏次数，系统已判定违规并强制交卷！',
+    '违规交卷',
+    {
+      confirmButtonText: '确定',
+      showClose: false,
+      closeOnClickModal: false,
+      closeOnPressEscape: false,
+      type: 'error',
+    }
+  ).then(() => {
+    submitExam();
+  });
+}
 
 function setupInitialAnswers(list) {
   list.forEach(q => {
@@ -140,6 +183,7 @@ async function autoSubmit() {
 async function doSubmit(isAuto = false) {
   submitting.value = true;
   try {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
     // 组装 payload: List<StudentAnswer> => [{question:{id}, selectedAnswer}]
     const payload = examQuestions.value.map(q => {
       let ans = '';
@@ -150,7 +194,7 @@ async function doSubmit(isAuto = false) {
       }
       return { question: { id: q.id }, selectedAnswer: ans };
     });
-    const result = await submitExam(examId, payload);
+    const result = await submitExamApi(examId, payload);
     const score = result?.score ?? '未知';
     ElMessageBox.alert(`本次得分：${score}`, '提交成功', { type: 'success' });
     setTimeout(() => router.push('/student/exams'), 1000);
@@ -159,6 +203,11 @@ async function doSubmit(isAuto = false) {
   } finally {
     submitting.value = false;
   }
+}
+
+async function submitExam() {
+  if (submitting.value) return;
+  await doSubmit(true);
 }
 </script>
 
@@ -180,6 +229,10 @@ async function doSubmit(isAuto = false) {
   backdrop-filter: saturate(180%) blur(10px);
   box-shadow: 0 10px 30px rgba(0,0,0,.06);
 }
+.header-center {
+  display: flex;
+  align-items: center;
+}
 .title {
   font-size: 18px;
   font-weight: 600;
@@ -192,4 +245,3 @@ async function doSubmit(isAuto = false) {
 .q-type { margin-left: auto; }
 .option-group { display: flex; flex-direction: column; gap: 8px; }
 </style>
-
