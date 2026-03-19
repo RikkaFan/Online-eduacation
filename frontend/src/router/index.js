@@ -17,6 +17,7 @@ import StudentPractice from '@/views/StudentPractice.vue';
 import TeacherView from '@/views/TeacherView.vue';
 import TeacherDashboard from '@/views/TeacherDashboard.vue';
 import AdminUserManagement from '@/views/AdminUserManagement.vue';
+import AdminView from '@/views/AdminView.vue';
 
 const routes = [
   {
@@ -78,7 +79,16 @@ const routes = [
       { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
       { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
       { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER', 'ROLE_ADMIN'] } },
-      { path: '/admin/users', name: 'AdminUsers', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
+    ],
+  },
+  {
+    path: '/admin',
+    component: AdminView,
+    meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] },
+    children: [
+      { path: '', redirect: 'users' },
+      { path: 'users', name: 'AdminUsers', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
+      { path: 'logs', component: () => import('../views/AdminLogManagement.vue'), meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] } },
     ],
   },
   {
