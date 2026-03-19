@@ -32,12 +32,12 @@ onMounted(async () => {
 </script>
 
 <style>
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #C7CDD1; padding-bottom: 16px; margin-bottom: 24px; }
-.dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 400; color: #2D3B45; }
-.lms-course-card { border-radius: 4px; border: 1px solid #C7CDD1; transition: box-shadow 0.2s; cursor: pointer; background: white; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding-bottom: 16px; margin-bottom: 24px; }
+.dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 400; color: #1E293B; }
+.lms-course-card { border-radius: 16px; border: 1px solid rgba(226, 232, 240, 0.8); transition: box-shadow 0.2s; cursor: pointer; background: white; }
 .lms-course-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .card-content { padding: 16px; }
-.course-code { margin: 0 0 4px 0; font-size: 12px; color: #556572; font-weight: normal; }
+.course-code { margin: 0 0 4px 0; font-size: 12px; color: #64748B; font-weight: normal; }
 .course-name { margin: 0 0 8px 0; font-size: 16px; font-weight: 700; }
-.course-term { margin: 0; font-size: 12px; color: #556572; }
+.course-term { margin: 0; font-size: 12px; color: #64748B; }
 </style>

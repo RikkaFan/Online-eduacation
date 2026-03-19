@@ -84,3 +84,55 @@ body {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
   border-radius: 20px;
 }
+
+.el-table {
+  background-color: transparent !important;
+  border: none !important;
+  --el-table-border-color: transparent;
+  --el-table-bg-color: transparent;
+  --el-fill-color-lighter: rgba(255, 255, 255, 0.28);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.el-table::before,
+.el-table__inner-wrapper::before {
+  display: none !important;
+}
+
+.el-table th.el-table__cell {
+  background: rgba(255, 255, 255, 0.4) !important;
+  color: #1E293B;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.el-table tr,
+.el-table td.el-table__cell {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+  color: #334155;
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+.el-table__body tr:hover > td.el-table__cell {
+  background: rgba(255, 255, 255, 0.34) !important;
+}
+
+.el-dialog {
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.el-dialog__title {
+  color: #1E293B;
+}

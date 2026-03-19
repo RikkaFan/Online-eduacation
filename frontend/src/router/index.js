@@ -96,7 +96,7 @@ router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const { isAuthenticated, roles } = storeToRefs(authStore);
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const allowedRoles = to.matched.flatMap(record => (record.meta && record.meta.roles) ? record.meta.roles : []);
+  const allowedRoles = Array.isArray(to.meta?.roles) ? to.meta.roles : [];
   const rawRoles = roles.value || [];
   const normalized = rawRoles.map(r => (r && r.startsWith('ROLE_')) ? r : `ROLE_${r}`);
 
