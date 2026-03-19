@@ -1,9 +1,13 @@
 <template>
   <div class="student-exam-list">
-    <div class="page-header">
-      <h2>考试列表</h2>
+    <div class="page-header glass-card">
+      <div class="header-left">
+        <h2>考试列表</h2>
+        <div class="header-sub">查看考试安排、状态与进入入口</div>
+      </div>
+      <el-button round @click="goBackDashboard">返回首页</el-button>
     </div>
-    <el-card shadow="never">
+    <el-card class="glass-card list-card" shadow="never">
       <el-table :data="exams" v-loading="loading" style="width: 100%" empty-text="当前暂无考试">
         <el-table-column prop="title" label="考试名称" min-width="200" />
         <el-table-column label="所属课程" min-width="160">
@@ -25,7 +29,7 @@
         <el-table-column label="操作" width="140" align="center">
           <template #default="{ row }">
             <el-button type="primary" size="small" :disabled="getStatus(row) !== 'ongoing'" @click="enterExam(row.id)">
-              进入考试
+              {{ getStatus(row) === 'finished' ? '已结束' : '进入考试' }}
             </el-button>
           </template>
         </el-table-column>
@@ -39,6 +43,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
+import { getMyScores } from '@/api/score';
 
 const router = useRouter();
 const exams = ref([]);
@@ -47,9 +52,18 @@ const loading = ref(false);
 onMounted(async () => {
   loading.value = true;
   try {
-    exams.value = await getAllExamsByAllCourses();
+    const [allExams, myScores] = await Promise.all([
+      getAllExamsByAllCourses(),
+      getMyScores().catch(() => []),
+    ]);
+    const submittedExamIds = new Set((myScores || []).map(s => s?.exam?.id).filter(Boolean));
+    exams.value = (allExams || []).map(exam => ({
+      ...exam,
+      submitted: submittedExamIds.has(exam.id),
+    }));
   } catch (e) {
     ElMessage.error(e.message || '加载考试失败');
+    exams.value = [];
   } finally {
     loading.value = false;
   }
@@ -63,6 +77,7 @@ function formatDateTime(v) {
 }
 
 function getStatus(exam) {
+  if (exam.submitted) return 'finished';
   const now = Date.now();
   const start = exam.startTime ? new Date(exam.startTime).getTime() : 0;
   const end = exam.endTime ? new Date(exam.endTime).getTime() : 0;
@@ -79,17 +94,34 @@ function statusType(s) {
 function enterExam(id) {
   router.push(`/student/exam/${id}`);
 }
+
+function goBackDashboard() {
+  router.push('/student/dashboard');
+}
 </script>
 
 <style scoped>
 .student-exam-list {
-  padding: 20px;
+  padding: 0;
 }
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.header-left h2 {
+  margin: 0;
+  color: #0F172A;
+  font-size: 22px;
+}
+.header-sub {
+  margin-top: 6px;
+  color: #64748B;
+  font-size: 13px;
+}
+.list-card {
+  padding: 4px 6px;
 }
 </style>
-

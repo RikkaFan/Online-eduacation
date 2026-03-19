@@ -196,8 +196,16 @@ async function doSubmit(isAuto = false) {
     });
     const result = await submitExamApi(examId, payload);
     const score = result?.score ?? '未知';
-    ElMessageBox.alert(`本次得分：${score}`, '提交成功', { type: 'success' });
-    setTimeout(() => router.push('/student/exams'), 1000);
+    if (timer) clearInterval(timer);
+    countdownMs.value = 0;
+    await ElMessageBox.alert(`本次得分：${score}`, '提交成功', {
+      type: 'success',
+      confirmButtonText: '返回考试列表',
+      showClose: false,
+      closeOnClickModal: false,
+      closeOnPressEscape: false,
+    });
+    router.replace('/student/exams');
   } catch (e) {
     ElMessage.error(e.message || '提交失败');
   } finally {
