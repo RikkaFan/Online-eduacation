@@ -1,5 +1,6 @@
 package com.example.onlineexam.controller;
 
+import com.example.onlineexam.annotation.LogAction;
 import com.example.onlineexam.model.Exam;
 import com.example.onlineexam.model.Question;
 import com.example.onlineexam.payload.response.StudentExamDTO;
@@ -42,6 +43,7 @@ public class ExamController {
 
     @PostMapping("/courses/{courseId}/exams")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("发布了新考试")
     public Exam createExam(@PathVariable Long courseId, @RequestBody Exam exam, @RequestParam int numberOfQuestions) {
         return examService.createExam(courseId, exam, numberOfQuestions);
     }
@@ -55,6 +57,7 @@ public class ExamController {
 
     @DeleteMapping("/exams/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("删除了考试")
     public ResponseEntity<Void> deleteExam(@PathVariable Long id) {
         examService.deleteExam(id);
         return ResponseEntity.noContent().build();

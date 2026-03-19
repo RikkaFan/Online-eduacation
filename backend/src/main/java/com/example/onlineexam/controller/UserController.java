@@ -1,5 +1,6 @@
 package com.example.onlineexam.controller;
 
+import com.example.onlineexam.annotation.LogAction;
 import com.example.onlineexam.model.Role;
 import com.example.onlineexam.model.User;
 import com.example.onlineexam.payload.response.MessageResponse;
@@ -109,6 +110,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
+    @LogAction("删除了用户")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Error: User is not found."));

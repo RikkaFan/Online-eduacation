@@ -1,5 +1,6 @@
 package com.example.onlineexam.controller;
 
+import com.example.onlineexam.annotation.LogAction;
 import com.example.onlineexam.model.Course;
 import com.example.onlineexam.service.CourseService;
 import com.example.onlineexam.security.UserDetailsImpl;
@@ -32,6 +33,7 @@ public class CourseController {
 
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("创建了新课程")
     public Course createCourse(@RequestBody Course course, @AuthenticationPrincipal UserDetailsImpl user) {
         if (user != null) {
             System.out.println("====== Extracted Teacher ID from @AuthenticationPrincipal: " + user.getId() + " ======");
@@ -54,6 +56,7 @@ public class CourseController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("删除了课程")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
