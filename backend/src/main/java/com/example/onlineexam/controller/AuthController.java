@@ -2,8 +2,6 @@ package com.example.onlineexam.controller;
 
 import com.example.onlineexam.model.Role;
 import com.example.onlineexam.model.User;
-import com.example.onlineexam.model.Role;
-import com.example.onlineexam.model.User;
 import com.example.onlineexam.payload.request.LoginRequest;
 import com.example.onlineexam.payload.request.SignupRequest;
 import com.example.onlineexam.payload.response.JwtResponse;
@@ -76,6 +74,8 @@ public class AuthController {
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
+        String department = signUpRequest.getDepartment();
+        user.setDepartment(department == null || department.trim().isEmpty() ? "未分配" : department.trim());
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();

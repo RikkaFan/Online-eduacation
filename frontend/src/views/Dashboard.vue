@@ -53,6 +53,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import { getAdminStats } from '@/api/stats';
 
 const stats = ref({
@@ -71,13 +72,14 @@ onMounted(async () => {
       totalQuestions: data?.totalQuestions ?? 0,
       totalExams: data?.totalExams ?? 0,
     };
-  } catch {
+  } catch (e) {
     stats.value = {
-      totalUsers: 1280,
-      totalCourses: 96,
-      totalQuestions: 4520,
-      totalExams: 318,
+      totalUsers: 0,
+      totalCourses: 0,
+      totalQuestions: 0,
+      totalExams: 0,
     };
+    ElMessage.error(e.message || '获取管理端统计失败');
   }
 });
 </script>

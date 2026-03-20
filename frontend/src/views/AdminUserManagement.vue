@@ -14,6 +14,9 @@
       <el-table :data="filteredUsers" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" min-width="180" />
+        <el-table-column prop="department" label="所属部门/班级" min-width="200">
+          <template #default="{ row }">{{ row.department || '暂无' }}</template>
+        </el-table-column>
         <el-table-column prop="email" label="邮箱" min-width="220">
           <template #default="{ row }">{{ row.email || '-' }}</template>
         </el-table-column>
@@ -63,6 +66,9 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱" />
         </el-form-item>
+        <el-form-item label="部门/班级" prop="department">
+          <el-input v-model="form.department" placeholder="请输入所属部门或班级名称（如：计科2201班）" />
+        </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-radio-group v-model="form.role">
             <el-radio label="ROLE_ADMIN">管理员</el-radio>
@@ -98,6 +104,7 @@ const form = reactive({
   username: '',
   password: '',
   email: '',
+  department: '',
   role: 'ROLE_STUDENT',
 });
 
@@ -144,6 +151,7 @@ function openCreateDialog() {
   form.username = '';
   form.password = '';
   form.email = '';
+  form.department = '';
   form.role = 'ROLE_STUDENT';
   dialogVisible.value = true;
 }
@@ -154,6 +162,7 @@ function openEditDialog(row) {
   form.username = row.username || '';
   form.password = '';
   form.email = row.email || '';
+  form.department = row.department || '';
   form.role = (row.roles && row.roles[0]) || 'ROLE_STUDENT';
   dialogVisible.value = true;
 }
@@ -168,6 +177,7 @@ async function submitForm() {
     if (isEdit.value) {
       const payload = {
         email: form.email?.trim() || '',
+        department: form.department?.trim() || '',
         role: form.role,
       };
       if (form.password && form.password.trim()) payload.password = form.password.trim();
@@ -178,6 +188,7 @@ async function submitForm() {
         username: form.username.trim(),
         password: form.password.trim(),
         email: form.email?.trim() || '',
+        department: form.department?.trim() || '',
         role: form.role,
       });
       ElMessage.success('用户创建成功');

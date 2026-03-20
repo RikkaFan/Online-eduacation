@@ -87,6 +87,18 @@ export async function getQuestionsByCourse(courseId) {
   return response.json();
 }
 
+export async function generatePractice(courseId, count = 10) {
+  const response = await fetch(`${QUESTION_API_URL}/practice/generate?courseId=${courseId}&count=${count}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`生成自主练习题失败: ${response.status} ${errText}`);
+  }
+  return response.json();
+}
+
 export async function createQuestion(data) {
   const response = await fetch(QUESTION_API_URL, {
     method: 'POST',

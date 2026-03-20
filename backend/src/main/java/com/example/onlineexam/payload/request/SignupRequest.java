@@ -7,5 +7,6 @@ import java.util.Set;
 public class SignupRequest {
     private String username;
     private String password;
+    private String department;
     private Set<String> role;
 }

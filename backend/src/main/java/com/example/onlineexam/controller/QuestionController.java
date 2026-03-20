@@ -61,6 +61,12 @@ public class QuestionController {
         return questionService.getQuestionsByCourseId(courseId);
     }
 
+    @GetMapping("/practice/generate")
+    @PreAuthorize("hasRole('STUDENT')")
+    public List<Question> generatePractice(@RequestParam Long courseId, @RequestParam(defaultValue = "10") int count) {
+        return questionService.generatePracticeQuestions(courseId, count);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @LogAction("新增了题目")

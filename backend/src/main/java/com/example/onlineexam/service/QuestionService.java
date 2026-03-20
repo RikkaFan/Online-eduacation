@@ -5,6 +5,7 @@ import com.example.onlineexam.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,13 @@ public class QuestionService {
 
     public List<Question> getQuestionsByCourseId(Long courseId) {
         return questionRepository.findByCourseId(courseId);
+    }
+
+    public List<Question> generatePracticeQuestions(Long courseId, int count) {
+        List<Question> allQuestions = questionRepository.findByCourseId(courseId);
+        Collections.shuffle(allQuestions);
+        int size = Math.min(Math.max(count, 1), allQuestions.size());
+        return allQuestions.subList(0, size);
     }
 
     public Question createQuestion(Question question) {

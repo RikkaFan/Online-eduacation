@@ -66,6 +66,8 @@ const routes = [
       { path: 'exams', name: 'StudentExamsAlias', component: StudentExamList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'scores', name: 'StudentScoresAlias', component: StudentScoreHistory, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'practice', name: 'StudentPractice', component: StudentPractice, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'favorites', component: () => import('../views/StudentFavorites.vue'), meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'smart-practice', component: () => import('../views/StudentSmartPractice.vue'), meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
     ],
   },
   {

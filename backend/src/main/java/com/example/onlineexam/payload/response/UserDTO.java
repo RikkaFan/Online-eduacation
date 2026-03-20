@@ -13,5 +13,6 @@ public class UserDTO {
     private Long id;
     private String username;
     private String email;
+    private String department;
     private Set<String> roles;
 }

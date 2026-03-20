@@ -62,14 +62,16 @@ public class UserController {
         if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken."));
         }
-        if (request.getEmail() != null && !request.getEmail().isBlank() && Boolean.TRUE.equals(userRepository.existsByEmail(request.getEmail()))) {
+        String normalizedEmail = request.getEmail() == null ? null : request.getEmail().trim();
+        if (normalizedEmail != null && !normalizedEmail.isEmpty() && Boolean.TRUE.equals(userRepository.existsByEmail(normalizedEmail))) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already taken."));
         }
 
         User user = new User();
         user.setUsername(request.getUsername().trim());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setEmail(request.getEmail() == null ? null : request.getEmail().trim());
+        user.setEmail(normalizedEmail == null || normalizedEmail.isEmpty() ? null : normalizedEmail);
+        user.setDepartment(request.getDepartment() == null || request.getDepartment().trim().isEmpty() ? null : request.getDepartment().trim());
         user.setRoles(Set.of(resolveRole(request.getRole())));
         User saved = userRepository.save(user);
         return ResponseEntity.ok(toDTO(saved));
@@ -95,6 +97,11 @@ public class UserController {
                 return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already taken."));
             }
             user.setEmail(newEmail.isEmpty() ? null : newEmail);
+        }
+
+        if (request.getDepartment() != null) {
+            String newDepartment = request.getDepartment().trim();
+            user.setDepartment(newDepartment.isEmpty() ? null : newDepartment);
         }
 
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
@@ -166,7 +173,7 @@ public class UserController {
 
     private UserDTO toDTO(User user) {
         Set<String> roleNames = user.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
-        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), roleNames);
+        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getDepartment(), roleNames);
     }
 
     @Data
@@ -174,6 +181,7 @@ public class UserController {
         private String username;
         private String password;
         private String email;
+        private String department;
         private String role;
     }
 
@@ -182,6 +190,7 @@ public class UserController {
         private String username;
         private String password;
         private String email;
+        private String department;
         private String role;
     }
 

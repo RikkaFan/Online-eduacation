@@ -21,6 +21,14 @@
           <el-icon><Notebook /></el-icon>
           <span>错题本</span>
         </el-menu-item>
+        <el-menu-item index="/student/favorites">
+          <el-icon><Star /></el-icon>
+          <span>我的收藏</span>
+        </el-menu-item>
+        <el-menu-item index="/student/smart-practice">
+          <el-icon><DocumentChecked /></el-icon>
+          <span>自主刷题</span>
+        </el-menu-item>
       </el-menu>
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
@@ -69,7 +77,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataBoard, EditPen, DataLine, Notebook } from '@element-plus/icons-vue';
+import { DataBoard, EditPen, DataLine, Notebook, Star, DocumentChecked } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();

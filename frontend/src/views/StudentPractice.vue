@@ -25,6 +25,9 @@
           <span class="label">解析：</span>
           <span class="value">{{ item.question?.analysis || item.question?.explanation }}</span>
         </div>
+        <div class="action-row">
+          <el-button type="warning" plain @click="onFavorite(item)">⭐ 收藏本题</el-button>
+        </div>
       </el-card>
     </div>
   </div>
@@ -36,6 +39,7 @@ import { storeToRefs } from 'pinia';
 import { ElMessage } from 'element-plus';
 import { useAuthStore } from '@/store/auth';
 import { getStudentMistakes } from '@/api/examTaking';
+import { toggleFavorite } from '@/api/favorite';
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -66,6 +70,24 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+async function onFavorite(item) {
+  const questionId = item?.question?.id;
+  if (!questionId) {
+    ElMessage.warning('题目信息缺失，无法收藏');
+    return;
+  }
+  try {
+    const data = await toggleFavorite(questionId);
+    if (data?.favorited === false) {
+      ElMessage.success('已从收藏本移除');
+      return;
+    }
+    ElMessage.success('已收藏到题目本');
+  } catch (e) {
+    ElMessage.error(e.message || '收藏失败');
+  }
+}
 </script>
 
 <style scoped>
@@ -128,5 +150,8 @@ onMounted(async () => {
 .right {
   color: #188038;
   font-weight: 600;
+}
+.action-row {
+  margin-top: 12px;
 }
 </style>

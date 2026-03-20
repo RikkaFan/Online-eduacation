@@ -5,6 +5,8 @@ import com.example.onlineexam.model.OperationLog;
 import com.example.onlineexam.repository.OperationLogRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 @Aspect
 @Component
 public class LogAspect {
+    private static final Logger logger = LoggerFactory.getLogger(LogAspect.class);
 
     @Autowired
     private OperationLogRepository operationLogRepository;
@@ -44,13 +47,17 @@ public class LogAspect {
             return;
         }
 
-        OperationLog log = new OperationLog();
-        log.setUsername(resolveUsername());
-        log.setOperation(logAction.value());
-        log.setMethod(resolveHttpMethod());
-        log.setIp(resolveIp());
-        log.setCreateTime(LocalDateTime.now());
-        operationLogRepository.save(log);
+        try {
+            OperationLog log = new OperationLog();
+            log.setUsername(resolveUsername());
+            log.setOperation(logAction.value());
+            log.setMethod(resolveHttpMethod());
+            log.setIp(resolveIp());
+            log.setCreateTime(LocalDateTime.now());
+            operationLogRepository.save(log);
+        } catch (Exception e) {
+            logger.error("写入操作日志失败: {}", e.getMessage(), e);
+        }
     }
 
     private String resolveUsername() {

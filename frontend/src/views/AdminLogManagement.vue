@@ -56,6 +56,10 @@ onMounted(async () => {
   try {
     const data = await getLogs();
     logs.value = Array.isArray(data) ? data : [];
+    if (logs.value.length === 0) {
+      const retryData = await getLogs();
+      logs.value = Array.isArray(retryData) ? retryData : [];
+    }
   } catch (e) {
     ElMessage.error(e.message || '加载日志失败');
     logs.value = [];
