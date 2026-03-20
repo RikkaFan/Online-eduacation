@@ -68,6 +68,34 @@ public class AiGradingService {
         return Math.min(parsed, max);
     }
 
+    public String explainWrongAnswer(String question, String standardAnswer, String studentAnswer) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new RuntimeException("DeepSeek API Key 未配置");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(apiKey.trim());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String systemPrompt = "你是一位极其幽默、循循善诱的资深金牌讲师。你的任务是给做错题的学生讲题。";
+        String userPrompt = "题目是：【" + safe(question) + "】。标准答案是：【" + safe(standardAnswer)
+                + "】。我选了（或填了）：【" + safe(studentAnswer)
+                + "】。请告诉我为什么我错了，正确答案的解题思路是什么？语言尽量通俗易懂，像聊天一样，控制在 300 字以内。";
+
+        Map<String, Object> body = Map.of(
+                "model", "deepseek-chat",
+                "temperature", 0.7,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userPrompt)
+                )
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+        return extractContent(response.getBody());
+    }
+
     private String extractContent(String json) {
         try {
             JsonNode root = objectMapper.readTree(json);

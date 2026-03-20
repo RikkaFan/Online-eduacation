@@ -26,10 +26,17 @@
           <span class="value">{{ item.question?.analysis || item.question?.explanation }}</span>
         </div>
         <div class="action-row">
+          <el-button class="ai-tutor-btn" type="primary" plain @click="onSummonAiTutor(item)">✨ 召唤 AI 私教讲题</el-button>
           <el-button type="warning" plain @click="onFavorite(item)">⭐ 收藏本题</el-button>
         </div>
       </el-card>
     </div>
+
+    <el-dialog v-model="aiDialogVisible" title="💡 AI 专属私教辅导中..." width="620px">
+      <div v-loading="aiLoading" class="ai-dialog-body">
+        <div v-if="!aiLoading" class="ai-chat-bubble">{{ aiReply || 'AI 私教暂时没有给出回复，请稍后重试。' }}</div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -40,12 +47,16 @@ import { ElMessage } from 'element-plus';
 import { useAuthStore } from '@/store/auth';
 import { getStudentMistakes } from '@/api/examTaking';
 import { toggleFavorite } from '@/api/favorite';
+import { summonAiTutor } from '@/api/question';
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
 const loading = ref(false);
 const mistakes = ref([]);
+const aiDialogVisible = ref(false);
+const aiLoading = ref(false);
+const aiReply = ref('');
 
 function typeName(type) {
   if (type === 'SINGLE_CHOICE') return '单选题';
@@ -86,6 +97,32 @@ async function onFavorite(item) {
     ElMessage.success('已收藏到题目本');
   } catch (e) {
     ElMessage.error(e.message || '收藏失败');
+  }
+}
+
+async function onSummonAiTutor(item) {
+  const question = item?.question?.content || '';
+  const standardAnswer = item?.question?.answer || '';
+  const studentAnswer = item?.selectedAnswer || '未作答';
+  if (!question || !standardAnswer) {
+    ElMessage.warning('题目信息不完整，暂时无法召唤 AI 私教');
+    return;
+  }
+  aiDialogVisible.value = true;
+  aiLoading.value = true;
+  aiReply.value = '';
+  try {
+    const result = await summonAiTutor({
+      question,
+      standardAnswer,
+      studentAnswer,
+    });
+    aiReply.value = result?.explanation || result?.message || (typeof result === 'string' ? result : '');
+  } catch (e) {
+    ElMessage.error(e.message || 'AI 私教讲题失败');
+    aiReply.value = '';
+  } finally {
+    aiLoading.value = false;
   }
 }
 </script>
@@ -153,5 +190,24 @@ async function onFavorite(item) {
 }
 .action-row {
   margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ai-tutor-btn {
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.22);
+}
+.ai-dialog-body {
+  min-height: 180px;
+  padding: 8px 2px;
+}
+.ai-chat-bubble {
+  background: rgba(238, 246, 255, 0.92);
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  border-radius: 14px;
+  padding: 14px;
+  color: #1E293B;
+  line-height: 1.8;
+  white-space: pre-wrap;
 }
 </style>

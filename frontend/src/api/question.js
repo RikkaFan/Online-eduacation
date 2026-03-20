@@ -1,6 +1,7 @@
 import { getAuthHeaders, API_BASE } from './request';
 const CATEGORY_API_URL = `${API_BASE}/api/question-categories`;
 const QUESTION_API_URL = `${API_BASE}/api/questions`;
+const AI_TUTOR_API_URL = `${API_BASE}/api/ai/tutor/explain`;
 
 // ================= 分类管理 API =================
 
@@ -171,4 +172,17 @@ export async function importQuestions(courseId, file) {
     return response.json();
   }
   return response.text();
+}
+
+export async function summonAiTutor(data) {
+  const response = await fetch(AI_TUTOR_API_URL, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`召唤 AI 私教失败: ${response.status} ${errText}`);
+  }
+  return response.json();
 }

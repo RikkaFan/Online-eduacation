@@ -4,6 +4,7 @@ import com.example.onlineexam.model.ExamResult;
 import com.example.onlineexam.model.StudentAnswer;
 import com.example.onlineexam.payload.response.ScoreExcelDTO;
 import com.example.onlineexam.security.UserDetailsImpl;
+import com.example.onlineexam.service.AiGradingService;
 import com.example.onlineexam.service.ExamResultService;
 import com.alibaba.excel.EasyExcel;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +29,9 @@ public class ExamResultController {
 
     @Autowired
     private ExamResultService examResultService;
+
+    @Autowired
+    private AiGradingService aiGradingService;
 
     @PostMapping("/exams/{examId}/submit")
     @PreAuthorize("hasRole('STUDENT')")
@@ -108,5 +112,22 @@ public class ExamResultController {
         Integer score = payload.get("score") == null ? null : Integer.valueOf(String.valueOf(payload.get("score")));
         StudentAnswer graded = examResultService.gradeManual(studentAnswerId, score);
         return ResponseEntity.ok(graded);
+    }
+
+    @PostMapping("/ai/tutor/explain")
+    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> explainWrongAnswer(@RequestBody Map<String, Object> payload) {
+        Object questionValue = payload.get("question");
+        Object standardAnswerValue = payload.get("standardAnswer");
+        Object studentAnswerValue = payload.get("studentAnswer");
+        if (questionValue == null || standardAnswerValue == null || studentAnswerValue == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String explanation = aiGradingService.explainWrongAnswer(
+                String.valueOf(questionValue),
+                String.valueOf(standardAnswerValue),
+                String.valueOf(studentAnswerValue)
+        );
+        return ResponseEntity.ok(Map.of("explanation", explanation));
     }
 }
