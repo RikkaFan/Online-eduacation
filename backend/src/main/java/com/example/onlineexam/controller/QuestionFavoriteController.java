@@ -37,7 +37,7 @@ public class QuestionFavoriteController {
                     return Map.<String, Object>of("favorited", false, "questionId", questionId);
                 })
                 .orElseGet(() -> {
-                    Question question = questionRepository.findById(questionId)
+                    Question question = questionRepository.findByIdAndDeletedFalse(questionId)
                             .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
                     QuestionFavorite favorite = new QuestionFavorite();
                     favorite.setUserId(userId);

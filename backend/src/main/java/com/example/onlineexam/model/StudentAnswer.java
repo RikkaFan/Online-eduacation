@@ -24,6 +24,7 @@ public class StudentAnswer {
     private Question question;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String selectedAnswer;
 
     private Integer score;

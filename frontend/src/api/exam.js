@@ -30,6 +30,20 @@ export async function getExamById(id) {
   return response.json();
 }
 
+export async function getExamQuestions(id) {
+  const response = await fetch(`${EXAM_API_URL}/${id}/questions`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`获取试卷题目详情失败: ${response.status} ${errText}`);
+  }
+
+  return response.json();
+}
+
 export async function createExam(courseId, examData, numberOfQuestions) {
   const url = `${COURSE_API_URL}/${courseId}/exams?numberOfQuestions=${encodeURIComponent(numberOfQuestions)}`;
   const response = await fetch(url, {

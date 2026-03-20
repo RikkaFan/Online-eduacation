@@ -18,12 +18,31 @@
             <span>{{ q.content }}</span>
             <el-tag class="q-type" size="small">{{ typeName(q.type) }}</el-tag>
           </div>
-          <el-radio-group v-if="!isMultipleType(q.type)" v-model="q.selectedAnswer" class="options-group">
-            <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-radio>
-          </el-radio-group>
-          <el-checkbox-group v-else v-model="q.selectedAnswerArray" class="options-group">
-            <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-checkbox>
-          </el-checkbox-group>
+          <template v-if="q.type === 'SUBJECTIVE'">
+            <el-input
+              type="textarea"
+              v-model="q.selectedAnswer"
+              :rows="4"
+              placeholder="请输入你的答案..."
+              class="mt-12"
+            ></el-input>
+          </template>
+          <template v-else-if="q.type === 'JUDGE'">
+            <el-radio-group v-model="q.selectedAnswer" class="options-group">
+              <el-radio label="T">正确 (True)</el-radio>
+              <el-radio label="F">错误 (False)</el-radio>
+            </el-radio-group>
+          </template>
+          <template v-else-if="isMultipleType(q.type)">
+            <el-checkbox-group v-model="q.selectedAnswerArray" class="options-group">
+              <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-checkbox>
+            </el-checkbox-group>
+          </template>
+          <template v-else>
+            <el-radio-group v-model="q.selectedAnswer" class="options-group">
+              <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-radio>
+            </el-radio-group>
+          </template>
         </div>
       </div>
     </el-card>
@@ -163,6 +182,9 @@ function handleUnload(e) {
 }
 
 function typeName(t) {
+  const normalized = String(t || '').toUpperCase();
+  if (normalized === 'SUBJECTIVE') return '主观题';
+  if (normalized === 'JUDGE') return '判断题';
   return isMultipleType(t) ? '多选题' : '单选题';
 }
 

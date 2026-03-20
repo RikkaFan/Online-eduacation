@@ -52,17 +52,17 @@ public class ExamService {
 
         List<Question> selectedQuestions = new ArrayList<>();
         if (questionIds != null && !questionIds.isEmpty()) {
-            selectedQuestions = questionRepository.findAllById(questionIds);
+            selectedQuestions = questionRepository.findAllByIdInAndDeletedFalse(questionIds);
         } else if (exam.getQuestions() != null && !exam.getQuestions().isEmpty()) {
             Set<Long> ids = exam.getQuestions().stream()
                     .map(Question::getId)
                     .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!ids.isEmpty()) {
-                selectedQuestions = questionRepository.findAllById(ids);
+                selectedQuestions = questionRepository.findAllByIdInAndDeletedFalse(ids);
             }
         } else if (hasTypedRule(exam)) {
-            List<Question> allQuestions = questionRepository.findByCourseId(courseId);
+            List<Question> allQuestions = questionRepository.findByCourseIdAndDeletedFalse(courseId);
             List<Question> singleQuestions = allQuestions.stream().filter(q -> "SINGLE".equals(normalizeType(q.getType()))).collect(Collectors.toList());
             List<Question> multipleQuestions = allQuestions.stream().filter(q -> "MULTIPLE".equals(normalizeType(q.getType()))).collect(Collectors.toList());
             List<Question> judgeQuestions = allQuestions.stream().filter(q -> "JUDGE".equals(normalizeType(q.getType()))).collect(Collectors.toList());
@@ -73,7 +73,7 @@ public class ExamService {
             selectedQuestions.addAll(pickQuestions(judgeQuestions, valueOrZero(exam.getJudgeCount()), "判断题"));
             selectedQuestions.addAll(pickQuestions(subjectiveQuestions, valueOrZero(exam.getSubjectiveCount()), "主观题"));
         } else if (numberOfQuestions > 0) {
-            List<Question> allQuestions = questionRepository.findByCourseId(courseId);
+            List<Question> allQuestions = questionRepository.findByCourseIdAndDeletedFalse(courseId);
             Collections.shuffle(allQuestions);
             selectedQuestions = allQuestions.subList(0, Math.min(numberOfQuestions, allQuestions.size()));
         }

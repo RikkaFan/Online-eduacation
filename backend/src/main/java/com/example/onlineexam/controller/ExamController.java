@@ -46,6 +46,14 @@ public class ExamController {
         return ResponseEntity.ok(exam);
     }
 
+    @GetMapping("/exams/{id}/questions")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public List<Question> getExamQuestions(@PathVariable Long id) {
+        Exam exam = examService.getExamById(id)
+                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        return exam.getQuestions();
+    }
+
     @PostMapping("/courses/{courseId}/exams")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @LogAction("发布了新考试")

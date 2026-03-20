@@ -42,8 +42,9 @@
             {{ formatDateTime(row.endTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="140">
+        <el-table-column label="操作" width="220">
           <template #default="{ row }">
+            <el-button size="small" type="info" plain @click="openPreview(row)">🔍 预览试卷</el-button>
             <el-popconfirm
               title="确定删除该考试？"
               confirm-button-text="删除"
@@ -94,62 +95,107 @@
         </el-form-item>
         <el-form-item label="组卷策略">
           <el-radio-group v-model="createForm.generateMode">
-            <el-radio-button label="random">🎲 系统随机抽题 (防作弊)</el-radio-button>
+            <el-radio-button label="random">🎲 系统随机抽题</el-radio-button>
             <el-radio-button label="manual">✍️ 手动勾选题目</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <div class="smart-rule-box">
           <div class="smart-rule-title">智能组卷规则配置</div>
-          <div v-if="createForm.generateMode === 'random'" class="matrix-wrap">
-            <el-row class="matrix-header" :gutter="12">
-              <el-col :span="8">题型</el-col>
-              <el-col :span="8">抽取数量</el-col>
-              <el-col :span="8">每题分值</el-col>
+          <div v-if="createForm.generateMode === 'random'" class="config-matrix" style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px;">
+            <el-row :gutter="10" style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #606266;">
+              <el-col :span="4">题型</el-col>
+              <el-col :span="6">抽取数量</el-col>
+              <el-col :span="6">每题分值</el-col>
+              <el-col :span="8">题型总分</el-col>
             </el-row>
-            <el-row class="matrix-row" :gutter="12">
-              <el-col :span="8">单选题</el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.singleCount" :min="0" :max="200" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.singleScore" :min="0" :max="100" /></el-col>
+            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
+              <el-col :span="4" style="font-weight: 600;">单选题</el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.singleCount" :min="0" style="width: 100%" @change="calcTotal('single')" controls-position="right" /></el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.singleScore" :min="0" style="width: 100%" @change="calcTotal('single')" controls-position="right" /></el-col>
+              <el-col :span="8"><el-input-number v-model="createForm.singleTotal" :min="0" style="width: 100%" @change="calcReverse('single')" controls-position="right" /></el-col>
             </el-row>
-            <el-row class="matrix-row" :gutter="12">
-              <el-col :span="8">多选题</el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.multipleCount" :min="0" :max="200" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.multipleScore" :min="0" :max="100" /></el-col>
+            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
+              <el-col :span="4" style="font-weight: 600;">多选题</el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.multipleCount" :min="0" style="width: 100%" @change="calcTotal('multiple')" controls-position="right" /></el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.multipleScore" :min="0" style="width: 100%" @change="calcTotal('multiple')" controls-position="right" /></el-col>
+              <el-col :span="8"><el-input-number v-model="createForm.multipleTotal" :min="0" style="width: 100%" @change="calcReverse('multiple')" controls-position="right" /></el-col>
             </el-row>
-            <el-row class="matrix-row" :gutter="12">
-              <el-col :span="8">判断题</el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.judgeCount" :min="0" :max="200" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.judgeScore" :min="0" :max="100" /></el-col>
+            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
+              <el-col :span="4" style="font-weight: 600;">判断题</el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.judgeCount" :min="0" style="width: 100%" @change="calcTotal('judge')" controls-position="right" /></el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.judgeScore" :min="0" style="width: 100%" @change="calcTotal('judge')" controls-position="right" /></el-col>
+              <el-col :span="8"><el-input-number v-model="createForm.judgeTotal" :min="0" style="width: 100%" @change="calcReverse('judge')" controls-position="right" /></el-col>
             </el-row>
-            <el-row class="matrix-row" :gutter="12">
-              <el-col :span="8">主观题</el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.subjectiveCount" :min="0" :max="200" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.subjectiveScore" :min="0" :max="100" /></el-col>
+            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
+              <el-col :span="4" style="font-weight: 600;">主观题</el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.subjectiveCount" :min="0" style="width: 100%" @change="calcTotal('subjective')" controls-position="right" /></el-col>
+              <el-col :span="6"><el-input-number v-model="createForm.subjectiveScore" :min="0" style="width: 100%" @change="calcTotal('subjective')" controls-position="right" /></el-col>
+              <el-col :span="8"><el-input-number v-model="createForm.subjectiveTotal" :min="0" style="width: 100%" @change="calcReverse('subjective')" controls-position="right" /></el-col>
             </el-row>
             <div class="total-preview">当前试卷总分：{{ totalScore }} 分</div>
             <p class="rule-tip">
               系统将自动按题型规则抽题并组卷，确保每份试卷结构一致且题目组合可随机变化。
             </p>
           </div>
-          <el-form-item v-else label="选择客观题" class="rule-item">
-            <div class="count-config">
-              <el-select
-                v-model="createForm.questionIds"
-                multiple
-                collapse-tags
-                collapse-tags-tooltip
-                placeholder="请从该课程题库中手动勾选题目"
-                style="width: 100%;"
-              >
-                <el-option
-                  v-for="q in availableQuestions"
-                  :key="q.id"
-                  :label="q.content"
-                  :value="q.id"
-                />
-              </el-select>
+          <div v-else>
+            <div v-if="singleQs.length > 0" style="margin-bottom: 20px;">
+              <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">单选题每题分值</div>
+                  <el-input-number v-model="createForm.singleScore" :min="0" style="width: 100%" controls-position="right" />
+                </div>
+                <div style="flex: 3;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">勾选题目 (已选 {{ manualSingleIds.length }} 题)</div>
+                  <el-select v-model="manualSingleIds" multiple collapse-tags placeholder="请选择单选题" style="width: 100%">
+                    <el-option v-for="q in singleQs" :key="q.id" :label="q.content" :value="q.id" />
+                  </el-select>
+                </div>
+              </div>
             </div>
-          </el-form-item>
+            <div v-if="multipleQs.length > 0" style="margin-bottom: 20px;">
+              <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">多选题每题分值</div>
+                  <el-input-number v-model="createForm.multipleScore" :min="0" style="width: 100%" controls-position="right" />
+                </div>
+                <div style="flex: 3;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">勾选题目 (已选 {{ manualMultipleIds.length }} 题)</div>
+                  <el-select v-model="manualMultipleIds" multiple collapse-tags placeholder="请选择多选题" style="width: 100%">
+                    <el-option v-for="q in multipleQs" :key="q.id" :label="q.content" :value="q.id" />
+                  </el-select>
+                </div>
+              </div>
+            </div>
+            <div v-if="judgeQs.length > 0" style="margin-bottom: 20px;">
+              <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">判断题每题分值</div>
+                  <el-input-number v-model="createForm.judgeScore" :min="0" style="width: 100%" controls-position="right" />
+                </div>
+                <div style="flex: 3;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">勾选题目 (已选 {{ manualJudgeIds.length }} 题)</div>
+                  <el-select v-model="manualJudgeIds" multiple collapse-tags placeholder="请选择判断题" style="width: 100%">
+                    <el-option v-for="q in judgeQs" :key="q.id" :label="q.content" :value="q.id" />
+                  </el-select>
+                </div>
+              </div>
+            </div>
+            <div v-if="subjectiveQs.length > 0" style="margin-bottom: 20px;">
+              <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">主观题每题分值</div>
+                  <el-input-number v-model="createForm.subjectiveScore" :min="0" style="width: 100%" controls-position="right" />
+                </div>
+                <div style="flex: 3;">
+                  <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">勾选题目 (已选 {{ manualSubjectiveIds.length }} 题)</div>
+                  <el-select v-model="manualSubjectiveIds" multiple collapse-tags placeholder="请选择主观题" style="width: 100%">
+                    <el-option v-for="q in subjectiveQs" :key="q.id" :label="q.content" :value="q.id" />
+                  </el-select>
+                </div>
+              </div>
+            </div>
+            <div class="total-preview">当前试卷总分：{{ totalScore }} 分</div>
+          </div>
         </div>
       </el-form>
       <template #footer>
@@ -157,6 +203,52 @@
         <el-button type="primary" :loading="submitting" @click="submitCreate">确认发布</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="previewVisible" title="📝 试卷全真预览" size="50%">
+      <div v-loading="previewLoading" class="preview-container">
+        <div v-if="previewQuestions.length === 0" class="preview-empty">暂无题目数据</div>
+        <div v-else>
+          <div v-for="(q, idx) in previewQuestions" :key="q.id || idx" class="glass-card preview-question">
+            <div class="preview-title">
+              <span class="preview-no">{{ idx + 1 }}.</span>
+              <span>{{ q.content }}</span>
+              <el-tag size="small" class="preview-tag">{{ previewTypeName(q.type) }}</el-tag>
+            </div>
+
+            <template v-if="q.type === 'SUBJECTIVE'">
+              <el-input
+                type="textarea"
+                :rows="4"
+                disabled
+                placeholder="主观题作答区（预览）"
+                class="mt-12"
+              ></el-input>
+            </template>
+            <template v-else-if="q.type === 'JUDGE'">
+              <el-radio-group class="options-group" disabled>
+                <el-radio label="T">正确 (True)</el-radio>
+                <el-radio label="F">错误 (False)</el-radio>
+              </el-radio-group>
+            </template>
+            <template v-else-if="isMultipleType(q.type)">
+              <el-checkbox-group class="options-group" disabled>
+                <el-checkbox v-for="opt in parsePreviewOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-checkbox>
+              </el-checkbox-group>
+            </template>
+            <template v-else>
+              <el-radio-group class="options-group" disabled>
+                <el-radio v-for="opt in parsePreviewOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-radio>
+              </el-radio-group>
+            </template>
+
+            <div class="answer-tip">
+              <div>💡 标准答案：{{ q.answer || '暂无' }}</div>
+              <div v-if="q.type === 'SUBJECTIVE'">💡 解析：{{ q.analysis || '暂无' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -165,7 +257,7 @@ import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { getCourses } from '@/api/course';
-import { getExamsByCourse, createExam, deleteExam } from '@/api/exam';
+import { getExamsByCourse, createExam, deleteExam, getExamQuestions } from '@/api/exam';
 import { getQuestionsByCourse } from '@/api/question';
 
 const route = useRoute();
@@ -179,6 +271,9 @@ const availableQuestions = ref([]);
 const createDialogVisible = ref(false);
 const submitting = ref(false);
 const formRef = ref(null);
+const previewVisible = ref(false);
+const previewLoading = ref(false);
+const previewQuestions = ref([]);
 
 const createForm = reactive({
   courseId: null,
@@ -187,21 +282,42 @@ const createForm = reactive({
   endTime: '',
   singleCount: 0,
   singleScore: 0,
+  singleTotal: 0,
   multipleCount: 0,
   multipleScore: 0,
+  multipleTotal: 0,
   judgeCount: 0,
   judgeScore: 0,
+  judgeTotal: 0,
   subjectiveCount: 0,
   subjectiveScore: 0,
+  subjectiveTotal: 0,
   generateMode: 'random',
   questionIds: []
 });
 
+const manualSingleIds = ref([]);
+const manualMultipleIds = ref([]);
+const manualJudgeIds = ref([]);
+const manualSubjectiveIds = ref([]);
+
+const calcTotal = (type) => {
+  createForm[`${type}Total`] = (createForm[`${type}Count`] || 0) * (createForm[`${type}Score`] || 0);
+};
+
+const calcReverse = (type) => {
+  const total = createForm[`${type}Total`] || 0;
+  const count = createForm[`${type}Count`] || 0;
+  if (count > 0) {
+    createForm[`${type}Score`] = Number((total / count).toFixed(1));
+  }
+};
+
 const totalScore = computed(() => (
-  (createForm.singleCount * createForm.singleScore)
-  + (createForm.multipleCount * createForm.multipleScore)
-  + (createForm.judgeCount * createForm.judgeScore)
-  + (createForm.subjectiveCount * createForm.subjectiveScore)
+  ((createForm.generateMode === 'manual' ? manualSingleIds.value.length : createForm.singleCount) * createForm.singleScore)
+  + ((createForm.generateMode === 'manual' ? manualMultipleIds.value.length : createForm.multipleCount) * createForm.multipleScore)
+  + ((createForm.generateMode === 'manual' ? manualJudgeIds.value.length : createForm.judgeCount) * createForm.judgeScore)
+  + ((createForm.generateMode === 'manual' ? manualSubjectiveIds.value.length : createForm.subjectiveCount) * createForm.subjectiveScore)
 ));
 
 const totalQuestionCount = computed(() => (
@@ -210,6 +326,11 @@ const totalQuestionCount = computed(() => (
   + createForm.judgeCount
   + createForm.subjectiveCount
 ));
+
+const singleQs = computed(() => availableQuestions.value.filter(q => !q.type || q.type === 'SINGLE'));
+const multipleQs = computed(() => availableQuestions.value.filter(q => q.type === 'MULTIPLE'));
+const judgeQs = computed(() => availableQuestions.value.filter(q => q.type === 'JUDGE'));
+const subjectiveQs = computed(() => availableQuestions.value.filter(q => q.type === 'SUBJECTIVE'));
 
 const rules = {
   courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
@@ -261,6 +382,33 @@ function handleCourseChange() {
   loadExams();
 }
 
+function isMultipleType(type) {
+  const normalized = String(type || '').toUpperCase();
+  return normalized === 'MULTIPLE' || normalized === 'MULTIPLE_CHOICE';
+}
+
+function previewTypeName(type) {
+  const normalized = String(type || '').toUpperCase();
+  if (normalized === 'SUBJECTIVE') return '主观题';
+  if (normalized === 'JUDGE') return '判断题';
+  return isMultipleType(normalized) ? '多选题' : '单选题';
+}
+
+function parsePreviewOptions(q) {
+  const raw = q.options || '';
+  return raw.split(',').map(s => s.trim()).filter(Boolean).map(chunk => {
+    const idx = chunk.indexOf(':');
+    if (idx > 0) {
+      return { key: chunk.slice(0, idx).trim(), text: chunk.slice(idx + 1).trim() };
+    }
+    const dotIndex = chunk.indexOf('.');
+    if (dotIndex > 0) {
+      return { key: chunk.slice(0, dotIndex).trim(), text: chunk.slice(dotIndex + 1).trim() };
+    }
+    return { key: chunk, text: chunk };
+  });
+}
+
 async function loadAvailableQuestions(courseId) {
   if (!courseId) {
     availableQuestions.value = [];
@@ -282,14 +430,22 @@ function openCreateDialog() {
   createForm.endTime = '';
   createForm.singleCount = 0;
   createForm.singleScore = 0;
+  createForm.singleTotal = 0;
   createForm.multipleCount = 0;
   createForm.multipleScore = 0;
+  createForm.multipleTotal = 0;
   createForm.judgeCount = 0;
   createForm.judgeScore = 0;
+  createForm.judgeTotal = 0;
   createForm.subjectiveCount = 0;
   createForm.subjectiveScore = 0;
+  createForm.subjectiveTotal = 0;
   createForm.generateMode = 'random';
   createForm.questionIds = [];
+  manualSingleIds.value = [];
+  manualMultipleIds.value = [];
+  manualJudgeIds.value = [];
+  manualSubjectiveIds.value = [];
   loadAvailableQuestions(createForm.courseId);
   createDialogVisible.value = true;
 }
@@ -319,12 +475,31 @@ async function submitCreate() {
     };
     let numberOfQuestions = totalQuestionCount.value;
     if (createForm.generateMode === 'manual') {
+      createForm.singleCount = manualSingleIds.value.length;
+      createForm.multipleCount = manualMultipleIds.value.length;
+      createForm.judgeCount = manualJudgeIds.value.length;
+      createForm.subjectiveCount = manualSubjectiveIds.value.length;
+      createForm.questionIds = [
+        ...manualSingleIds.value,
+        ...manualMultipleIds.value,
+        ...manualJudgeIds.value,
+        ...manualSubjectiveIds.value
+      ];
+      createForm.totalScore = (createForm.singleCount * createForm.singleScore)
+        + (createForm.multipleCount * createForm.multipleScore)
+        + (createForm.judgeCount * createForm.judgeScore)
+        + (createForm.subjectiveCount * createForm.subjectiveScore);
+      examPayload.singleCount = createForm.singleCount;
+      examPayload.multipleCount = createForm.multipleCount;
+      examPayload.judgeCount = createForm.judgeCount;
+      examPayload.subjectiveCount = createForm.subjectiveCount;
       if (!createForm.questionIds || createForm.questionIds.length === 0) {
         ElMessage.warning('请至少勾选一道题目');
         submitting.value = false;
         return;
       }
       examPayload.questionIds = [...createForm.questionIds];
+      examPayload.totalScore = createForm.totalScore;
       numberOfQuestions = 0;
     } else if (numberOfQuestions <= 0) {
       ElMessage.warning('请至少配置一道题目的抽取数量');
@@ -352,6 +527,20 @@ async function onDelete(row) {
   }
 }
 
+async function openPreview(row) {
+  previewVisible.value = true;
+  previewLoading.value = true;
+  previewQuestions.value = [];
+  try {
+    const data = await getExamQuestions(row.id);
+    previewQuestions.value = Array.isArray(data) ? data : [];
+  } catch (e) {
+    ElMessage.error(e.message || '加载试卷预览失败');
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   await loadCourses();
   if (!selectedCourseId.value && courses.value.length > 0) {
@@ -368,6 +557,10 @@ onMounted(async () => {
 
 watch(() => createForm.courseId, (value) => {
   createForm.questionIds = [];
+  manualSingleIds.value = [];
+  manualMultipleIds.value = [];
+  manualJudgeIds.value = [];
+  manualSubjectiveIds.value = [];
   loadAvailableQuestions(value);
 });
 
@@ -435,5 +628,39 @@ watch(() => createForm.courseId, (value) => {
   font-size: 12px;
   line-height: 1.6;
   color: #64748b;
+}
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.preview-empty {
+  color: #64748b;
+}
+.preview-question {
+  padding: 14px;
+}
+.preview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preview-no {
+  color: #0a84ff;
+  font-weight: 600;
+}
+.preview-tag {
+  margin-left: auto;
+}
+.answer-tip {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 </style>

@@ -11,13 +11,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,11 +38,21 @@ public class ExamResultController {
 
     @PostMapping("/exams/{examId}/submit")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ExamResult> submitAnswers(@PathVariable Long examId, @RequestBody List<StudentAnswer> answers) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public ResponseEntity<?> submitAnswers(@PathVariable Long examId, @RequestBody List<StudentAnswer> answers) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsImpl userDetails)) {
+            return ResponseEntity.status(401).body(Map.of("message", "登录状态失效，请重新登录后交卷"));
+        }
         Long studentId = userDetails.getId();
-        ExamResult result = examResultService.submitAnswers(examId, studentId, answers);
-        return ResponseEntity.ok(result);
+        try {
+            ExamResult result = examResultService.submitAnswers(examId, studentId, answers);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "提交失败：作答内容过长或数据不符合存储要求"));
+        }
     }
 
     @GetMapping("/exams/{examId}/results")
@@ -89,16 +102,23 @@ public class ExamResultController {
         return examResultService.getPendingGrading();
     }
 
+    @GetMapping("/results/graded")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public List<StudentAnswer> getGradedResults() {
+        return examResultService.getGradedResults();
+    }
+
     @PostMapping("/results/grade/ai")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public ResponseEntity<StudentAnswer> gradeByAi(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Map<String, Integer>> gradeByAi(@RequestBody Map<String, Object> payload) {
         Object answerIdValue = payload.get("studentAnswerId");
         if (answerIdValue == null) {
             return ResponseEntity.badRequest().build();
         }
         Long studentAnswerId = Long.valueOf(String.valueOf(answerIdValue));
         StudentAnswer graded = examResultService.gradeByAi(studentAnswerId);
-        return ResponseEntity.ok(graded);
+        Integer finalScore = graded.getScore() == null ? 0 : graded.getScore();
+        return ResponseEntity.ok(Collections.singletonMap("score", finalScore));
     }
 
     @PostMapping("/results/grade/manual")

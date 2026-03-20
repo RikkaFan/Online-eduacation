@@ -44,7 +44,26 @@
             </template>
           </el-table-column>
           <el-table-column prop="options" label="选项" min-width="150" show-overflow-tooltip />
-          <el-table-column prop="answer" label="正确答案" width="100" align="center" />
+          <el-table-column label="正确答案" min-width="260">
+            <template #default="{ row }">
+              <template v-if="normalizeType(row.type) === 'SUBJECTIVE'">
+                <div class="answer-cell">
+                  <el-tooltip
+                    effect="dark"
+                    placement="top"
+                    :content="row.answer || '暂无答案'"
+                    raw-content
+                  >
+                    <span class="answer-ellipsis">{{ answerPreview(row.answer) }}</span>
+                  </el-tooltip>
+                  <el-button link type="primary" size="small" @click="openAnswerPreview(row)">查看</el-button>
+                </div>
+              </template>
+              <template v-else>
+                <span>{{ row.answer || '-' }}</span>
+              </template>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
               <el-button link type="danger" @click="handleDeleteQuestion(row.id)">删除</el-button>
@@ -102,6 +121,13 @@
           <el-button @click="questionDialogVisible = false">取消</el-button>
           <el-button type="primary" @click="submitQuestionForm" :loading="submittingQuestion">确认</el-button>
         </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="answerPreviewVisible" title="主观题参考答案" width="640px">
+      <div class="answer-preview-content">{{ answerPreviewText || '暂无答案' }}</div>
+      <template #footer>
+        <el-button @click="answerPreviewVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>
@@ -172,6 +198,8 @@ const loadQuestions = async (courseId) => {
 const questionDialogVisible = ref(false);
 const submittingQuestion = ref(false);
 const questionFormRef = ref(null);
+const answerPreviewVisible = ref(false);
+const answerPreviewText = ref('');
 const questionForm = ref({
   type: 'SINGLE',
   content: '',
@@ -221,6 +249,18 @@ const normalizeType = (type) => {
   if (normalized === 'JUDGE' || normalized === 'TRUE_FALSE') return 'JUDGE';
   if (normalized === 'SUBJECTIVE') return 'SUBJECTIVE';
   return 'SINGLE';
+};
+
+const answerPreview = (text) => {
+  const raw = String(text || '').trim();
+  if (!raw) return '暂无答案';
+  if (raw.length <= 28) return raw;
+  return `${raw.slice(0, 28)}...`;
+};
+
+const openAnswerPreview = (row) => {
+  answerPreviewText.value = String(row?.answer || '');
+  answerPreviewVisible.value = true;
 };
 
 const submitQuestionForm = async () => {
@@ -452,6 +492,30 @@ const handleImport = async (file) => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.answer-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.answer-ellipsis {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.answer-preview-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.8;
+  color: #1f2937;
+  max-height: 60vh;
+  overflow: auto;
 }
 
 /* 覆盖el-menu-item的高度，确保按钮对齐 */

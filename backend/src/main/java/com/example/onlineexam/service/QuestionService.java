@@ -4,6 +4,9 @@ import com.example.onlineexam.model.Question;
 import com.example.onlineexam.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,23 +19,23 @@ public class QuestionService {
     private QuestionRepository questionRepository;
 
     public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
+        return questionRepository.findByDeletedFalse();
     }
 
     public Optional<Question> getQuestionById(Long id) {
-        return questionRepository.findById(id);
+        return questionRepository.findByIdAndDeletedFalse(id);
     }
 
     public List<Question> getQuestionsByCategoryId(Long categoryId) {
-        return questionRepository.findByCategoryId(categoryId);
+        return questionRepository.findByCategoryIdAndDeletedFalse(categoryId);
     }
 
     public List<Question> getQuestionsByCourseId(Long courseId) {
-        return questionRepository.findByCourseId(courseId);
+        return questionRepository.findByCourseIdAndDeletedFalse(courseId);
     }
 
     public List<Question> generatePracticeQuestions(Long courseId, int count) {
-        List<Question> allQuestions = questionRepository.findByCourseId(courseId);
+        List<Question> allQuestions = questionRepository.findByCourseIdAndDeletedFalse(courseId);
         Collections.shuffle(allQuestions);
         int size = Math.min(Math.max(count, 1), allQuestions.size());
         return allQuestions.subList(0, size);
@@ -40,11 +43,12 @@ public class QuestionService {
 
     public Question createQuestion(Question question) {
         question.setType(normalizeType(question.getType()));
+        question.setDeleted(false);
         return questionRepository.save(question);
     }
 
     public Question updateQuestion(Long id, Question questionDetails) {
-        Question question = questionRepository.findById(id)
+        Question question = questionRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
 
         question.setContent(questionDetails.getContent());
@@ -57,8 +61,15 @@ public class QuestionService {
         return questionRepository.save(question);
     }
 
+    @Transactional
     public void deleteQuestion(Long id) {
-        questionRepository.deleteById(id);
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "题目不存在"));
+        if (question.isDeleted()) {
+            return;
+        }
+        question.setDeleted(true);
+        questionRepository.save(question);
     }
 
     private String normalizeType(String type) {

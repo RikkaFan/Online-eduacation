@@ -2,6 +2,8 @@ package com.example.onlineexam.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +21,7 @@ import java.util.regex.Pattern;
 public class AiGradingService {
 
     private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+)");
+    private static final Logger log = LoggerFactory.getLogger(AiGradingService.class);
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -115,10 +118,21 @@ public class AiGradingService {
     }
 
     private int extractScore(String text) {
-        if (text == null) return -1;
+        if (text == null) {
+            log.warn("AI 批改返回为空，默认按 0 分处理");
+            return 0;
+        }
         Matcher matcher = NUMBER_PATTERN.matcher(text);
-        if (!matcher.find()) return -1;
-        return Integer.parseInt(matcher.group(1));
+        if (!matcher.find()) {
+            log.warn("AI 批改未提取到数字分数，原始返回：{}", text);
+            return 0;
+        }
+        try {
+            return Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException ex) {
+            log.warn("AI 批改分数解析失败，原始返回：{}", text);
+            return 0;
+        }
     }
 
     private String safe(String value) {

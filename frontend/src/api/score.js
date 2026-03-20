@@ -86,6 +86,18 @@ export async function getPendingGrading() {
   return res.json();
 }
 
+export async function getGradedResults() {
+  const res = await fetch(`${API}/results/graded`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取已批阅列表失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
 export async function autoGradeWithAI(studentAnswerId) {
   const res = await fetch(`${API}/results/grade/ai`, {
     method: 'POST',

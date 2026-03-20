@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
@@ -70,11 +71,24 @@ public class QuestionController {
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @LogAction("新增了题目")
-    public Question createQuestion(@RequestBody Question question) {
+    public ResponseEntity<?> createQuestion(@RequestBody Question question) {
+        if (question == null || isBlank(question.getContent()) || isBlank(question.getAnswer())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "题干和答案不能为空"));
+        }
+        if (question.getCategoryId() == null && question.getCourseId() != null) {
+            question.setCategoryId(question.getCourseId());
+        }
         if (question.getCourseId() == null && question.getCategoryId() != null) {
             question.setCourseId(question.getCategoryId());
         }
-        return questionService.createQuestion(question);
+        if (question.getCourseId() == null && question.getCategoryId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "courseId 与 categoryId 不能同时为空"));
+        }
+        try {
+            return ResponseEntity.ok(questionService.createQuestion(question));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "题目数据不符合存储要求，请检查题干、答案和选项长度"));
+        }
     }
 
     @GetMapping("/import/template")

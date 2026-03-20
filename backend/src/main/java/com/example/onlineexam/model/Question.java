@@ -18,10 +18,15 @@ public class Question {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String answer;
 
+    @Column(length = 32)
     private String type;
 
+    @Column(columnDefinition = "TEXT")
     private String options;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

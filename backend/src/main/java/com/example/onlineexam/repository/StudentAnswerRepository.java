@@ -46,8 +46,37 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
             """)
     List<StudentAnswer> findPendingSubjectiveAnswers();
 
+    @Query("""
+            select sa
+            from StudentAnswer sa
+            join fetch sa.exam e
+            join fetch sa.student s
+            join fetch sa.question q
+            where q.type = 'SUBJECTIVE'
+              and exists (
+                select 1
+                from StudentAnswer sx
+                join sx.question qx
+                where sx.exam.id = sa.exam.id
+                  and sx.student.id = sa.student.id
+                  and qx.type = 'SUBJECTIVE'
+              )
+              and not exists (
+                select 1
+                from StudentAnswer sy
+                join sy.question qy
+                where sy.exam.id = sa.exam.id
+                  and sy.student.id = sa.student.id
+                  and qy.type = 'SUBJECTIVE'
+                  and sy.score is null
+              )
+            order by sa.id desc
+            """)
+    List<StudentAnswer> findFullyGradedSubjectiveAnswers();
+
     List<StudentAnswer> findByExam_IdAndStudent_Id(Long examId, Long studentId);
 
+    long countByQuestion_Id(Long questionId);
     void deleteByExam_Id(Long examId);
     void deleteByStudent_Id(Long studentId);
 }

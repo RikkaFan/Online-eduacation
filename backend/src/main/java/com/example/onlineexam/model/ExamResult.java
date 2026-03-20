@@ -20,4 +20,6 @@ public class ExamResult {
     private User student;
 
     private double score;
+
+    private String status;
 }

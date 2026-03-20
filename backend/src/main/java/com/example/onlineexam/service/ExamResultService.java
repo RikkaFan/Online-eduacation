@@ -4,12 +4,17 @@ import com.example.onlineexam.model.*;
 import com.example.onlineexam.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ExamResultService {
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_COMPLETED = "COMPLETED";
 
     @Autowired
     private ExamResultRepository examResultRepository;
@@ -29,43 +34,67 @@ public class ExamResultService {
     @Autowired
     private AiGradingService aiGradingService;
 
+    @Transactional
     public ExamResult submitAnswers(Long examId, Long studentId, List<StudentAnswer> answers) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + examId));
         User student = userRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+        List<StudentAnswer> safeAnswers = answers == null ? List.of() : answers;
+        Set<Long> examQuestionIds = exam.getQuestions() == null
+                ? Set.of()
+                : exam.getQuestions().stream()
+                .map(Question::getId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        studentAnswerRepository.findByExam_IdAndStudent_Id(examId, studentId).forEach(existing -> studentAnswerRepository.deleteById(existing.getId()));
 
         int totalScore = 0;
-        for (StudentAnswer answer : answers) {
-            Question question = questionRepository.findById(answer.getQuestion().getId())
-                    .orElseThrow(() -> new RuntimeException("Question not found with id: " + answer.getQuestion().getId()));
+        for (StudentAnswer answer : safeAnswers) {
+            Long questionId = answer == null || answer.getQuestion() == null ? null : answer.getQuestion().getId();
+            if (questionId == null) {
+                throw new IllegalArgumentException("提交失败：存在缺少题目ID的答案");
+            }
+            if (!examQuestionIds.isEmpty() && !examQuestionIds.contains(questionId)) {
+                throw new IllegalArgumentException("提交失败：题目不属于当前试卷，questionId=" + questionId);
+            }
+            Question question = questionRepository.findById(questionId)
+                    .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
             String type = normalizeType(question.getType());
             int maxScore = maxScoreForQuestion(exam, type);
 
-            answer.setQuestion(question);
-            answer.setSelectedAnswer(answer.getSelectedAnswer() == null ? "" : answer.getSelectedAnswer().trim());
+            StudentAnswer persistedAnswer = new StudentAnswer();
+            persistedAnswer.setQuestion(question);
+            persistedAnswer.setSelectedAnswer(answer.getSelectedAnswer() == null ? "" : answer.getSelectedAnswer().trim());
             if ("SUBJECTIVE".equals(type)) {
-                answer.setScore(null);
-                answer.setGraded(false);
+                persistedAnswer.setScore(null);
+                persistedAnswer.setGraded(false);
             } else {
                 String standard = normalizeObjectiveAnswer(question.getAnswer(), type);
-                String studentAnswer = normalizeObjectiveAnswer(answer.getSelectedAnswer(), type);
+                String studentAnswer = normalizeObjectiveAnswer(persistedAnswer.getSelectedAnswer(), type);
                 int score = standard.equals(studentAnswer) ? maxScore : 0;
-                answer.setScore(score);
-                answer.setGraded(true);
+                persistedAnswer.setScore(score);
+                persistedAnswer.setGraded(true);
                 totalScore += score;
             }
-            answer.setStudent(student);
-            answer.setExam(exam);
-            studentAnswerRepository.save(answer);
+            persistedAnswer.setStudent(student);
+            persistedAnswer.setExam(exam);
+            studentAnswerRepository.save(persistedAnswer);
         }
 
-        ExamResult examResult = new ExamResult();
-        examResult.setExam(exam);
-        examResult.setStudent(student);
+        ExamResult examResult = examResultRepository.findByExam_IdAndStudent_Id(examId, studentId)
+                .orElseGet(() -> {
+                    ExamResult er = new ExamResult();
+                    er.setExam(exam);
+                    er.setStudent(student);
+                    return er;
+                });
         examResult.setScore(totalScore);
+        examResult.setStatus(STATUS_PENDING);
 
-        return examResultRepository.save(examResult);
+        examResultRepository.save(examResult);
+        return refreshExamResultScore(examId, studentId);
     }
 
     public List<ExamResult> getResultsByExam(Long examId) {
@@ -82,6 +111,10 @@ public class ExamResultService {
 
     public List<StudentAnswer> getPendingGrading() {
         return studentAnswerRepository.findPendingSubjectiveAnswers();
+    }
+
+    public List<StudentAnswer> getGradedResults() {
+        return studentAnswerRepository.findFullyGradedSubjectiveAnswers();
     }
 
     public StudentAnswer gradeByAi(Long studentAnswerId) {
@@ -117,13 +150,18 @@ public class ExamResultService {
         return saved;
     }
 
-    private void refreshExamResultScore(Long examId, Long studentId) {
+    private ExamResult refreshExamResultScore(Long examId, Long studentId) {
         List<StudentAnswer> allAnswers = studentAnswerRepository.findByExam_IdAndStudent_Id(examId, studentId);
         int total = allAnswers.stream()
                 .map(StudentAnswer::getScore)
                 .filter(java.util.Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
+        boolean hasSubjective = allAnswers.stream()
+                .anyMatch(sa -> "SUBJECTIVE".equals(normalizeType(sa.getQuestion() == null ? null : sa.getQuestion().getType())));
+        boolean allSubjectiveGraded = allAnswers.stream()
+                .filter(sa -> "SUBJECTIVE".equals(normalizeType(sa.getQuestion() == null ? null : sa.getQuestion().getType())))
+                .allMatch(sa -> sa.getScore() != null);
         ExamResult examResult = examResultRepository.findByExam_IdAndStudent_Id(examId, studentId)
                 .orElseGet(() -> {
                     Exam exam = examRepository.findById(examId).orElseThrow();
@@ -134,7 +172,8 @@ public class ExamResultService {
                     return er;
                 });
         examResult.setScore(total);
-        examResultRepository.save(examResult);
+        examResult.setStatus(!hasSubjective || allSubjectiveGraded ? STATUS_COMPLETED : STATUS_PENDING);
+        return examResultRepository.save(examResult);
     }
 
     private String normalizeType(String type) {

@@ -31,7 +31,7 @@ public class StatsService {
         return new AdminStatsResponse(
                 courseRepository.count(),
                 examRepository.count(),
-                questionRepository.count(),
+                questionRepository.countByDeletedFalse(),
                 userRepository.count()
         );
     }
