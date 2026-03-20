@@ -198,7 +198,11 @@
                 </div>
               </div>
             </div>
-            <div class="total-preview">当前试卷总分：{{ totalScore }} 分</div>
+            <div style="text-align: center; margin-top: 25px; margin-bottom: 10px; border-top: 1px dashed #D1D1D6; padding-top: 20px;">
+              <span style="font-size: 16px; font-weight: 600; color: #1c1c1e;">当前试卷总分：</span>
+              <span style="font-size: 24px; font-weight: 700; color: #007AFF;">{{ totalScore }}</span>
+              <span style="font-size: 16px; font-weight: 600; color: #1c1c1e; margin-left: 4px;">分</span>
+            </div>
           </div>
         </div>
       </el-form>
@@ -331,10 +335,20 @@ const totalQuestionCount = computed(() => (
   + createForm.subjectiveCount
 ));
 
-const singleQs = computed(() => availableQuestions.value.filter(q => !q.type || q.type === 'SINGLE'));
-const multipleQs = computed(() => availableQuestions.value.filter(q => q.type === 'MULTIPLE'));
-const judgeQs = computed(() => availableQuestions.value.filter(q => q.type === 'JUDGE'));
-const subjectiveQs = computed(() => availableQuestions.value.filter(q => q.type === 'SUBJECTIVE'));
+const normalizeQuestionType = (type) => String(type || '').trim().toUpperCase();
+const singleQs = computed(() => availableQuestions.value.filter((q) => {
+  const normalized = normalizeQuestionType(q.type);
+  return !normalized || normalized === 'SINGLE' || normalized === 'SINGLE_CHOICE';
+}));
+const multipleQs = computed(() => availableQuestions.value.filter((q) => {
+  const normalized = normalizeQuestionType(q.type);
+  return normalized === 'MULTIPLE' || normalized === 'MULTIPLE_CHOICE';
+}));
+const judgeQs = computed(() => availableQuestions.value.filter((q) => {
+  const normalized = normalizeQuestionType(q.type);
+  return normalized === 'JUDGE' || normalized === 'TRUE_FALSE';
+}));
+const subjectiveQs = computed(() => availableQuestions.value.filter((q) => normalizeQuestionType(q.type) === 'SUBJECTIVE'));
 
 const rules = {
   courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
