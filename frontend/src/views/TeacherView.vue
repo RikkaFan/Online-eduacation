@@ -25,6 +25,10 @@
           <el-icon><DataLine /></el-icon>
           <span>成绩分析</span>
         </el-menu-item>
+        <el-menu-item index="/teacher/grading">
+          <el-icon><DocumentChecked /></el-icon>
+          <span>阅卷管理</span>
+        </el-menu-item>
         <el-menu-item index="/admin/users" v-if="isAdmin">
           <el-icon><Setting /></el-icon>
           <span>系统管理</span>
@@ -78,7 +82,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataBoard, Reading, Folder, EditPen, DataLine, Setting } from '@element-plus/icons-vue';
+import { DataBoard, Reading, Folder, EditPen, DataLine, DocumentChecked, Setting } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();

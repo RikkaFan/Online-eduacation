@@ -81,6 +81,7 @@ const routes = [
       { path: 'questions', name: 'QuestionManagement', component: QuestionManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
       { path: 'exams', name: 'ExamManagement', component: ExamManagement, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
       { path: 'scores', name: 'ScoreAnalysis', component: ScoreAnalysis, meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
+      { path: 'grading', component: () => import('../views/TeacherGrading.vue'), meta: { requiresAuth: true, roles: ['ROLE_TEACHER'] } },
     ],
   },
   {

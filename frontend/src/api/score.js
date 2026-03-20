@@ -73,3 +73,41 @@ export function exportScoreToExcel(examId) {
     xhr.send();
   });
 }
+
+export async function getPendingGrading() {
+  const res = await fetch(`${API}/results/pending-grading`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取待批改列表失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
+export async function autoGradeWithAI(studentAnswerId) {
+  const res = await fetch(`${API}/results/grade/ai`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ studentAnswerId }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`AI 批改失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
+export async function manualGrade(studentAnswerId, score) {
+  const res = await fetch(`${API}/results/grade/manual`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ studentAnswerId, score }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`手动给分失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
