@@ -95,47 +95,51 @@
         </el-form-item>
         <el-form-item label="组卷策略">
           <el-radio-group v-model="createForm.generateMode">
-            <el-radio-button label="random">🎲 系统随机抽题</el-radio-button>
+            <el-radio-button label="random">🎲 系统自动化组卷</el-radio-button>
             <el-radio-button label="manual">✍️ 手动勾选题目</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <div class="smart-rule-box">
           <div class="smart-rule-title">智能组卷规则配置</div>
           <div v-if="createForm.generateMode === 'random'" class="config-matrix" style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px;">
-            <el-row :gutter="10" style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #606266;">
-              <el-col :span="4">题型</el-col>
+            <el-row :gutter="10" style="display: flex; align-items: center; text-align: center; margin-bottom: 15px; font-weight: bold; color: #606266;">
+              <el-col :span="5" style="text-align: center;">题型</el-col>
               <el-col :span="6">抽取数量</el-col>
               <el-col :span="6">每题分值</el-col>
-              <el-col :span="8">题型总分</el-col>
+              <el-col :span="7">题型总分</el-col>
             </el-row>
-            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
-              <el-col :span="4" style="font-weight: 600;">单选题</el-col>
+            <el-row :gutter="10" style="display: flex; align-items: center; text-align: center; margin-bottom: 15px;">
+              <el-col :span="5" style="font-weight: 600; text-align: center;">单选题</el-col>
               <el-col :span="6"><el-input-number v-model="createForm.singleCount" :min="0" style="width: 100%" @change="calcTotal('single')" controls-position="right" /></el-col>
               <el-col :span="6"><el-input-number v-model="createForm.singleScore" :min="0" style="width: 100%" @change="calcTotal('single')" controls-position="right" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.singleTotal" :min="0" style="width: 100%" @change="calcReverse('single')" controls-position="right" /></el-col>
+              <el-col :span="7"><el-input-number v-model="createForm.singleTotal" :min="0" style="width: 100%" @change="calcReverse('single')" controls-position="right" /></el-col>
             </el-row>
-            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
-              <el-col :span="4" style="font-weight: 600;">多选题</el-col>
+            <el-row :gutter="10" style="display: flex; align-items: center; text-align: center; margin-bottom: 15px;">
+              <el-col :span="5" style="font-weight: 600; text-align: center;">多选题</el-col>
               <el-col :span="6"><el-input-number v-model="createForm.multipleCount" :min="0" style="width: 100%" @change="calcTotal('multiple')" controls-position="right" /></el-col>
               <el-col :span="6"><el-input-number v-model="createForm.multipleScore" :min="0" style="width: 100%" @change="calcTotal('multiple')" controls-position="right" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.multipleTotal" :min="0" style="width: 100%" @change="calcReverse('multiple')" controls-position="right" /></el-col>
+              <el-col :span="7"><el-input-number v-model="createForm.multipleTotal" :min="0" style="width: 100%" @change="calcReverse('multiple')" controls-position="right" /></el-col>
             </el-row>
-            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
-              <el-col :span="4" style="font-weight: 600;">判断题</el-col>
+            <el-row :gutter="10" style="display: flex; align-items: center; text-align: center; margin-bottom: 15px;">
+              <el-col :span="5" style="font-weight: 600; text-align: center;">判断题</el-col>
               <el-col :span="6"><el-input-number v-model="createForm.judgeCount" :min="0" style="width: 100%" @change="calcTotal('judge')" controls-position="right" /></el-col>
               <el-col :span="6"><el-input-number v-model="createForm.judgeScore" :min="0" style="width: 100%" @change="calcTotal('judge')" controls-position="right" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.judgeTotal" :min="0" style="width: 100%" @change="calcReverse('judge')" controls-position="right" /></el-col>
+              <el-col :span="7"><el-input-number v-model="createForm.judgeTotal" :min="0" style="width: 100%" @change="calcReverse('judge')" controls-position="right" /></el-col>
             </el-row>
-            <el-row :gutter="10" style="text-align: center; margin-bottom: 15px; align-items: center;">
-              <el-col :span="4" style="font-weight: 600;">主观题</el-col>
+            <el-row :gutter="10" style="display: flex; align-items: center; text-align: center; margin-bottom: 15px;">
+              <el-col :span="5" style="font-weight: 600; text-align: center;">主观题</el-col>
               <el-col :span="6"><el-input-number v-model="createForm.subjectiveCount" :min="0" style="width: 100%" @change="calcTotal('subjective')" controls-position="right" /></el-col>
               <el-col :span="6"><el-input-number v-model="createForm.subjectiveScore" :min="0" style="width: 100%" @change="calcTotal('subjective')" controls-position="right" /></el-col>
-              <el-col :span="8"><el-input-number v-model="createForm.subjectiveTotal" :min="0" style="width: 100%" @change="calcReverse('subjective')" controls-position="right" /></el-col>
+              <el-col :span="7"><el-input-number v-model="createForm.subjectiveTotal" :min="0" style="width: 100%" @change="calcReverse('subjective')" controls-position="right" /></el-col>
             </el-row>
-            <div class="total-preview">当前试卷总分：{{ totalScore }} 分</div>
             <p class="rule-tip">
               系统将自动按题型规则抽题并组卷，确保每份试卷结构一致且题目组合可随机变化。
             </p>
+          </div>
+          <div v-if="createForm.generateMode === 'random'" style="text-align: center; margin-top: 25px; margin-bottom: 10px; border-top: 1px dashed #D1D1D6; padding-top: 20px;">
+            <span style="font-size: 16px; font-weight: 600; color: #1c1c1e;">当前试卷总分：</span>
+            <span style="font-size: 24px; font-weight: 700; color: #007AFF;">{{ (createForm.singleCount * createForm.singleScore) + (createForm.multipleCount * createForm.multipleScore) + (createForm.judgeCount * createForm.judgeScore) + (createForm.subjectiveCount * createForm.subjectiveScore) }}</span>
+            <span style="font-size: 16px; font-weight: 600; color: #1c1c1e; margin-left: 4px;">分</span>
           </div>
           <div v-else>
             <div v-if="singleQs.length > 0" style="margin-bottom: 20px;">
