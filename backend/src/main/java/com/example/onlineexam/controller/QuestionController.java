@@ -63,6 +63,7 @@ public class QuestionController {
 
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("新增了题目")
     public Question createQuestion(@RequestBody Question question) {
         if (question.getCourseId() == null && question.getCategoryId() != null) {
             question.setCourseId(question.getCategoryId());
@@ -136,6 +137,7 @@ public class QuestionController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("更新了题目")
     public ResponseEntity<Question> updateQuestion(@PathVariable Long id, @RequestBody Question questionDetails) {
         Question updatedQuestion = questionService.updateQuestion(id, questionDetails);
         return ResponseEntity.ok(updatedQuestion);
@@ -143,6 +145,7 @@ public class QuestionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("删除了题目")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
         questionService.deleteQuestion(id);
         return ResponseEntity.noContent().build();

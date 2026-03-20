@@ -49,6 +49,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("更新了课程")
     public ResponseEntity<Course> updateCourse(@PathVariable Long id, @RequestBody Course courseDetails) {
         Course updatedCourse = courseService.updateCourse(id, courseDetails);
         return ResponseEntity.ok(updatedCourse);

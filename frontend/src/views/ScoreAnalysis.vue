@@ -2,9 +2,14 @@
   <div class="score-analysis">
     <div class="action-bar">
       <h2>成绩分析</h2>
-      <el-select v-model="selectedExamId" placeholder="选择考试" filterable clearable @change="onExamChange" style="width: 320px">
-        <el-option v-for="e in exams" :key="e.id" :label="examLabel(e)" :value="e.id" />
-      </el-select>
+      <div class="action-tools">
+        <el-select v-model="selectedExamId" placeholder="选择考试" filterable clearable @change="onExamChange" style="width: 320px">
+          <el-option v-for="e in exams" :key="e.id" :label="examLabel(e)" :value="e.id" />
+        </el-select>
+        <el-button type="success" :icon="Download" :disabled="!selectedExamId" @click="onExportExcel">
+          导出为 Excel
+        </el-button>
+      </div>
     </div>
 
     <div v-if="selectedExamId" class="stat-cards">
@@ -33,8 +38,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
+import { Download } from '@element-plus/icons-vue';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
-import { getScoresByExam } from '@/api/score';
+import { exportScoreToExcel, getScoresByExam } from '@/api/score';
 
 const exams = ref([]);
 const selectedExamId = ref(null);
@@ -75,6 +81,28 @@ async function onExamChange() {
   }
 }
 
+async function onExportExcel() {
+  if (!selectedExamId.value) {
+    ElMessage.warning('请先选择考试');
+    return;
+  }
+  try {
+    const { blob, fileName } = await exportScoreToExcel(selectedExamId.value);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    ElMessage.success('导出成功');
+  } catch (e) {
+    ElMessage.error(e.message || '导出失败');
+  }
+}
+
 const stat = computed(() => {
   const arr = (scores.value || []).map(s => Number(s.score ?? 0));
   if (arr.length === 0) return { max: 0, min: 0, avg: 0 };
@@ -89,6 +117,11 @@ const stat = computed(() => {
 .score-analysis { padding: 20px; }
 .action-bar {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.action-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .stat-cards { display: flex; gap: 12px; margin-bottom: 12px; }
 .stat-card { width: 200px; text-align: center; }

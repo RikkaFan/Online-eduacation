@@ -51,6 +51,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @LogAction("新增了系统用户")
     public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request) {
         if (request.getUsername() == null || request.getUsername().isBlank()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is required."));
@@ -76,6 +77,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @LogAction("更新了系统用户")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Error: User is not found."));
@@ -123,6 +125,7 @@ public class UserController {
 
     @PutMapping("/password")
     @PreAuthorize("isAuthenticated()")
+    @LogAction("修改了账户密码")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
         if (request.getOldPassword() == null || request.getOldPassword().isBlank()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Old password is required."));

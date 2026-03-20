@@ -27,11 +27,22 @@ public class LogAspect {
     @Autowired
     private OperationLogRepository operationLogRepository;
 
-    @AfterReturning("@annotation(com.example.onlineexam.annotation.LogAction)")
-    public void afterReturning(JoinPoint joinPoint) {
+    @AfterReturning(value = "@annotation(logAction)", argNames = "joinPoint,logAction")
+    public void afterReturning(JoinPoint joinPoint, LogAction logAction) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
-        LogAction logAction = method.getAnnotation(LogAction.class);
+        if (logAction == null) {
+            try {
+                Method targetMethod = joinPoint.getTarget()
+                        .getClass()
+                        .getMethod(method.getName(), method.getParameterTypes());
+                logAction = targetMethod.getAnnotation(LogAction.class);
+            } catch (NoSuchMethodException ignored) {
+            }
+        }
+        if (logAction == null) {
+            return;
+        }
 
         OperationLog log = new OperationLog();
         log.setUsername(resolveUsername());

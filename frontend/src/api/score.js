@@ -41,3 +41,35 @@ export async function getMyScores() {
   return res.json();
 }
 
+export function exportScoreToExcel(examId) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', `${API}/exams/${examId}/export`, true);
+    const headers = getAuthHeaders();
+    Object.entries(headers).forEach(([key, value]) => {
+      if (key.toLowerCase() !== 'content-type') {
+        xhr.setRequestHeader(key, value);
+      }
+    });
+    xhr.responseType = 'blob';
+
+    xhr.onload = () => {
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(`导出成绩失败: ${xhr.status}`));
+        return;
+      }
+      const disposition = xhr.getResponseHeader('content-disposition') || '';
+      const match = disposition.match(/filename\*=utf-8''([^;]+)/i);
+      const fileName = match && match[1]
+        ? decodeURIComponent(match[1])
+        : `exam_scores_${examId}.xlsx`;
+      resolve({
+        blob: xhr.response,
+        fileName,
+      });
+    };
+
+    xhr.onerror = () => reject(new Error('导出成绩失败: 网络异常'));
+    xhr.send();
+  });
+}

@@ -50,6 +50,7 @@ public class ExamController {
 
     @PutMapping("/exams/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @LogAction("更新了考试")
     public ResponseEntity<Exam> updateExam(@PathVariable Long id, @RequestBody Exam examDetails) {
         Exam updatedExam = examService.updateExam(id, examDetails);
         return ResponseEntity.ok(updatedExam);
