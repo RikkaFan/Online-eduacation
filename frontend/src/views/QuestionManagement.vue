@@ -38,9 +38,9 @@
         <el-table :data="questions" v-loading="loadingQuestions" style="width: 100%" border stripe>
           <el-table-column prop="id" label="ID" width="60" align="center" />
           <el-table-column prop="content" label="题干" min-width="250" show-overflow-tooltip />
-          <el-table-column prop="type" label="题型" width="100">
-            <template #default="{ row }">
-              <el-tag :type="getTypeTag(row.type)">{{ getTypeName(row.type) }}</el-tag>
+          <el-table-column label="题型" width="120">
+            <template #default>
+              <el-tag type="info" effect="plain">单选 (客观题)</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="options" label="选项" min-width="150" show-overflow-tooltip />
@@ -148,24 +148,6 @@ const loadQuestions = async (courseId) => {
   } finally {
     loadingQuestions.value = false;
   }
-};
-
-const getTypeName = (type) => {
-  const map = {
-    SINGLE_CHOICE: '单选题',
-    MULTIPLE_CHOICE: '多选题',
-    TRUE_FALSE: '判断题'
-  };
-  return map[type] || type;
-};
-
-const getTypeTag = (type) => {
-  const map = {
-    SINGLE_CHOICE: '',
-    MULTIPLE_CHOICE: 'success',
-    TRUE_FALSE: 'warning'
-  };
-  return map[type] || 'info';
 };
 
 const questionDialogVisible = ref(false);
