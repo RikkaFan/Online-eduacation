@@ -64,30 +64,37 @@
           <el-radio-group v-model="questionForm.type">
             <el-radio-button label="SINGLE">单选题</el-radio-button>
             <el-radio-button label="MULTIPLE">多选题</el-radio-button>
+            <el-radio-button label="JUDGE">判断题</el-radio-button>
+            <el-radio-button label="SUBJECTIVE">主观题</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="题干" prop="content">
           <el-input v-model="questionForm.content" type="textarea" rows="4" placeholder="请输入题干" />
         </el-form-item>
-        <el-form-item label="选项内容" prop="options">
-          <el-input v-model="questionForm.options" placeholder="例如：A:苹果, B:香蕉, C:橘子, D:葡萄" />
-          <div class="form-help">请按格式输入选项</div>
+        <el-form-item v-if="questionForm.type === 'SINGLE'" label="单选配置">
+          <div class="option-editor">
+            <div v-for="opt in optionLabels" :key="`single-${opt}`" class="option-editor-row">
+              <el-radio v-model="questionForm.answer" :label="opt">{{ opt }}</el-radio>
+              <el-input v-model="questionForm[`option${opt}`]" :placeholder="`请输入选项 ${opt} 内容`" />
+            </div>
+          </div>
         </el-form-item>
-        <el-form-item v-if="questionForm.type === 'SINGLE'" label="正确答案" prop="answer">
+        <el-form-item v-else-if="questionForm.type === 'MULTIPLE'" label="多选配置">
+          <div class="option-editor">
+            <div v-for="opt in optionLabels" :key="`multiple-${opt}`" class="option-editor-row">
+              <el-checkbox v-model="questionForm.answerArray" :label="opt">{{ opt }}</el-checkbox>
+              <el-input v-model="questionForm[`option${opt}`]" :placeholder="`请输入选项 ${opt} 内容`" />
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item v-else-if="questionForm.type === 'JUDGE'" label="判断题答案">
           <el-radio-group v-model="questionForm.answer">
-            <el-radio-button label="A">A</el-radio-button>
-            <el-radio-button label="B">B</el-radio-button>
-            <el-radio-button label="C">C</el-radio-button>
-            <el-radio-button label="D">D</el-radio-button>
+            <el-radio label="T">正确 (True)</el-radio>
+            <el-radio label="F">错误 (False)</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-else label="正确答案">
-          <el-checkbox-group v-model="questionForm.answerArray">
-            <el-checkbox label="A">A</el-checkbox>
-            <el-checkbox label="B">B</el-checkbox>
-            <el-checkbox label="C">C</el-checkbox>
-            <el-checkbox label="D">D</el-checkbox>
-          </el-checkbox-group>
+        <el-form-item v-else label="参考答案">
+          <el-input v-model="questionForm.answer" type="textarea" rows="5" placeholder="请输入主观题参考答案" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -168,14 +175,17 @@ const questionFormRef = ref(null);
 const questionForm = ref({
   type: 'SINGLE',
   content: '',
-  options: '',
   answer: '',
-  answerArray: []
+  answerArray: [],
+  optionA: '',
+  optionB: '',
+  optionC: '',
+  optionD: ''
 });
+const optionLabels = ['A', 'B', 'C', 'D'];
 const questionRules = {
   type: [{ required: true, message: '请选择题型', trigger: 'change' }],
-  content: [{ required: true, message: '请输入题干', trigger: 'blur' }],
-  answer: [{ required: true, message: '请输入正确答案', trigger: 'blur' }]
+  content: [{ required: true, message: '请输入题干', trigger: 'blur' }]
 };
 
 const showAddQuestionDialog = () => {
@@ -186,22 +196,30 @@ const showAddQuestionDialog = () => {
   questionForm.value = {
     type: 'SINGLE',
     content: '',
-    options: '',
     answer: '',
-    answerArray: []
+    answerArray: [],
+    optionA: '',
+    optionB: '',
+    optionC: '',
+    optionD: ''
   };
   questionDialogVisible.value = true;
 };
 
 const rowTypeName = (type) => {
   const normalized = normalizeType(type);
-  return normalized === 'MULTIPLE' ? '多选 (客观题)' : '单选 (客观题)';
+  if (normalized === 'MULTIPLE') return '多选 (客观题)';
+  if (normalized === 'JUDGE') return '判断题';
+  if (normalized === 'SUBJECTIVE') return '主观题';
+  return '单选 (客观题)';
 };
 
 const normalizeType = (type) => {
   if (!type) return 'SINGLE';
   const normalized = String(type).toUpperCase();
   if (normalized === 'MULTIPLE' || normalized === 'MULTIPLE_CHOICE') return 'MULTIPLE';
+  if (normalized === 'JUDGE' || normalized === 'TRUE_FALSE') return 'JUDGE';
+  if (normalized === 'SUBJECTIVE') return 'SUBJECTIVE';
   return 'SINGLE';
 };
 
@@ -212,9 +230,23 @@ const submitQuestionForm = async () => {
       submittingQuestion.value = true;
       try {
         const type = normalizeType(questionForm.value.type);
+        const optionMap = optionLabels.map(opt => ({
+          key: opt,
+          text: String(questionForm.value[`option${opt}`] || '').trim()
+        }));
+        const options = (type === 'SINGLE' || type === 'MULTIPLE')
+          ? optionMap.map(item => `${item.key}:${item.text}`).join(', ')
+          : '';
         const answer = type === 'MULTIPLE'
           ? [...(questionForm.value.answerArray || [])].sort().join(',')
-          : questionForm.value.answer;
+          : String(questionForm.value.answer || '').trim();
+        if (type === 'SINGLE' || type === 'MULTIPLE') {
+          if (optionMap.some(item => !item.text)) {
+            ElMessage.warning('请完整填写 A-D 四个选项内容');
+            submittingQuestion.value = false;
+            return;
+          }
+        }
         if (!answer) {
           ElMessage.warning('请先选择正确答案');
           submittingQuestion.value = false;
@@ -223,7 +255,7 @@ const submitQuestionForm = async () => {
         const payload = {
           type,
           content: questionForm.value.content,
-          options: questionForm.value.options,
+          options,
           answer,
           courseId: selectedCourseId.value
         };
@@ -408,6 +440,18 @@ const handleImport = async (file) => {
   color: #909399;
   margin-top: 5px;
   line-height: 1.5;
+}
+
+.option-editor {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+
+.option-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* 覆盖el-menu-item的高度，确保按钮对齐 */

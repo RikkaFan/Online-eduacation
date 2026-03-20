@@ -32,7 +32,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getExamDetail, submitExam as submitExamApi } from '@/api/examTaking';
 
@@ -44,6 +44,7 @@ const exam = ref(null);
 const examQuestions = ref([]);
 const loading = ref(false);
 const submitting = ref(false);
+const isSubmitted = ref(false);
 const switchCount = ref(0);
 const MAX_SWITCHES = 3;
 
@@ -67,6 +68,7 @@ onMounted(async () => {
     setupInitialAnswers(examQuestions.value);
     startCountdown(data.endTime);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleUnload);
   } catch (e) {
     ElMessage.error(e.message || '加载考试详情失败');
   } finally {
@@ -77,6 +79,33 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('beforeunload', handleUnload);
+});
+
+onBeforeRouteLeave(async (_to, _from, next) => {
+  if (isSubmitted.value) {
+    next();
+    return;
+  }
+  try {
+    await ElMessageBox.confirm(
+      '您正在离开考试界面！离开将自动提交您当前的试卷，且无法再次进入。是否确认强制交卷并离开？',
+      '提示',
+      {
+        type: 'warning',
+        confirmButtonText: '确认离开并交卷',
+        cancelButtonText: '继续考试'
+      }
+    );
+    const success = await submitExam(true);
+    if (success) {
+      next();
+      return;
+    }
+    next(false);
+  } catch {
+    next(false);
+  }
 });
 
 function handleVisibilityChange() {
@@ -127,6 +156,12 @@ function setupInitialAnswers(list) {
   });
 }
 
+function handleUnload(e) {
+  if (isSubmitted.value) return;
+  e.preventDefault();
+  e.returnValue = '';
+}
+
 function typeName(t) {
   return isMultipleType(t) ? '多选题' : '单选题';
 }
@@ -175,13 +210,14 @@ async function confirmSubmit() {
 
 async function autoSubmit() {
   if (submitting.value) return;
-  await doSubmit(true);
+  await doSubmit(true, false);
 }
 
-async function doSubmit(isAuto = false) {
+async function doSubmit(isAuto = false, fromLeaveGuard = false) {
   submitting.value = true;
   try {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('beforeunload', handleUnload);
     // 组装 payload: List<StudentAnswer> => [{question:{id}, selectedAnswer}]
     const payload = examQuestions.value.map(q => {
       let ans = '';
@@ -194,8 +230,12 @@ async function doSubmit(isAuto = false) {
     });
     const result = await submitExamApi(examId, payload);
     const score = result?.score ?? '未知';
+    isSubmitted.value = true;
     if (timer) clearInterval(timer);
     countdownMs.value = 0;
+    if (fromLeaveGuard) {
+      return true;
+    }
     await ElMessageBox.alert(`本次得分：${score}`, '提交成功', {
       type: 'success',
       confirmButtonText: '返回考试列表',
@@ -204,16 +244,18 @@ async function doSubmit(isAuto = false) {
       closeOnPressEscape: false,
     });
     router.replace('/student/exams');
+    return true;
   } catch (e) {
     ElMessage.error(e.message || '提交失败');
+    return false;
   } finally {
     submitting.value = false;
   }
 }
 
-async function submitExam() {
+async function submitExam(fromLeaveGuard = false) {
   if (submitting.value) return;
-  await doSubmit(true);
+  return doSubmit(true, fromLeaveGuard);
 }
 </script>
 

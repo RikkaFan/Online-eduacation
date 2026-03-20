@@ -41,7 +41,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getMyScores } from '@/api/score';
 
@@ -91,8 +91,22 @@ function getStatusText(s) {
 function statusType(s) {
   return s === 'pending' ? 'info' : s === 'finished' ? 'warning' : 'success';
 }
-function enterExam(id) {
-  router.push(`/student/exam/${id}`);
+async function enterExam(id) {
+  try {
+    await ElMessageBox.confirm(
+      '1. 考试期间系统将开启防作弊监测，切屏将被记录。<br/><br/>2. 考试一旦开始将开始倒计时，中途退出视为自动交卷。<br/><br/>3. 请确保网络环境良好。<br/><br/>是否确认已准备就绪并进入考场？',
+      '📝 考试须知与诚信承诺',
+      {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '我已了解，进入考场',
+        cancelButtonText: '再检查一下',
+        type: 'warning',
+      }
+    );
+    router.push(`/student/exam/${id}`);
+  } catch {
+    // user cancelled
+  }
 }
 
 function goBackDashboard() {
