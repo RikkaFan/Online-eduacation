@@ -170,7 +170,7 @@
                 </div>
               </div>
             </div>
-            <div v-if="judgeQs.length > 0" style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px;">
               <div style="display: flex; gap: 15px;">
                 <div style="flex: 1;">
                   <div style="text-align: center; color: #606266; font-size: 13px; margin-bottom: 8px;">判断题每题分值</div>
