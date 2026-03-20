@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -76,5 +77,36 @@ public class ExamResultController {
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or #studentId == authentication.principal.id")
     public List<StudentAnswer> getMistakesByStudent(@PathVariable Long studentId) {
         return examResultService.getMistakesByStudent(studentId);
+    }
+
+    @GetMapping("/results/pending-grading")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public List<StudentAnswer> getPendingGrading() {
+        return examResultService.getPendingGrading();
+    }
+
+    @PostMapping("/results/grade/ai")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ResponseEntity<StudentAnswer> gradeByAi(@RequestBody Map<String, Object> payload) {
+        Object answerIdValue = payload.get("studentAnswerId");
+        if (answerIdValue == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Long studentAnswerId = Long.valueOf(String.valueOf(answerIdValue));
+        StudentAnswer graded = examResultService.gradeByAi(studentAnswerId);
+        return ResponseEntity.ok(graded);
+    }
+
+    @PostMapping("/results/grade/manual")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ResponseEntity<StudentAnswer> gradeManual(@RequestBody Map<String, Object> payload) {
+        Object answerIdValue = payload.get("studentAnswerId");
+        if (answerIdValue == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Long studentAnswerId = Long.valueOf(String.valueOf(answerIdValue));
+        Integer score = payload.get("score") == null ? null : Integer.valueOf(String.valueOf(payload.get("score")));
+        StudentAnswer graded = examResultService.gradeManual(studentAnswerId, score);
+        return ResponseEntity.ok(graded);
     }
 }

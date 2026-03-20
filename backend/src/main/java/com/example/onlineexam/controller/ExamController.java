@@ -49,12 +49,16 @@ public class ExamController {
     @PostMapping("/courses/{courseId}/exams")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @LogAction("发布了新考试")
-    public Exam createExam(@PathVariable Long courseId, @RequestBody Map<String, Object> payload, @RequestParam int numberOfQuestions) {
+    public Exam createExam(@PathVariable Long courseId, @RequestBody Map<String, Object> payload, @RequestParam(defaultValue = "0") int numberOfQuestions) {
         Exam exam = objectMapper.convertValue(payload, Exam.class);
         List<Integer> rawIds = (List<Integer>) payload.get("questionIds");
-        List<Long> questionIds = rawIds != null
-                ? rawIds.stream().map(Integer::longValue).collect(Collectors.toList())
-                : null;
+        List<Long> questionIds = rawIds != null ? rawIds.stream().map(Integer::longValue).collect(Collectors.toList()) : null;
+        if (questionIds == null && payload.get("questionIds") instanceof List<?> genericIds) {
+            questionIds = genericIds.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .map(v -> Long.valueOf(String.valueOf(v)))
+                    .collect(Collectors.toList());
+        }
         return examService.createExam(courseId, exam, numberOfQuestions, questionIds);
     }
 
@@ -100,6 +104,15 @@ public class ExamController {
                 exam.getDurationInMinutes(),
                 exam.getStartTime(),
                 exam.getEndTime(),
+                exam.getSingleCount(),
+                exam.getSingleScore(),
+                exam.getMultipleCount(),
+                exam.getMultipleScore(),
+                exam.getJudgeCount(),
+                exam.getJudgeScore(),
+                exam.getSubjectiveCount(),
+                exam.getSubjectiveScore(),
+                exam.getTotalScore(),
                 questions
         );
     }

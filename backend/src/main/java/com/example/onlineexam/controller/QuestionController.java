@@ -172,7 +172,19 @@ public class QuestionController {
             if ("MULTIPLE".equals(normalizedType) || "MULTIPLE_CHOICE".equals(normalizedType)) {
                 return "MULTIPLE";
             }
+            if ("JUDGE".equals(normalizedType) || "TRUE_FALSE".equals(normalizedType)) {
+                return "JUDGE";
+            }
+            if ("SUBJECTIVE".equals(normalizedType)) {
+                return "SUBJECTIVE";
+            }
             return "SINGLE";
+        }
+        if (answer != null) {
+            String normalizedAnswer = answer.trim().toUpperCase();
+            if ("T".equals(normalizedAnswer) || "F".equals(normalizedAnswer) || "TRUE".equals(normalizedAnswer) || "FALSE".equals(normalizedAnswer)) {
+                return "JUDGE";
+            }
         }
         if (answer != null && answer.trim().contains(",")) return "MULTIPLE";
         return "SINGLE";

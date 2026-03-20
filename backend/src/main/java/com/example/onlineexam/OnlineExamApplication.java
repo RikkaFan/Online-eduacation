@@ -7,6 +7,7 @@ import com.example.onlineexam.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Set;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,6 +44,11 @@ public class OnlineExamApplication {
 			ensureUserWithRole(userRepository, passwordEncoder, "teacher", "123456", teacherRole);
 			ensureUserWithRole(userRepository, passwordEncoder, "student", "123456", studentRole);
 		};
+	}
+
+	@Bean
+	RestTemplate restTemplate() {
+		return new RestTemplate();
 	}
 
 	private void ensureUserWithRole(UserRepository userRepository, PasswordEncoder passwordEncoder, String username, String rawPassword, Role role) {

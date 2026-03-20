@@ -25,4 +25,8 @@ public class StudentAnswer {
 
     @Lob
     private String selectedAnswer;
+
+    private Integer score;
+
+    private Boolean graded;
 }

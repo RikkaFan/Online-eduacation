@@ -34,6 +34,20 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
             """)
     long countMistakesByStudentId(@Param("studentId") Long studentId);
 
+    @Query("""
+            select sa
+            from StudentAnswer sa
+            join fetch sa.exam e
+            join fetch sa.student s
+            join fetch sa.question q
+            where (sa.graded is null or sa.graded = false)
+              and (q.type = 'SUBJECTIVE')
+            order by sa.id desc
+            """)
+    List<StudentAnswer> findPendingSubjectiveAnswers();
+
+    List<StudentAnswer> findByExam_IdAndStudent_Id(Long examId, Long studentId);
+
     void deleteByExam_Id(Long examId);
     void deleteByStudent_Id(Long studentId);
 }

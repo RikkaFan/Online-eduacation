@@ -66,11 +66,17 @@ public class QuestionService {
             return "SINGLE";
         }
         String normalized = type.trim().toUpperCase();
-        if ("SINGLE_CHOICE".equals(normalized) || "TRUE_FALSE".equals(normalized)) {
+        if ("SINGLE_CHOICE".equals(normalized)) {
             return "SINGLE";
+        }
+        if ("TRUE_FALSE".equals(normalized)) {
+            return "JUDGE";
         }
         if ("MULTIPLE_CHOICE".equals(normalized)) {
             return "MULTIPLE";
+        }
+        if ("JUDGE".equals(normalized) || "SUBJECTIVE".equals(normalized)) {
+            return normalized;
         }
         if (!"SINGLE".equals(normalized) && !"MULTIPLE".equals(normalized)) {
             return "SINGLE";
