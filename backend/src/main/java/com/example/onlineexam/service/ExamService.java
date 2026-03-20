@@ -44,13 +44,15 @@ public class ExamService {
         return examRepository.findById(id);
     }
 
-    public Exam createExam(Long courseId, Exam exam, int numberOfQuestions) {
+    public Exam createExam(Long courseId, Exam exam, int numberOfQuestions, List<Long> questionIds) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + courseId));
         exam.setCourse(course);
 
         List<Question> selectedQuestions = Collections.emptyList();
-        if (exam.getQuestions() != null && !exam.getQuestions().isEmpty()) {
+        if (questionIds != null && !questionIds.isEmpty()) {
+            selectedQuestions = questionRepository.findAllById(questionIds);
+        } else if (exam.getQuestions() != null && !exam.getQuestions().isEmpty()) {
             Set<Long> ids = exam.getQuestions().stream()
                     .map(Question::getId)
                     .filter(java.util.Objects::nonNull)

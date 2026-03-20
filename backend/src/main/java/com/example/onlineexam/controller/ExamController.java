@@ -1,6 +1,7 @@
 package com.example.onlineexam.controller;
 
 import com.example.onlineexam.annotation.LogAction;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.onlineexam.model.Exam;
 import com.example.onlineexam.model.Question;
 import com.example.onlineexam.payload.response.StudentExamDTO;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -24,6 +26,9 @@ public class ExamController {
 
     @Autowired
     private ExamService examService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @GetMapping("/courses/{courseId}/exams")
     public List<Exam> getExamsByCourse(@PathVariable Long courseId) {
@@ -44,8 +49,13 @@ public class ExamController {
     @PostMapping("/courses/{courseId}/exams")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @LogAction("发布了新考试")
-    public Exam createExam(@PathVariable Long courseId, @RequestBody Exam exam, @RequestParam int numberOfQuestions) {
-        return examService.createExam(courseId, exam, numberOfQuestions);
+    public Exam createExam(@PathVariable Long courseId, @RequestBody Map<String, Object> payload, @RequestParam int numberOfQuestions) {
+        Exam exam = objectMapper.convertValue(payload, Exam.class);
+        List<Integer> rawIds = (List<Integer>) payload.get("questionIds");
+        List<Long> questionIds = rawIds != null
+                ? rawIds.stream().map(Integer::longValue).collect(Collectors.toList())
+                : null;
+        return examService.createExam(courseId, exam, numberOfQuestions, questionIds);
     }
 
     @PutMapping("/exams/{id}")
