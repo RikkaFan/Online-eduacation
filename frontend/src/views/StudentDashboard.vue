@@ -21,6 +21,13 @@
       </div>
     </el-card>
 
+    <el-card class="glass-card section-card trend-card" shadow="never">
+      <div class="section-header">
+        <h3>我的学情追踪大盘</h3>
+      </div>
+      <div ref="trendChartRef" class="trend-chart"></div>
+    </el-card>
+
     <el-row :gutter="20">
       <el-col :span="16">
         <el-card class="glass-card section-card" shadow="never">
@@ -67,13 +74,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import * as echarts from 'echarts';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { useAuthStore } from '@/store/auth';
 import { getStudentStats } from '@/api/stats';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
+import { getMyScores } from '@/api/score';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -86,6 +95,9 @@ const stats = ref({
 });
 const loadingExams = ref(false);
 const upcomingExams = ref([]);
+const myHistoryScores = ref([]);
+const trendChartRef = ref(null);
+let trendChartInstance = null;
 
 const averageScoreText = computed(() => Number(stats.value.averageScore || 0).toFixed(1));
 
@@ -118,7 +130,116 @@ onMounted(async () => {
   } finally {
     loadingExams.value = false;
   }
+  await loadMyHistoryScores();
+  await nextTick();
+  initTrendChart();
+  renderTrendChart();
+  window.addEventListener('resize', handleChartResize);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleChartResize);
+  if (trendChartInstance) {
+    trendChartInstance.dispose();
+    trendChartInstance = null;
+  }
+});
+
+async function loadMyHistoryScores() {
+  try {
+    const list = await getMyScores();
+    const sorted = (Array.isArray(list) ? list : []).slice().sort((a, b) => {
+      const ta = resolveSubmitTime(a);
+      const tb = resolveSubmitTime(b);
+      return ta - tb;
+    });
+    myHistoryScores.value = sorted;
+  } catch (e) {
+    ElMessage.error(e.message || '加载历史成绩失败');
+    myHistoryScores.value = [];
+  }
+}
+
+function resolveSubmitTime(item) {
+  const raw = item?.submitTime
+    || item?.submitAt
+    || item?.createTime
+    || item?.createAt
+    || item?.exam?.endTime
+    || item?.exam?.startTime;
+  if (!raw) return 0;
+  const time = new Date(raw).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function initTrendChart() {
+  if (!trendChartRef.value) return;
+  if (trendChartInstance) {
+    trendChartInstance.dispose();
+  }
+  trendChartInstance = echarts.init(trendChartRef.value);
+}
+
+function renderTrendChart() {
+  if (!trendChartInstance) return;
+  const xData = myHistoryScores.value.map((item, index) => item?.exam?.title || `考试${index + 1}`);
+  const yData = myHistoryScores.value.map(item => Number(item?.score ?? 0));
+  trendChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        const point = Array.isArray(params) ? params[0] : params;
+        return `${point?.axisValue || '-'}<br/>成绩：${point?.data ?? 0} 分`;
+      },
+    },
+    grid: {
+      left: 36,
+      right: 20,
+      top: 28,
+      bottom: 28,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: xData,
+      axisLabel: { color: '#64748B' },
+      axisLine: { lineStyle: { color: '#CBD5E1' } },
+    },
+    yAxis: {
+      type: 'value',
+      name: '分数',
+      min: 0,
+      axisLabel: { color: '#64748B' },
+      splitLine: { lineStyle: { color: 'rgba(203, 213, 225, 0.55)' } },
+    },
+    series: [
+      {
+        type: 'line',
+        smooth: true,
+        data: yData,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: {
+          width: 3,
+          color: '#3B82F6',
+        },
+        itemStyle: {
+          color: '#3B82F6',
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(59, 130, 246, 0.36)' },
+            { offset: 1, color: 'rgba(59, 130, 246, 0)' },
+          ]),
+        },
+      },
+    ],
+  });
+}
+
+function handleChartResize() {
+  trendChartInstance?.resize();
+}
 
 function formatDateTime(value) {
   if (!value) return '-';
@@ -206,6 +327,15 @@ function goScores() {
 .section-card {
   padding: 18px;
   height: 100%;
+}
+
+.trend-card {
+  height: auto;
+}
+
+.trend-chart {
+  height: 350px;
+  width: 100%;
 }
 
 .section-header {

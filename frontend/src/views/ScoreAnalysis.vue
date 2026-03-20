@@ -18,7 +18,12 @@
       <el-card class="stat-card"><div class="stat-title">平均分</div><div class="stat-value">{{ stat.avg }}</div></el-card>
     </div>
 
-    <el-card shadow="never">
+    <el-card v-if="selectedExamId" class="glass-card distribution-card" shadow="never">
+      <div class="distribution-title">本次考试成绩分布</div>
+      <div ref="distributionChartRef" class="distribution-chart"></div>
+    </el-card>
+
+    <el-card class="glass-card" shadow="never">
       <el-table :data="scores" v-loading="loadingScores" empty-text="请选择考试后查看成绩" stripe>
         <el-table-column label="学生" min-width="160">
           <template #default="{ row }">{{ row.student?.username || '-' }}</template>
@@ -36,7 +41,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick, watch, onBeforeUnmount } from 'vue';
+import * as echarts from 'echarts';
 import { ElMessage } from 'element-plus';
 import { Download } from '@element-plus/icons-vue';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
@@ -47,6 +53,8 @@ const selectedExamId = ref(null);
 const scores = ref([]);
 const loadingExams = ref(false);
 const loadingScores = ref(false);
+const distributionChartRef = ref(null);
+let distributionChartInstance = null;
 
 onMounted(async () => {
   loadingExams.value = true;
@@ -57,6 +65,27 @@ onMounted(async () => {
   } finally {
     loadingExams.value = false;
   }
+  window.addEventListener('resize', handleChartResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleChartResize);
+  if (distributionChartInstance) {
+    distributionChartInstance.dispose();
+    distributionChartInstance = null;
+  }
+});
+
+watch(() => selectedExamId.value, async (val) => {
+  if (!val && distributionChartInstance) {
+    distributionChartInstance.clear();
+  }
+});
+
+watch(() => scores.value, async () => {
+  await nextTick();
+  initDistributionChart();
+  renderDistributionChart();
 });
 
 function examLabel(e) {
@@ -111,6 +140,73 @@ const stat = computed(() => {
   const avg = (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2);
   return { max, min, avg };
 });
+
+const scoreDistribution = computed(() => {
+  const buckets = [0, 0, 0, 0, 0];
+  (scores.value || []).forEach(item => {
+    const score = Number(item?.score ?? 0);
+    if (score < 60) buckets[0] += 1;
+    else if (score < 70) buckets[1] += 1;
+    else if (score < 80) buckets[2] += 1;
+    else if (score < 90) buckets[3] += 1;
+    else buckets[4] += 1;
+  });
+  return buckets;
+});
+
+function initDistributionChart() {
+  if (!distributionChartRef.value) return;
+  if (!distributionChartInstance) {
+    distributionChartInstance = echarts.init(distributionChartRef.value);
+  }
+}
+
+function renderDistributionChart() {
+  if (!distributionChartInstance) return;
+  const labels = ['<60 不及格', '60-69 及格', '70-79 中等', '80-89 良好', '90-100 优秀'];
+  const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#10B981'];
+  const values = scoreDistribution.value;
+  distributionChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params) => {
+        const point = Array.isArray(params) ? params[0] : params;
+        return `${point?.axisValue || '-'}<br/>人数：${point?.data ?? 0}`;
+      },
+    },
+    grid: {
+      left: 24,
+      right: 20,
+      top: 28,
+      bottom: 22,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { color: '#64748B' },
+      axisLine: { lineStyle: { color: '#CBD5E1' } },
+    },
+    yAxis: {
+      type: 'value',
+      name: '人数',
+      minInterval: 1,
+      axisLabel: { color: '#64748B' },
+      splitLine: { lineStyle: { color: 'rgba(203, 213, 225, 0.55)' } },
+    },
+    series: [{
+      type: 'bar',
+      data: values.map((val, idx) => ({ value: val, itemStyle: { color: colors[idx] } })),
+      barWidth: '48%',
+      borderRadius: [8, 8, 0, 0],
+    }],
+  });
+}
+
+function handleChartResize() {
+  distributionChartInstance?.resize();
+}
 </script>
 
 <style scoped>
@@ -127,4 +223,15 @@ const stat = computed(() => {
 .stat-card { width: 200px; text-align: center; }
 .stat-title { font-size: 14px; color: #666; }
 .stat-value { font-size: 24px; font-weight: 600; color: #111; }
+.distribution-card { margin-bottom: 12px; }
+.distribution-title {
+  margin-bottom: 10px;
+  color: #0F172A;
+  font-size: 18px;
+  font-weight: 600;
+}
+.distribution-chart {
+  width: 100%;
+  height: 300px;
+}
 </style>
