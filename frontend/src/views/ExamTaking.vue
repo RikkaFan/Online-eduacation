@@ -18,13 +18,11 @@
             <span>{{ q.content }}</span>
             <el-tag class="q-type" size="small">{{ typeName(q.type) }}</el-tag>
           </div>
-          <!-- 单选 -->
-          <el-radio-group v-if="q.type === 'SINGLE_CHOICE' || q.type === 'TRUE_FALSE'" v-model="studentAnswers[q.id]" class="option-group">
-            <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.label }}</el-radio>
+          <el-radio-group v-if="!isMultipleType(q.type)" v-model="q.selectedAnswer" class="options-group">
+            <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-radio>
           </el-radio-group>
-          <!-- 多选 -->
-          <el-checkbox-group v-else v-model="studentAnswersMulti[q.id]" class="option-group">
-            <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.label }}</el-checkbox>
+          <el-checkbox-group v-else v-model="q.selectedAnswerArray" class="options-group">
+            <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">{{ opt.key }}. {{ opt.text }}</el-checkbox>
           </el-checkbox-group>
         </div>
       </div>
@@ -33,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getExamDetail, submitExam as submitExamApi } from '@/api/examTaking';
@@ -48,10 +46,6 @@ const loading = ref(false);
 const submitting = ref(false);
 const switchCount = ref(0);
 const MAX_SWITCHES = 3;
-
-// 单选/判断：直接以 key 存储；多选：数组，提交时用逗号连接
-const studentAnswers = reactive({});
-const studentAnswersMulti = reactive({});
 
 // 倒计时
 let timer = null;
@@ -123,33 +117,37 @@ function handleVisibilityChange() {
 
 function setupInitialAnswers(list) {
   list.forEach(q => {
-    if (q.type === 'MULTIPLE_CHOICE') {
-      studentAnswersMulti[q.id] = [];
+    if (isMultipleType(q.type)) {
+      q.selectedAnswerArray = [];
+      q.selectedAnswer = '';
     } else {
-      studentAnswers[q.id] = '';
+      q.selectedAnswer = '';
+      q.selectedAnswerArray = [];
     }
   });
 }
 
 function typeName(t) {
-  return t === 'SINGLE_CHOICE' ? '单选题' : t === 'MULTIPLE_CHOICE' ? '多选题' : '判断题';
+  return isMultipleType(t) ? '多选题' : '单选题';
+}
+
+function isMultipleType(type) {
+  const normalized = String(type || '').toUpperCase();
+  return normalized === 'MULTIPLE' || normalized === 'MULTIPLE_CHOICE';
 }
 
 function parseOptions(q) {
-  if (q.type === 'TRUE_FALSE') {
-    return [
-      { key: 'T', label: '正确' },
-      { key: 'F', label: '错误' },
-    ];
-  }
   const raw = q.options || '';
-  // 解析如 "A:苹果, B:香蕉"
   return raw.split(',').map(s => s.trim()).filter(Boolean).map(chunk => {
     const idx = chunk.indexOf(':');
     if (idx > 0) {
-      return { key: chunk.slice(0, idx).trim(), label: chunk.slice(idx + 1).trim() };
+      return { key: chunk.slice(0, idx).trim(), text: chunk.slice(idx + 1).trim() };
     }
-    return { key: chunk, label: chunk };
+    const dotIndex = chunk.indexOf('.');
+    if (dotIndex > 0) {
+      return { key: chunk.slice(0, dotIndex).trim(), text: chunk.slice(dotIndex + 1).trim() };
+    }
+    return { key: chunk, text: chunk };
   });
 }
 
@@ -187,10 +185,10 @@ async function doSubmit(isAuto = false) {
     // 组装 payload: List<StudentAnswer> => [{question:{id}, selectedAnswer}]
     const payload = examQuestions.value.map(q => {
       let ans = '';
-      if (q.type === 'MULTIPLE_CHOICE') {
-        ans = (studentAnswersMulti[q.id] || []).join(',');
+      if (Array.isArray(q.selectedAnswerArray) && q.selectedAnswerArray.length > 0) {
+        ans = [...q.selectedAnswerArray].sort().join(',');
       } else {
-        ans = studentAnswers[q.id] || '';
+        ans = q.selectedAnswer || '';
       }
       return { question: { id: q.id }, selectedAnswer: ans };
     });
@@ -251,5 +249,5 @@ async function submitExam() {
 .q-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .q-no { color: #0a84ff; font-weight: 600; }
 .q-type { margin-left: auto; }
-.option-group { display: flex; flex-direction: column; gap: 8px; }
+.options-group { display: flex; flex-direction: column; gap: 8px; }
 </style>

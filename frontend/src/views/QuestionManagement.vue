@@ -39,8 +39,8 @@
           <el-table-column prop="id" label="ID" width="60" align="center" />
           <el-table-column prop="content" label="题干" min-width="250" show-overflow-tooltip />
           <el-table-column label="题型" width="120">
-            <template #default>
-              <el-tag type="info" effect="plain">单选 (客观题)</el-tag>
+            <template #default="{ row }">
+              <el-tag type="info" effect="plain">{{ rowTypeName(row.type) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="options" label="选项" min-width="150" show-overflow-tooltip />
@@ -61,21 +61,33 @@
     <el-dialog v-model="questionDialogVisible" title="新增题目" width="50%">
       <el-form :model="questionForm" :rules="questionRules" ref="questionFormRef" label-width="100px">
         <el-form-item label="题型" prop="type">
-          <el-select v-model="questionForm.type" placeholder="请选择题型" style="width: 100%;">
-            <el-option label="单选题" value="SINGLE_CHOICE" />
-            <el-option label="多选题" value="MULTIPLE_CHOICE" />
-            <el-option label="判断题" value="TRUE_FALSE" />
-          </el-select>
+          <el-radio-group v-model="questionForm.type">
+            <el-radio-button label="SINGLE">单选题</el-radio-button>
+            <el-radio-button label="MULTIPLE">多选题</el-radio-button>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="题干" prop="content">
           <el-input v-model="questionForm.content" type="textarea" rows="4" placeholder="请输入题干" />
         </el-form-item>
-        <el-form-item label="选项内容" prop="options" v-if="questionForm.type !== 'TRUE_FALSE'">
+        <el-form-item label="选项内容" prop="options">
           <el-input v-model="questionForm.options" placeholder="例如：A:苹果, B:香蕉, C:橘子, D:葡萄" />
-          <div class="form-help">请按格式输入选项（判断题无需输入选项）</div>
+          <div class="form-help">请按格式输入选项</div>
         </el-form-item>
-        <el-form-item label="正确答案" prop="answer">
-          <el-input v-model="questionForm.answer" placeholder="例如：A（单选）、A,B（多选）、T/F（判断）" />
+        <el-form-item v-if="questionForm.type === 'SINGLE'" label="正确答案" prop="answer">
+          <el-radio-group v-model="questionForm.answer">
+            <el-radio-button label="A">A</el-radio-button>
+            <el-radio-button label="B">B</el-radio-button>
+            <el-radio-button label="C">C</el-radio-button>
+            <el-radio-button label="D">D</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-else label="正确答案">
+          <el-checkbox-group v-model="questionForm.answerArray">
+            <el-checkbox label="A">A</el-checkbox>
+            <el-checkbox label="B">B</el-checkbox>
+            <el-checkbox label="C">C</el-checkbox>
+            <el-checkbox label="D">D</el-checkbox>
+          </el-checkbox-group>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -154,10 +166,11 @@ const questionDialogVisible = ref(false);
 const submittingQuestion = ref(false);
 const questionFormRef = ref(null);
 const questionForm = ref({
-  type: 'SINGLE_CHOICE',
+  type: 'SINGLE',
   content: '',
   options: '',
-  answer: ''
+  answer: '',
+  answerArray: []
 });
 const questionRules = {
   type: [{ required: true, message: '请选择题型', trigger: 'change' }],
@@ -171,12 +184,25 @@ const showAddQuestionDialog = () => {
     return;
   }
   questionForm.value = {
-    type: 'SINGLE_CHOICE',
+    type: 'SINGLE',
     content: '',
     options: '',
-    answer: ''
+    answer: '',
+    answerArray: []
   };
   questionDialogVisible.value = true;
+};
+
+const rowTypeName = (type) => {
+  const normalized = normalizeType(type);
+  return normalized === 'MULTIPLE' ? '多选 (客观题)' : '单选 (客观题)';
+};
+
+const normalizeType = (type) => {
+  if (!type) return 'SINGLE';
+  const normalized = String(type).toUpperCase();
+  if (normalized === 'MULTIPLE' || normalized === 'MULTIPLE_CHOICE') return 'MULTIPLE';
+  return 'SINGLE';
 };
 
 const submitQuestionForm = async () => {
@@ -185,13 +211,22 @@ const submitQuestionForm = async () => {
     if (valid) {
       submittingQuestion.value = true;
       try {
+        const type = normalizeType(questionForm.value.type);
+        const answer = type === 'MULTIPLE'
+          ? [...(questionForm.value.answerArray || [])].sort().join(',')
+          : questionForm.value.answer;
+        if (!answer) {
+          ElMessage.warning('请先选择正确答案');
+          submittingQuestion.value = false;
+          return;
+        }
         const payload = {
-          ...questionForm.value,
+          type,
+          content: questionForm.value.content,
+          options: questionForm.value.options,
+          answer,
           courseId: selectedCourseId.value
         };
-        if (payload.type === 'TRUE_FALSE') {
-          payload.options = null;
-        }
         await createQuestion(payload);
         ElMessage.success('题目创建成功');
         questionDialogVisible.value = false;

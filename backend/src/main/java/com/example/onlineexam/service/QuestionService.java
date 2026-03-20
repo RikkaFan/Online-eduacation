@@ -39,6 +39,7 @@ public class QuestionService {
     }
 
     public Question createQuestion(Question question) {
+        question.setType(normalizeType(question.getType()));
         return questionRepository.save(question);
     }
 
@@ -49,6 +50,7 @@ public class QuestionService {
         question.setContent(questionDetails.getContent());
         question.setOptions(questionDetails.getOptions());
         question.setAnswer(questionDetails.getAnswer());
+        question.setType(normalizeType(questionDetails.getType()));
         question.setCategoryId(questionDetails.getCategoryId());
         question.setCourseId(questionDetails.getCourseId());
 
@@ -57,5 +59,22 @@ public class QuestionService {
 
     public void deleteQuestion(Long id) {
         questionRepository.deleteById(id);
+    }
+
+    private String normalizeType(String type) {
+        if (type == null || type.trim().isEmpty()) {
+            return "SINGLE";
+        }
+        String normalized = type.trim().toUpperCase();
+        if ("SINGLE_CHOICE".equals(normalized) || "TRUE_FALSE".equals(normalized)) {
+            return "SINGLE";
+        }
+        if ("MULTIPLE_CHOICE".equals(normalized)) {
+            return "MULTIPLE";
+        }
+        if (!"SINGLE".equals(normalized) && !"MULTIPLE".equals(normalized)) {
+            return "SINGLE";
+        }
+        return normalized;
     }
 }

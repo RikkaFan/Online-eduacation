@@ -5,6 +5,9 @@ import lombok.Data;
 
 @Data
 public class QuestionExcelDTO {
+    @ExcelProperty("题型")
+    private String type;
+
     @ExcelProperty("题干")
     private String content;
 

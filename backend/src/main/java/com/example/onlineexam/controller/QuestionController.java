@@ -91,6 +91,7 @@ public class QuestionController {
         sample.setOptionB("Redis");
         sample.setOptionC("Kafka");
         sample.setOptionD("Nacos");
+        sample.setType("SINGLE");
         sample.setAnswer("A");
         sample.setAnalysis("MySQL 是关系型数据库。");
         sample.setScore(5);
@@ -124,7 +125,7 @@ public class QuestionController {
                     question.setCategoryId(course.getId());
                     question.setCourseId(course.getId());
                     question.setContent(row.getContent().trim());
-                    question.setType(resolveType(row.getAnswer()));
+                    question.setType(resolveType(row.getType(), row.getAnswer()));
                     question.setAnswer(row.getAnswer().trim().toUpperCase());
                     question.setOptions(buildOptions(row));
                     toSave.add(question);
@@ -165,14 +166,16 @@ public class QuestionController {
         return String.format("A:%s, B:%s, C:%s, D:%s", a, b, c, d);
     }
 
-    private String resolveType(String answer) {
-        if (answer == null) return "SINGLE_CHOICE";
-        String normalized = answer.trim().toUpperCase();
-        if (normalized.contains(",")) return "MULTIPLE_CHOICE";
-        if ("T".equals(normalized) || "F".equals(normalized) || "TRUE".equals(normalized) || "FALSE".equals(normalized)) {
-            return "TRUE_FALSE";
+    private String resolveType(String type, String answer) {
+        if (type != null && !type.trim().isEmpty()) {
+            String normalizedType = type.trim().toUpperCase();
+            if ("MULTIPLE".equals(normalizedType) || "MULTIPLE_CHOICE".equals(normalizedType)) {
+                return "MULTIPLE";
+            }
+            return "SINGLE";
         }
-        return "SINGLE_CHOICE";
+        if (answer != null && answer.trim().contains(",")) return "MULTIPLE";
+        return "SINGLE";
     }
 
     private String safe(String text) {
