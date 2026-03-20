@@ -70,7 +70,7 @@ public class AiGradingService {
 
     public String explainWrongAnswer(String question, String standardAnswer, String studentAnswer) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new RuntimeException("DeepSeek API Key 未配置");
+            return "AI 私教暂时无法连接（未配置服务密钥）。先给你一个思路：先对照标准答案拆出关键得分点，再定位你答案中遗漏或混淆的部分，最后按“结论→依据→步骤”三段式重写一遍，正确率会明显提升。";
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -91,9 +91,17 @@ public class AiGradingService {
                 )
         );
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
-        return extractContent(response.getBody());
+        try {
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+            String content = extractContent(response.getBody());
+            if (content == null || content.trim().isEmpty()) {
+                return "AI 私教刚刚走神了，没返回有效讲解。建议你先看标准答案的关键词，再把自己的作答和关键词逐条对齐，补齐缺失点后再试一次。";
+            }
+            return content;
+        } catch (Exception e) {
+            return "AI 私教暂时繁忙，先给你一个速解法：先判断题目考点，再把标准答案拆成2-3个关键步骤，对照你的答案找出偏差点，最后按步骤重写。等会儿再点一次，我继续陪你练。";
+        }
     }
 
     private String extractContent(String json) {
