@@ -92,34 +92,23 @@
             :default-time="defaultEndTime"
           />
         </el-form-item>
-        <el-form-item label="出题方式">
-          <el-radio-group v-model="createForm.questionMode">
-            <el-radio label="random">随机组卷</el-radio>
-            <el-radio label="manual">题库选题</el-radio>
+        <el-form-item label="组卷策略">
+          <el-radio-group v-model="createForm.generateMode">
+            <el-radio-button label="random">🎲 系统随机抽题 (防作弊)</el-radio-button>
+            <el-radio-button label="manual" disabled>手动挑题 (敬请期待)</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="createForm.questionMode === 'random'" label="题目数量" prop="numberOfQuestions">
-          <el-input-number v-model="createForm.numberOfQuestions" :min="1" :max="500" />
-        </el-form-item>
-        <el-form-item v-else label="选择题目">
-          <el-select
-            v-model="createForm.selectedQuestionIds"
-            multiple
-            filterable
-            clearable
-            collapse-tags
-            collapse-tags-tooltip
-            placeholder="从题库中选择题目"
-            style="width: 100%;"
-          >
-            <el-option
-              v-for="q in questionOptions"
-              :key="q.id"
-              :label="`#${q.id} ${q.content || '未命名题目'}`"
-              :value="q.id"
-            />
-          </el-select>
-        </el-form-item>
+        <div class="smart-rule-box">
+          <div class="smart-rule-title">智能组卷规则配置</div>
+          <el-form-item label="随机抽取题数" prop="numberOfQuestions" class="rule-item">
+            <div class="count-config">
+              <el-input-number v-model="createForm.numberOfQuestions" :min="1" :max="500" />
+              <p class="rule-tip">
+                系统将自动对所选课程的题库进行洗牌打乱，并随机抽取指定数量的题目，确保每次生成的试卷内容均不完全相同。
+              </p>
+            </div>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
@@ -130,12 +119,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { getCourses } from '@/api/course';
 import { getExamsByCourse, createExam, deleteExam } from '@/api/exam';
-import { getQuestionsByCourse } from '@/api/question';
 
 const route = useRoute();
 const router = useRouter();
@@ -143,7 +131,6 @@ const courses = ref([]);
 const selectedCourseId = ref(null);
 const exams = ref([]);
 const loading = ref(false);
-const questionOptions = ref([]);
 
 const createDialogVisible = ref(false);
 const submitting = ref(false);
@@ -155,8 +142,7 @@ const createForm = reactive({
   startTime: '',
   endTime: '',
   numberOfQuestions: 10,
-  questionMode: 'random',
-  selectedQuestionIds: []
+  generateMode: 'random'
 });
 
 const rules = {
@@ -208,7 +194,6 @@ async function loadExams() {
 
 function handleCourseChange() {
   loadExams();
-  loadQuestionOptions(selectedCourseId.value);
 }
 
 function openCreateDialog() {
@@ -217,23 +202,8 @@ function openCreateDialog() {
   createForm.startTime = '';
   createForm.endTime = '';
   createForm.numberOfQuestions = 10;
-  createForm.questionMode = 'random';
-  createForm.selectedQuestionIds = [];
+  createForm.generateMode = 'random';
   createDialogVisible.value = true;
-}
-
-async function loadQuestionOptions(courseId) {
-  if (!courseId) {
-    questionOptions.value = [];
-    return;
-  }
-  try {
-    const data = await getQuestionsByCourse(courseId);
-    questionOptions.value = Array.isArray(data) ? data : [];
-  } catch (e) {
-    ElMessage.error(e.message || '加载题库题目失败');
-    questionOptions.value = [];
-  }
 }
 
 async function submitCreate() {
@@ -245,21 +215,12 @@ async function submitCreate() {
   }
   submitting.value = true;
   try {
-    if (createForm.questionMode === 'manual' && (!createForm.selectedQuestionIds || createForm.selectedQuestionIds.length === 0)) {
-      ElMessage.warning('请选择至少一道题目');
-      submitting.value = false;
-      return;
-    }
     const examPayload = {
       title: createForm.title,
       startTime: createForm.startTime,
       endTime: createForm.endTime
     };
-    if (createForm.questionMode === 'manual') {
-      examPayload.questions = createForm.selectedQuestionIds.map(id => ({ id }));
-    }
-    const count = createForm.questionMode === 'random' ? createForm.numberOfQuestions : 0;
-    await createExam(createForm.courseId, examPayload, count);
+    await createExam(createForm.courseId, examPayload, createForm.numberOfQuestions);
     ElMessage.success('发布考试成功');
     createDialogVisible.value = false;
     await loadExams();
@@ -286,7 +247,6 @@ onMounted(async () => {
     selectedCourseId.value = courses.value[0].id;
     await loadExams();
   }
-  await loadQuestionOptions(selectedCourseId.value);
   if (route.query.create === '1') {
     openCreateDialog();
     const nextQuery = { ...route.query };
@@ -295,10 +255,6 @@ onMounted(async () => {
   }
 });
 
-watch(() => createForm.courseId, (val) => {
-  loadQuestionOptions(val);
-  createForm.selectedQuestionIds = [];
-});
 </script>
 
 <style scoped>
@@ -312,5 +268,28 @@ watch(() => createForm.courseId, (val) => {
 }
 .mt-12 {
   margin-top: 12px;
+}
+.smart-rule-box {
+  border: 1px dashed #bfdbfe;
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 12px 12px 2px;
+}
+.smart-rule-title {
+  color: #1d4ed8;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.rule-item {
+  margin-bottom: 12px;
+}
+.count-config {
+  width: 100%;
+}
+.rule-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #64748b;
 }
 </style>
