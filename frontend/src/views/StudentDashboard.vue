@@ -21,12 +21,15 @@
       </div>
     </el-card>
 
-    <el-card class="glass-card section-card trend-card" shadow="never">
-      <div class="section-header">
-        <h3>我的学情追踪大盘</h3>
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; color: #1c1c1e; font-weight: 600;">📈 课程学情追踪</h3>
+        <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
+          <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
+        </el-select>
       </div>
-      <div ref="trendChartRef" class="trend-chart"></div>
-    </el-card>
+      <div ref="chartRef" style="height: 350px; width: 100%;"></div>
+    </div>
 
     <el-row :gutter="20">
       <el-col :span="16">
@@ -95,9 +98,11 @@ const stats = ref({
 });
 const loadingExams = ref(false);
 const upcomingExams = ref([]);
-const myHistoryScores = ref([]);
-const trendChartRef = ref(null);
-let trendChartInstance = null;
+const allScores = ref([]);
+const availableCourses = ref([]);
+const selectedCourse = ref('');
+const chartRef = ref(null);
+let myChart = null;
 
 const averageScoreText = computed(() => Number(stats.value.averageScore || 0).toFixed(1));
 
@@ -132,31 +137,39 @@ onMounted(async () => {
   }
   await loadMyHistoryScores();
   await nextTick();
-  initTrendChart();
-  renderTrendChart();
+  initChart();
+  renderChart();
   window.addEventListener('resize', handleChartResize);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleChartResize);
-  if (trendChartInstance) {
-    trendChartInstance.dispose();
-    trendChartInstance = null;
+  if (myChart) {
+    myChart.dispose();
+    myChart = null;
   }
 });
 
 async function loadMyHistoryScores() {
   try {
     const list = await getMyScores();
-    const sorted = (Array.isArray(list) ? list : []).slice().sort((a, b) => {
-      const ta = resolveSubmitTime(a);
-      const tb = resolveSubmitTime(b);
-      return ta - tb;
+    allScores.value = (Array.isArray(list) ? list : []).map((item, index) => {
+      const submitTime = resolveSubmitTime(item);
+      return {
+        ...item,
+        submitTime,
+        examTitle: item?.exam?.title || `考试${index + 1}`,
+        courseName: item?.courseName || item?.exam?.course?.courseName || item?.exam?.courseName || '未分类课程',
+      };
     });
-    myHistoryScores.value = sorted;
+    availableCourses.value = [...new Set(allScores.value.map(item => item.courseName))];
+    const latest = allScores.value.slice().sort((a, b) => b.submitTime - a.submitTime)[0];
+    selectedCourse.value = latest?.courseName || availableCourses.value[0] || '';
   } catch (e) {
     ElMessage.error(e.message || '加载历史成绩失败');
-    myHistoryScores.value = [];
+    allScores.value = [];
+    availableCourses.value = [];
+    selectedCourse.value = '';
   }
 }
 
@@ -172,73 +185,73 @@ function resolveSubmitTime(item) {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function initTrendChart() {
-  if (!trendChartRef.value) return;
-  if (trendChartInstance) {
-    trendChartInstance.dispose();
+function initChart() {
+  if (!chartRef.value) return;
+  if (myChart) {
+    myChart.dispose();
   }
-  trendChartInstance = echarts.init(trendChartRef.value);
+  myChart = echarts.init(chartRef.value);
 }
 
-function renderTrendChart() {
-  if (!trendChartInstance) return;
-  const xData = myHistoryScores.value.map((item, index) => item?.exam?.title || `考试${index + 1}`);
-  const yData = myHistoryScores.value.map(item => Number(item?.score ?? 0));
-  trendChartInstance.setOption({
+function renderChart() {
+  if (!myChart) return;
+  const filtered = allScores.value
+    .filter(item => item.courseName === selectedCourse.value)
+    .slice()
+    .sort((a, b) => a.submitTime - b.submitTime);
+  const xData = filtered.map(item => item.examTitle);
+  const yData = filtered.map(item => Number(item.score ?? 0));
+  const option = {
     tooltip: {
       trigger: 'axis',
-      formatter: (params) => {
-        const point = Array.isArray(params) ? params[0] : params;
-        return `${point?.axisValue || '-'}<br/>成绩：${point?.data ?? 0} 分`;
-      },
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      borderColor: '#E5E5EA',
+      textStyle: { color: '#1C1C1E', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI"' },
+      extraCssText: 'backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-radius: 12px; padding: 12px;'
     },
-    grid: {
-      left: 36,
-      right: 20,
-      top: 28,
-      bottom: 28,
-      containLabel: true,
-    },
+    grid: { top: 30, right: 20, bottom: 30, left: 40, containLabel: true },
     xAxis: {
       type: 'category',
-      data: xData,
-      axisLabel: { color: '#64748B' },
-      axisLine: { lineStyle: { color: '#CBD5E1' } },
+      data: xData, // 过滤后的考试名称
+      axisLine: { lineStyle: { color: '#D1D1D6', width: 1 } },
+      axisTick: { show: false },
+      axisLabel: { color: '#8E8E93', fontFamily: '-apple-system', margin: 12 }
     },
     yAxis: {
       type: 'value',
-      name: '分数',
       min: 0,
-      axisLabel: { color: '#64748B' },
-      splitLine: { lineStyle: { color: 'rgba(203, 213, 225, 0.55)' } },
+      max: 100,
+      splitLine: { lineStyle: { color: '#F2F2F7', type: 'dashed' } },
+      axisLabel: { color: '#8E8E93', fontFamily: '-apple-system' }
     },
-    series: [
-      {
-        type: 'line',
-        smooth: true,
-        data: yData,
-        symbol: 'circle',
-        symbolSize: 7,
-        lineStyle: {
-          width: 3,
-          color: '#3B82F6',
-        },
-        itemStyle: {
-          color: '#3B82F6',
-        },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(59, 130, 246, 0.36)' },
-            { offset: 1, color: 'rgba(59, 130, 246, 0)' },
-          ]),
-        },
+    series: [{
+      data: yData, // 过滤后的成绩
+      type: 'line',
+      smooth: 0.4, // 平滑曲线
+      showSymbol: false, // 隐藏默认圆点，只有 hover 时显示
+      symbol: 'circle',
+      symbolSize: 10,
+      itemStyle: { color: '#007AFF', borderColor: '#FFF', borderWidth: 2 }, // iOS Blue
+      lineStyle: {
+        width: 4,
+        color: '#007AFF',
+        shadowColor: 'rgba(0, 122, 255, 0.3)', // 曲线的立体投影
+        shadowBlur: 12,
+        shadowOffsetY: 6
       },
-    ],
-  });
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(0, 122, 255, 0.25)' }, // 顶部淡蓝色
+          { offset: 1, color: 'rgba(0, 122, 255, 0.02)' }  // 底部几乎透明
+        ])
+      }
+    }]
+  };
+  myChart.setOption(option);
 }
 
 function handleChartResize() {
-  trendChartInstance?.resize();
+  myChart?.resize();
 }
 
 function formatDateTime(value) {
@@ -327,15 +340,6 @@ function goScores() {
 .section-card {
   padding: 18px;
   height: 100%;
-}
-
-.trend-card {
-  height: auto;
-}
-
-.trend-chart {
-  height: 350px;
-  width: 100%;
 }
 
 .section-header {
