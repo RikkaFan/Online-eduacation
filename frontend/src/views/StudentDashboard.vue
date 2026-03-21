@@ -1,7 +1,7 @@
 <template>
-  <div class="student-dashboard" style="display: flex; flex-direction: column; gap: 24px; padding: 24px;">
+  <div class="student-dashboard dashboard-canvas">
     <div class="page-label">Student Dashboard</div>
-    <div class="glass-card welcome-banner" style="padding: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div class="glass-card welcome-banner">
       <div class="hero-left">
         <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
         <p class="hero-subtitle">持续学习，稳步提升，每一次作答都在靠近更好的自己。</p>
@@ -14,27 +14,27 @@
       <div class="hero-art"></div>
     </div>
 
-    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
-      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+    <div class="metrics-grid">
+      <div class="glass-card metric-item">
         <div class="metric-top"><el-icon class="metric-icon"><EditPen /></el-icon><span>已考场次</span></div>
         <div class="metric-value">{{ stats.attendedExams }}</div>
       </div>
-      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+      <div class="glass-card metric-item">
         <div class="metric-top"><el-icon class="metric-icon"><Warning /></el-icon><span>错题总数</span></div>
         <div class="metric-value">{{ stats.totalMistakes }}</div>
       </div>
-      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+      <div class="glass-card metric-item">
         <div class="metric-top"><el-icon class="metric-icon"><DataBoard /></el-icon><span>平均得分</span></div>
         <div class="metric-value">{{ averageScoreText }}<small> 分</small></div>
       </div>
-      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+      <div class="glass-card metric-item">
         <div class="metric-top"><el-icon class="metric-icon"><Reading /></el-icon><span>课程进度</span></div>
         <div class="metric-value">{{ availableCourses.length || 0 }}</div>
       </div>
     </div>
 
-    <div class="bottom-grid" style="display: grid; grid-template-columns: 7fr 3fr; gap: 24px;">
-      <div class="glass-card chart-section" style="padding: 24px; height: 400px; display: flex; flex-direction: column;">
+    <div class="bottom-grid">
+      <div class="glass-card chart-section">
         <div class="section-head">
           <h3>课程学情追踪</h3>
           <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
@@ -44,16 +44,16 @@
         <div ref="chartRef" class="chart-panel"></div>
       </div>
 
-      <div class="glass-card list-section" style="padding: 24px; height: 400px; display: flex; flex-direction: column;">
+      <div class="glass-card list-section">
         <h3 style="font-size: 18px; font-weight: 600; color: #1c1c1e; margin-bottom: 20px;">近期考试</h3>
         <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
-        <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+        <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar">
           <div class="exam-head-row">
             <span>课程名称</span>
             <span>日期</span>
             <span>操作</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+          <div class="exam-body-grid">
             <div
               v-for="exam in upcomingExamsView"
               :key="exam.id"
@@ -305,8 +305,20 @@ function goScores() {
 </script>
 
 <style scoped>
+.student-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+.dashboard-canvas {
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(239, 245, 255, 0.72) 0%, rgba(246, 249, 255, 0.5) 100%);
+  border: 1px solid rgba(228, 236, 250, 0.8);
+}
 .page-label {
-  font-size: 42px;
+  font-size: clamp(34px, 3vw, 46px);
   font-weight: 700;
   color: #0f172a;
   letter-spacing: -0.6px;
@@ -325,6 +337,7 @@ function goScores() {
   gap: 24px;
   position: relative;
   overflow: hidden;
+  padding: 24px;
 }
 .welcome-banner::before {
   content: '';
@@ -339,6 +352,7 @@ function goScores() {
   flex: 1;
   position: relative;
   z-index: 1;
+  min-width: 0;
 }
 .hero-subtitle {
   margin-top: 8px;
@@ -364,8 +378,9 @@ function goScores() {
   font-weight: 600;
 }
 .hero-art {
-  width: 220px;
-  height: 140px;
+  width: min(24%, 260px);
+  min-width: 180px;
+  height: 148px;
   border-radius: 16px;
   background:
     radial-gradient(at 20% 20%, rgba(59, 130, 246, 0.2) 0px, transparent 55%),
@@ -393,7 +408,30 @@ function goScores() {
   color: #0a84ff;
 }
 .metric-item {
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.03);
+}
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(320px, 3fr);
+  gap: 24px;
+}
+.chart-section,
+.list-section {
+  padding: 24px;
+  height: clamp(360px, 43vh, 430px);
+  display: flex;
+  flex-direction: column;
 }
 .section-head {
   display: flex;
@@ -416,8 +454,10 @@ function goScores() {
 }
 .exam-list-container {
   -webkit-overflow-scrolling: touch;
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-right: 2px;
   transition: all 0.3s ease;
 }
 .exam-head-row {
@@ -428,6 +468,11 @@ function goScores() {
   font-size: 12px;
   font-weight: 600;
   padding: 0 14px 8px;
+}
+.exam-body-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 .exam-card-item {
   padding: 14px 16px;
@@ -490,6 +535,13 @@ function goScores() {
   border-radius: 12px !important;
 }
 @media (max-width: 1200px) {
+  .student-dashboard {
+    padding: 20px;
+    gap: 20px;
+  }
+  .page-label {
+    font-size: 34px;
+  }
   .welcome-banner {
     flex-direction: column;
     align-items: flex-start;
@@ -511,6 +563,18 @@ function goScores() {
   }
   .action-col {
     justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  .student-dashboard {
+    padding: 16px;
+    gap: 16px;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-title {
+    font-size: 28px;
   }
 }
 </style>
