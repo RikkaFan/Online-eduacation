@@ -304,11 +304,11 @@ function goScores() {
 
 <style scoped>
 .student-dashboard {
-  --dashboard-scale: clamp(0.84, calc((100vw - 300px) / 1360), 1);
+  --dashboard-scale: clamp(0.88, calc((100vw - 280px) / 1400), 1);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 24px;
+  gap: 14px;
+  padding: 32px 24px 24px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
@@ -344,11 +344,11 @@ function goScores() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   position: relative;
   overflow: hidden;
-  padding: 18px 20px;
-  min-height: 136px;
+  padding: 16px 20px;
+  min-height: 128px;
   margin-top: 2px;
   isolation: isolate;
 }
@@ -378,7 +378,7 @@ function goScores() {
 }
 .hero-left {
   flex: 1;
-  max-width: min(60%, 720px);
+  max-width: min(58%, 700px);
   position: relative;
   z-index: 1;
   min-width: 0;
@@ -388,9 +388,9 @@ function goScores() {
   color: #475569;
 }
 .hero-meta-list {
-  margin-top: 12px;
+  margin-top: 10px;
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 .hero-meta-item {
   display: flex;
@@ -398,8 +398,8 @@ function goScores() {
   justify-content: flex-start;
   gap: 12px;
   background: rgba(255, 255, 255, 0.42);
-  border-radius: 12px;
-  padding: 7px 12px;
+  border-radius: 10px;
+  padding: 6px 10px;
   color: #64748b;
   font-size: 13px;
 }
@@ -428,8 +428,8 @@ function goScores() {
   color: #0a84ff;
 }
 .metric-item {
-  padding: 16px 20px;
-  min-height: 88px;
+  padding: 14px 18px;
+  min-height: 94px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -440,17 +440,17 @@ function goScores() {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 .bottom-grid {
   display: grid;
-  grid-template-columns: minmax(0, 6fr) minmax(360px, 4fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
 }
 .chart-section,
 .list-section {
-  padding: 18px 20px;
-  height: clamp(300px, 35vh, 350px);
+  padding: 16px 18px;
+  height: clamp(314px, 36vh, 360px);
   display: flex;
   flex-direction: column;
 }
@@ -458,7 +458,7 @@ function goScores() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .section-head h3 {
   margin: 0;
@@ -577,7 +577,7 @@ function goScores() {
   .student-dashboard {
     --dashboard-scale: 1;
     padding: 20px;
-    gap: 20px;
+    gap: 14px;
     width: 100%;
     transform: none;
   }
