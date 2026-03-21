@@ -291,7 +291,7 @@ function goScores() {
 .student-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 .dash-title {
   font-size: 24px;
@@ -311,7 +311,7 @@ function goScores() {
   gap: 20px;
 }
 .metric-card {
-  padding: 18px 16px;
+  padding: 24px;
   text-align: center;
 }
 .metric-icon {
@@ -332,7 +332,7 @@ function goScores() {
 .hero-banner {
   background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
   border: 1px solid #cce4ff;
-  padding: 16px 18px;
+  padding: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -357,7 +357,7 @@ function goScores() {
   margin-top: 24px;
 }
 .chart-section {
-  padding: 18px;
+  padding: 24px;
 }
 .chart-head {
   display: flex;
@@ -379,9 +379,11 @@ function goScores() {
 .chart-panel {
   height: 350px;
   width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
 }
 .list-section {
-  padding: 18px;
+  padding: 24px;
 }
 .placeholder {
   color: #64748b;
@@ -408,12 +410,14 @@ function goScores() {
   grid-template-columns: 1.2fr 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 12px;
-  transition: background-color .2s ease;
+  transition: all 0.3s ease;
 }
 .timeline-item:hover {
-  background: rgba(248, 250, 252, 0.9);
+  background: rgba(255, 255, 255, 0.62);
 }
 .timeline-left {
   display: flex;
@@ -439,6 +443,12 @@ function goScores() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+:deep(.el-button) {
+  border-radius: 12px !important;
+}
+:deep(.el-tag) {
+  border-radius: 12px !important;
 }
 @media (max-width: 1200px) {
   .metric-grid {
