@@ -1,5 +1,5 @@
 <template>
-  <el-container class="apple-layout" style="height: 100vh; overflow: hidden;">
+  <el-container class="apple-layout">
     <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
       <div class="profile-card">
         <el-avatar :size="42">
@@ -54,7 +54,7 @@
       </div>
     </el-aside>
 
-    <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden; height: 100%; display: flex; flex-direction: column;">
+    <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden;">
       <router-view />
     </el-main>
   </el-container>
@@ -108,6 +108,7 @@ function handleLogout() {
   align-items: center;
   gap: 10px;
   padding: 8px 4px 16px;
+  margin-top: clamp(44px, 6vh, 62px);
 }
 .profile-meta {
   min-width: 0;
@@ -159,5 +160,10 @@ function handleLogout() {
 .nav-bottom {
   width: 100%;
   margin-bottom: 16px;
+}
+@media (max-width: 1200px) {
+  .profile-card {
+    margin-top: 20px;
+  }
 }
 </style>
