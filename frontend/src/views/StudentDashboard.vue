@@ -305,10 +305,21 @@ function goScores() {
 
 <style scoped>
 .student-dashboard {
+  --dashboard-scale: clamp(0.84, calc((100vw - 300px) / 1360), 1);
   display: flex;
   flex-direction: column;
   gap: 24px;
   padding: 24px;
+  width: calc(100% / var(--dashboard-scale));
+  transform: scale(var(--dashboard-scale));
+  transform-origin: top left;
+}
+@supports (zoom: 1) {
+  .student-dashboard {
+    width: 100%;
+    transform: none;
+    zoom: var(--dashboard-scale);
+  }
 }
 .dashboard-canvas {
   border-radius: 24px;
@@ -455,7 +466,7 @@ function goScores() {
 }
 .exam-head-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.9fr) auto;
   align-items: center;
   color: #8e8e93;
   font-size: 12px;
@@ -471,7 +482,7 @@ function goScores() {
   padding: 16px 18px;
   border-radius: 12px;
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.9fr) auto;
   align-items: center;
   border: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.02);
@@ -499,6 +510,7 @@ function goScores() {
   font-size: 12px;
   color: #8E8E93;
   line-height: 1.45;
+  white-space: nowrap;
 }
 .action-col {
   justify-content: flex-end;
@@ -533,8 +545,16 @@ function goScores() {
 }
 @media (max-width: 1200px) {
   .student-dashboard {
+    --dashboard-scale: 1;
     padding: 20px;
     gap: 20px;
+    width: 100%;
+    transform: none;
+  }
+  @supports (zoom: 1) {
+    .student-dashboard {
+      zoom: 1;
+    }
   }
   .welcome-banner {
     flex-direction: column;
