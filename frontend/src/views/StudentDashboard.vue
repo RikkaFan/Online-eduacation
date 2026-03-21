@@ -289,6 +289,8 @@ function goScores() {
 <style scoped>
 .dashboard-wrapper {
   --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -298,6 +300,7 @@ function goScores() {
   transform: scale(var(--dashboard-scale));
   transform-origin: top left;
   background: transparent;
+  overflow: hidden;
 }
 @supports (zoom: 1) {
   .dashboard-wrapper {
@@ -313,6 +316,7 @@ function goScores() {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .welcome-banner {
+  flex: 1.5;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -320,8 +324,8 @@ function goScores() {
   position: relative;
   overflow: hidden;
   padding: 0 36px;
-  height: 120px;
-  min-height: 120px;
+  min-height: 100px;
+  max-height: 160px;
   border-radius: 20px !important;
   isolation: isolate;
 }
@@ -379,11 +383,15 @@ function goScores() {
   font-size: 28px;
 }
 .metrics-grid {
+  flex: 1;
+  min-height: 90px;
+  max-height: 120px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 .metric-card {
+  height: 100%;
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
@@ -410,6 +418,8 @@ function goScores() {
   margin-left: 4px;
 }
 .bottom-grid {
+  flex: 4;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
@@ -417,7 +427,7 @@ function goScores() {
 .chart-section,
 .list-section {
   padding: 24px;
-  height: 320px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   border-radius: 20px !important;
