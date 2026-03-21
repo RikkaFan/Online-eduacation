@@ -5,29 +5,21 @@
         <h2>考试列表</h2>
         <div class="hero-sub">查看考试安排、状态与进入入口</div>
       </div>
-      <el-button class="hero-btn" round @click="goBackDashboard">返回首页</el-button>
     </div>
     <div class="glass-card list-card">
       <div class="list-head-row">
-        <span>考试名称</span>
-        <span>所属课程</span>
-        <span>开始时间</span>
-        <span>结束时间</span>
-        <span>状态</span>
-        <span>操作</span>
+        <span>课程名称</span>
+        <span>日期</span>
+        <span>入口</span>
       </div>
       <div v-loading="loading" class="list-scroll">
         <template v-if="exams.length">
-          <div v-for="row in exams" :key="row.id" class="exam-row glass-row">
+          <div v-for="row in exams" :key="row.id" class="exam-row">
             <div class="row-cell title-cell">
+              <el-icon class="exam-cal-icon"><Calendar /></el-icon>
               <span class="exam-title">{{ row.title || '未命名考试' }}</span>
             </div>
-            <div class="row-cell">{{ row.course?.courseName || row.courseName || '-' }}</div>
             <div class="row-cell">{{ formatDateTime(row.startTime) }}</div>
-            <div class="row-cell">{{ formatDateTime(row.endTime) }}</div>
-            <div class="row-cell">
-              <el-tag effect="plain" :type="statusType(getStatus(row))">{{ getStatusText(getStatus(row)) }}</el-tag>
-            </div>
             <div class="row-cell action-cell">
               <el-button type="primary" size="small" plain round :disabled="getStatus(row) !== 'ongoing'" @click="enterExam(row.id)">
                 {{ getStatus(row) === 'finished' ? '已结束' : '进入考试' }}
@@ -45,6 +37,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { Calendar } from '@element-plus/icons-vue';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getMyScores } from '@/api/score';
 
@@ -88,18 +81,8 @@ function getStatus(exam) {
   if (end && now > end) return 'finished';
   return 'ongoing';
 }
-function getStatusText(s) {
-  return s === 'pending' ? '未开始' : s === 'finished' ? '已结束' : '进行中';
-}
-function statusType(s) {
-  return s === 'pending' ? 'info' : s === 'finished' ? 'warning' : 'success';
-}
 function enterExam(id) {
   router.push(`/student/exam-ready/${id}`);
-}
-
-function goBackDashboard() {
-  router.push('/student/dashboard');
 }
 </script>
 
@@ -115,10 +98,12 @@ function goBackDashboard() {
   align-items: center;
   justify-content: space-between;
   min-height: 112px;
-  padding: 0 28px;
+  padding: 0 32px;
   border-radius: 20px !important;
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(212, 224, 244, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
 }
 .page-hero::before {
   content: '';
@@ -143,23 +128,22 @@ function goBackDashboard() {
   color: #64748b;
   font-size: 13px;
 }
-.hero-btn {
-  position: relative;
-  z-index: 1;
-}
 .list-card {
   border-radius: 20px !important;
-  padding: 18px;
-  min-height: 420px;
+  padding: 24px;
+  min-height: 456px;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(212, 224, 244, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
 }
 .list-head-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.1fr) minmax(110px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) 90px 96px;
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
   align-items: center;
-  padding: 0 12px 10px;
+  text-align: center;
+  padding: 0 10px 14px;
   color: #8e8e93;
   font-size: 12px;
   font-weight: 600;
@@ -169,34 +153,41 @@ function goBackDashboard() {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   padding-right: 4px;
 }
 .exam-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.1fr) minmax(110px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) 90px 96px;
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
   align-items: center;
-  padding: 14px 12px;
-  border-radius: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
   border: 1px solid rgba(212, 224, 244, 0.92);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.03);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 .row-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #475569;
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.exam-cal-icon {
+  font-size: 18px;
+  color: #007AFF;
+  margin-right: 8px;
+}
 .title-cell .exam-title {
   color: #0f172a;
   font-weight: 600;
 }
 .action-cell {
-  display: flex;
-  justify-content: flex-start;
+  justify-content: center;
 }
 @media (max-width: 1200px) {
   .list-head-row,
