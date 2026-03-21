@@ -1,81 +1,76 @@
 <template>
   <div class="question-management-container">
-    <el-row :gutter="20" class="full-height">
-      <el-col :span="6" class="category-panel">
-        <div class="panel-header">
-          <h3>课程题库</h3>
-        </div>
-        <div class="category-list">
-          <el-menu :default-active="selectedCourseId?.toString()" @select="handleCourseSelect" class="el-menu-vertical apple-menu">
-            <el-menu-item
-              v-for="course in courses"
-              :key="course.id"
-              :index="course.id.toString()"
-            >
-              <div class="category-item-content">
-                <span class="category-name" :title="course.courseName || `课程#${course.id}`">{{ course.courseName || `课程#${course.id}` }}</span>
-              </div>
-            </el-menu-item>
-          </el-menu>
-          <div v-if="courses.length === 0" class="empty-tip">
-            暂无课程，请先在课程管理中创建。
-          </div>
-        </div>
-      </el-col>
+    <h2 class="page-title">📚 题库管理中心</h2>
 
-      <el-col :span="18" class="question-panel">
-        <div class="panel-header">
-          <h3>题目列表 <span v-if="activeCourseName">- {{ activeCourseName }}</span></h3>
-          <div class="action-buttons">
-            <el-button size="small" @click="handleDownloadTemplate">下载导入模板</el-button>
-            <el-upload accept=".xlsx,.xls" :show-file-list="false" :before-upload="handleImport">
-              <el-button type="success" size="small">批量导入题目</el-button>
-            </el-upload>
-            <el-button type="primary" size="small" :disabled="!selectedCourseId" @click="showAddQuestionDialog">新增题目</el-button>
-          </div>
-        </div>
+    <div class="glass-card toolbar-card">
+      <div class="toolbar-left">
+        <el-select v-model="searchCourse" clearable placeholder="选择课程筛选" style="width: 220px;">
+          <el-option v-for="course in courses" :key="course.id" :label="course.courseName || `课程#${course.id}`" :value="course.id" />
+        </el-select>
+        <el-input v-model="searchKeyword" clearable placeholder="搜索题干关键字" style="width: 320px;" />
+      </div>
+      <div class="toolbar-right">
+        <el-button type="primary" round @click="handleDownloadTemplate">下载导入模板</el-button>
+        <el-upload accept=".xlsx,.xls" :show-file-list="false" :before-upload="handleImport">
+          <el-button type="primary" round>批量导入题目</el-button>
+        </el-upload>
+        <el-button type="primary" round :disabled="!searchCourse" @click="showAddQuestionDialog">新增题目</el-button>
+      </div>
+    </div>
 
-        <el-table :data="questions" v-loading="loadingQuestions" style="width: 100%" border stripe>
-          <el-table-column prop="id" label="ID" width="60" align="center" />
-          <el-table-column prop="content" label="题干" min-width="250" show-overflow-tooltip />
-          <el-table-column label="题型" width="120">
-            <template #default="{ row }">
-              <el-tag type="info" effect="plain">{{ rowTypeName(row.type) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="options" label="选项" min-width="150" show-overflow-tooltip />
-          <el-table-column label="正确答案" min-width="260">
-            <template #default="{ row }">
-              <template v-if="normalizeType(row.type) === 'SUBJECTIVE'">
-                <div class="answer-cell">
-                  <el-tooltip
-                    effect="dark"
-                    placement="top"
-                    :content="row.answer || '暂无答案'"
-                    raw-content
-                  >
-                    <span class="answer-ellipsis">{{ answerPreview(row.answer) }}</span>
-                  </el-tooltip>
-                  <el-button link type="primary" size="small" @click="openAnswerPreview(row)">查看</el-button>
-                </div>
-              </template>
-              <template v-else>
-                <span>{{ row.answer || '-' }}</span>
-              </template>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="100" align="center">
-            <template #default="{ row }">
-              <el-button link type="danger" @click="handleDeleteQuestion(row.id)">删除</el-button>
-            </template>
-          </el-table-column>
-          <template #empty>
-            <div v-if="!selectedCourseId">请先在左侧选择课程</div>
-            <div v-else>该课程下暂无题目</div>
+    <el-tabs v-model="activeTab" class="question-tabs">
+      <el-tab-pane label="全部题目" name="all" />
+      <el-tab-pane label="单选题" name="SINGLE" />
+      <el-tab-pane label="多选题" name="MULTIPLE" />
+      <el-tab-pane label="判断题" name="JUDGE" />
+      <el-tab-pane label="主观题" name="SUBJECTIVE" />
+    </el-tabs>
+
+    <div class="glass-card table-card">
+      <div class="table-header">
+        <h3>题目列表</h3>
+        <span class="table-sub">{{ filteredQuestions.length }} 道题</span>
+      </div>
+      <el-table :data="filteredQuestions" v-loading="loadingQuestions" style="width: 100%" border stripe>
+        <el-table-column prop="id" label="ID" width="70" align="center" />
+        <el-table-column prop="content" label="题干" min-width="380" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="content-cell">
+              <span class="content-text">{{ row.content || '-' }}</span>
+              <span v-if="row.imageUrl" class="image-flag">🖼️</span>
+            </div>
           </template>
-        </el-table>
-      </el-col>
-    </el-row>
+        </el-table-column>
+        <el-table-column label="题型" width="130" align="center">
+          <template #default="{ row }">
+            <el-tag :type="typeTagType(row.type)" effect="plain">{{ rowTypeName(row.type) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="标准答案" min-width="260">
+          <template #default="{ row }">
+            <template v-if="normalizeType(row.type) === 'SUBJECTIVE'">
+              <div class="answer-cell">
+                <el-tooltip effect="dark" placement="top" :content="row.answer || '暂无答案'" raw-content>
+                  <span class="answer-ellipsis answer-highlight">{{ answerPreview(row.answer) }}</span>
+                </el-tooltip>
+                <el-button link type="primary" size="small" @click="openAnswerPreview(row)">查看</el-button>
+              </div>
+            </template>
+            <template v-else>
+              <span class="answer-highlight">{{ row.answer || '-' }}</span>
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" align="center">
+          <template #default="{ row }">
+            <el-button link type="danger" @click="handleDeleteQuestion(row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+        <template #empty>
+          <div>暂无匹配题目</div>
+        </template>
+      </el-table>
+    </div>
 
     <el-dialog v-model="questionDialogVisible" title="新增题目" width="50%">
       <el-form :model="questionForm" :rules="questionRules" ref="questionFormRef" label-width="100px">
@@ -147,13 +142,25 @@ import {
 
 const courses = ref([]);
 const selectedCourseId = ref(null);
+const searchCourse = ref(null);
+const searchKeyword = ref('');
+const activeTab = ref('all');
 const questions = ref([]);
 const loadingQuestions = ref(false);
 
-const activeCourseName = computed(() => {
-  if (!selectedCourseId.value) return '';
-  const course = courses.value.find(c => c.id === selectedCourseId.value);
-  return course ? (course.courseName || '') : '';
+const filteredQuestions = computed(() => {
+  let result = [...questions.value];
+  if (searchCourse.value) {
+    result = result.filter(q => Number(q.courseId) === Number(searchCourse.value));
+  }
+  if (searchKeyword.value) {
+    const keyword = String(searchKeyword.value).trim();
+    result = result.filter(q => q.content && q.content.includes(keyword));
+  }
+  if (activeTab.value !== 'all') {
+    result = result.filter(q => normalizeType(q.type) === activeTab.value);
+  }
+  return result.sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
 });
 
 onMounted(async () => {
@@ -164,29 +171,31 @@ const loadCourses = async () => {
   try {
     const data = await getCourses();
     courses.value = Array.isArray(data) ? data : [];
-    if (courses.value.length > 0 && !selectedCourseId.value) {
+    if (courses.value.length > 0) {
+      searchCourse.value = courses.value[0].id;
       selectedCourseId.value = courses.value[0].id;
-      await loadQuestions(selectedCourseId.value);
-    } else if (courses.value.length === 0) {
-      selectedCourseId.value = null;
-      questions.value = [];
+      await loadQuestions();
+      return;
     }
+    searchCourse.value = null;
+    selectedCourseId.value = null;
+    questions.value = [];
   } catch (error) {
     ElMessage.error(error.message || '加载课程失败');
   }
 };
 
-const handleCourseSelect = async (index) => {
-  const courseId = Number(index);
-  selectedCourseId.value = Number.isNaN(courseId) ? null : courseId;
-  await loadQuestions(selectedCourseId.value);
-};
-
-const loadQuestions = async (courseId) => {
-  if (!courseId) return;
+const loadQuestions = async () => {
   loadingQuestions.value = true;
   try {
-    questions.value = await getQuestionsByCourse(courseId);
+    const all = await Promise.all(courses.value.map(async (course) => {
+      const list = await getQuestionsByCourse(course.id);
+      return (Array.isArray(list) ? list : []).map(q => ({
+        ...q,
+        courseId: q.courseId ?? course.id
+      }));
+    }));
+    questions.value = all.flat();
   } catch (error) {
     ElMessage.error(error.message || '加载题目失败');
     questions.value = [];
@@ -217,6 +226,7 @@ const questionRules = {
 };
 
 const showAddQuestionDialog = () => {
+  selectedCourseId.value = searchCourse.value;
   if (!selectedCourseId.value) {
     ElMessage.warning('请先选择一门课程');
     return;
@@ -240,6 +250,14 @@ const rowTypeName = (type) => {
   if (normalized === 'JUDGE') return '判断题';
   if (normalized === 'SUBJECTIVE') return '主观题';
   return '单选 (客观题)';
+};
+
+const typeTagType = (type) => {
+  const normalized = normalizeType(type);
+  if (normalized === 'MULTIPLE') return 'warning';
+  if (normalized === 'JUDGE') return 'success';
+  if (normalized === 'SUBJECTIVE') return 'info';
+  return '';
 };
 
 const normalizeType = (type) => {
@@ -302,7 +320,7 @@ const submitQuestionForm = async () => {
         await createQuestion(payload);
         ElMessage.success('题目创建成功');
         questionDialogVisible.value = false;
-        await loadQuestions(selectedCourseId.value);
+        await loadQuestions();
       } catch (error) {
         ElMessage.error(error.message || '创建题目失败');
       } finally {
@@ -321,7 +339,7 @@ const handleDeleteQuestion = async (id) => {
     });
     await deleteQuestion(id);
     ElMessage.success('题目删除成功');
-    await loadQuestions(selectedCourseId.value);
+    await loadQuestions();
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除题目失败');
@@ -359,7 +377,7 @@ const handleImport = async (file) => {
   try {
     await importQuestions(selectedCourseId.value, file);
     ElMessage.success('导入成功');
-    await loadQuestions(selectedCourseId.value);
+    await loadQuestions();
   } catch (error) {
     ElMessage.error(error.message || '导入失败');
   } finally {
@@ -372,116 +390,77 @@ const handleImport = async (file) => {
 <style scoped>
 .question-management-container {
   padding: 20px;
-  height: calc(100vh - 100px); /* 视具体项目布局调整 */
-  background: #f5f5f7; /* Apple 浅灰背景 */
+  min-height: calc(100vh - 100px);
+  background: #f5f5f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.full-height {
-  height: 100%;
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1d1d1f;
 }
-
-.panel-header {
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 16px;
+}
+.toolbar-card {
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
+  gap: 14px;
+  flex-wrap: wrap;
 }
-
-.panel-header h3 {
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.question-tabs {
+  padding: 0 8px;
+}
+.table-card {
+  padding: 14px;
+}
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.table-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #303133;
+  color: #1d1d1f;
 }
-
-.action-buttons {
-  display: flex;
+.table-sub {
+  color: #64748b;
+  font-size: 13px;
+}
+.content-cell {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
-
-.category-panel {
-  background: #ffffffcc;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  height: 100%;
-  overflow-y: auto;
-  backdrop-filter: saturate(180%) blur(10px);
-}
-
-.category-list {
-  margin-top: 10px;
-}
-
-.category-item-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.category-name {
-  max-width: 180px;
+.content-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #1d1d1f;
-  font-weight: 500;
-  letter-spacing: 0.2px;
 }
-
-.category-item-content .delete-btn {
-  visibility: hidden;
+.image-flag {
+  font-size: 13px;
 }
-
-.el-menu-item:hover .category-item-content .delete-btn {
-  visibility: visible;
-}
-
-.apple-menu :deep(.el-menu-item) {
-  height: 46px;
-  line-height: 46px;
-  border-radius: 10px;
-  margin: 4px 6px;
-  transition: background 0.25s ease, color 0.25s ease;
-}
-
-.apple-menu :deep(.el-menu-item.is-active) {
-  background: #e8f0fe;
-  color: #0a84ff;
-}
-
-.apple-menu :deep(.el-menu-item:hover) {
-  background: #f2f2f7;
-}
-
-.empty-tip {
-  color: #909399;
-  text-align: center;
-  padding: 30px 0;
-  font-size: 14px;
-}
-
-.question-panel {
-  background: #ffffffcc;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  height: 100%;
-  overflow-y: auto;
-  backdrop-filter: saturate(180%) blur(10px);
-}
-
-.form-help {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
-  line-height: 1.5;
-}
-
 .option-editor {
   width: 100%;
   display: grid;
@@ -506,7 +485,13 @@ const handleImport = async (file) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #334155;
+}
+.answer-highlight {
+  color: #059669;
+  font-weight: 600;
+  background: #ecfdf5;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .answer-preview-content {
@@ -517,10 +502,10 @@ const handleImport = async (file) => {
   max-height: 60vh;
   overflow: auto;
 }
-
-/* 覆盖el-menu-item的高度，确保按钮对齐 */
-:deep(.el-menu-item) {
-  height: 46px;
-  line-height: 46px;
+@media (max-width: 1100px) {
+  .toolbar-left .el-select,
+  .toolbar-left .el-input {
+    width: 100% !important;
+  }
 }
 </style>
