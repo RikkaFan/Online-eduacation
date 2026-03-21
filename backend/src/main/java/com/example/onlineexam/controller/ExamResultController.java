@@ -1,8 +1,11 @@
 package com.example.onlineexam.controller;
 
 import com.example.onlineexam.model.ExamResult;
+import com.example.onlineexam.model.Question;
 import com.example.onlineexam.model.StudentAnswer;
 import com.example.onlineexam.payload.response.ScoreExcelDTO;
+import com.example.onlineexam.repository.ExamResultRepository;
+import com.example.onlineexam.repository.StudentAnswerRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import com.example.onlineexam.service.AiGradingService;
 import com.example.onlineexam.service.ExamResultService;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +39,12 @@ public class ExamResultController {
 
     @Autowired
     private AiGradingService aiGradingService;
+
+    @Autowired
+    private ExamResultRepository examResultRepository;
+
+    @Autowired
+    private StudentAnswerRepository studentAnswerRepository;
 
     @PostMapping("/exams/{examId}/submit")
     @PreAuthorize("hasRole('STUDENT')")
@@ -94,6 +104,46 @@ public class ExamResultController {
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or #studentId == authentication.principal.id")
     public List<StudentAnswer> getMistakesByStudent(@PathVariable Long studentId) {
         return examResultService.getMistakesByStudent(studentId);
+    }
+
+    @GetMapping("/results/review/{examId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> getExamReview(@PathVariable Long examId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsImpl userDetails)) {
+            return ResponseEntity.status(401).body(Map.of("message", "登录状态失效，请重新登录"));
+        }
+        Long studentId = userDetails.getId();
+        ExamResult examResult = examResultRepository.findByExam_IdAndStudent_Id(examId, studentId)
+                .orElseThrow(() -> new RuntimeException("未找到该考试成绩记录"));
+        List<StudentAnswer> answers = studentAnswerRepository.findByExam_IdAndStudent_Id(examId, studentId);
+        boolean hasPendingSubjective = answers.stream().anyMatch(sa -> {
+            Question q = sa.getQuestion();
+            String type = q == null || q.getType() == null ? "" : q.getType().trim().toUpperCase();
+            return "SUBJECTIVE".equals(type) && sa.getScore() == null;
+        });
+        Double studentScore = hasPendingSubjective ? null : examResult.getScore();
+        List<Map<String, Object>> answerList = answers.stream().map(sa -> {
+            Question q = sa.getQuestion();
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("questionId", q == null ? null : q.getId());
+            item.put("content", q == null ? "" : String.valueOf(q.getContent() == null ? "" : q.getContent()));
+            item.put("type", q == null ? "" : String.valueOf(q.getType() == null ? "" : q.getType()));
+            item.put("options", q == null ? "" : String.valueOf(q.getOptions() == null ? "" : q.getOptions()));
+            item.put("answer", q == null ? "" : String.valueOf(q.getAnswer() == null ? "" : q.getAnswer()));
+            item.put("analysis", null);
+            item.put("imageUrl", null);
+            item.put("selectedAnswer", sa.getSelectedAnswer() == null ? "" : sa.getSelectedAnswer());
+            item.put("score", sa.getScore());
+            return item;
+        }).collect(Collectors.toList());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("examTitle", examResult.getExam() == null ? "-" : examResult.getExam().getTitle());
+        payload.put("totalScore", examResult.getExam() == null ? 0 : examResult.getExam().getTotalScore());
+        payload.put("studentScore", studentScore);
+        payload.put("answers", answerList);
+        return ResponseEntity.ok(payload);
     }
 
     @GetMapping("/results/pending-grading")

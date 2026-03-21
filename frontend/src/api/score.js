@@ -41,6 +41,18 @@ export async function getMyScores() {
   return res.json();
 }
 
+export async function getExamReview(examId) {
+  const res = await fetch(`${API}/results/review/${examId}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取试卷回放失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
 export function exportScoreToExcel(examId) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();

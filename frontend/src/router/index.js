@@ -8,6 +8,7 @@ import QuestionManagement from '@/views/QuestionManagement.vue';
 import ExamManagement from '@/views/ExamManagement.vue';
 import StudentExamList from '@/views/StudentExamList.vue';
 import ExamTaking from '@/views/ExamTaking.vue';
+import StudentExamReady from '@/views/StudentExamReady.vue';
 import ScoreAnalysis from '@/views/ScoreAnalysis.vue';
 import StudentScoreHistory from '@/views/StudentScoreHistory.vue';
 import StudentView from '@/views/StudentView.vue';
@@ -50,7 +51,8 @@ const routes = [
     meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
   },
   {
-    path: '/student/exam/:id',
+    path: '/student/exam-taking/:id',
+    alias: '/student/exam/:id',
     name: 'ExamTaking',
     component: ExamTaking,
     meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
@@ -64,6 +66,8 @@ const routes = [
       { path: 'dashboard', name: 'StudentDashboard', component: StudentDashboard, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'courses', name: 'StudentCourseList', component: StudentCourseList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'exams', name: 'StudentExamsAlias', component: StudentExamList, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'exam-ready/:id', name: 'StudentExamReady', component: StudentExamReady, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
+      { path: 'exam-review/:id', name: 'StudentExamReview', component: () => import('../views/StudentExamReview.vue'), meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'scores', name: 'StudentScoresAlias', component: StudentScoreHistory, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'practice', name: 'StudentPractice', component: StudentPractice, meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },
       { path: 'favorites', component: () => import('../views/StudentFavorites.vue'), meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] } },

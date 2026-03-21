@@ -10,6 +10,11 @@
         <el-table-column label="交卷时间" min-width="180">
           <template #default> - </template>
         </el-table-column>
+        <el-table-column label="操作" width="140" align="center">
+          <template #default="{ row }">
+            <el-button size="small" type="primary" plain @click="goReview(row)">🔍 查看试卷</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
   </div>
@@ -17,9 +22,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { getMyScores } from '@/api/score';
 
+const router = useRouter();
 const scores = ref([]);
 const loading = ref(false);
 
@@ -33,6 +40,12 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+function goReview(row) {
+  const examId = row?.examId || row?.exam?.id;
+  if (!examId) return;
+  router.push('/student/exam-review/' + examId);
+}
 </script>
 
 <style scoped>
