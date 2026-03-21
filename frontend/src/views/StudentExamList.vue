@@ -1,40 +1,43 @@
 <template>
   <div class="student-exam-list">
-    <div class="page-header glass-card">
-      <div class="header-left">
+    <div class="glass-card page-hero">
+      <div class="hero-left">
         <h2>考试列表</h2>
-        <div class="header-sub">查看考试安排、状态与进入入口</div>
+        <div class="hero-sub">查看考试安排、状态与进入入口</div>
       </div>
-      <el-button round @click="goBackDashboard">返回首页</el-button>
+      <el-button class="hero-btn" round @click="goBackDashboard">返回首页</el-button>
     </div>
-    <el-card class="glass-card list-card" shadow="never">
-      <el-table :data="exams" v-loading="loading" style="width: 100%" empty-text="当前暂无考试">
-        <el-table-column prop="title" label="考试名称" min-width="200" />
-        <el-table-column label="所属课程" min-width="160">
-          <template #default="{ row }">
-            {{ row.course?.courseName || row.courseName || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="开始时间" min-width="170">
-          <template #default="{ row }">{{ formatDateTime(row.startTime) }}</template>
-        </el-table-column>
-        <el-table-column label="结束时间" min-width="170">
-          <template #default="{ row }">{{ formatDateTime(row.endTime) }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="statusType(getStatus(row))">{{ getStatusText(getStatus(row)) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="140" align="center">
-          <template #default="{ row }">
-            <el-button type="primary" size="small" :disabled="getStatus(row) !== 'ongoing'" @click="enterExam(row.id)">
-              {{ getStatus(row) === 'finished' ? '已结束' : '进入考试' }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <div class="glass-card list-card">
+      <div class="list-head-row">
+        <span>考试名称</span>
+        <span>所属课程</span>
+        <span>开始时间</span>
+        <span>结束时间</span>
+        <span>状态</span>
+        <span>操作</span>
+      </div>
+      <div v-loading="loading" class="list-scroll">
+        <template v-if="exams.length">
+          <div v-for="row in exams" :key="row.id" class="exam-row glass-row">
+            <div class="row-cell title-cell">
+              <span class="exam-title">{{ row.title || '未命名考试' }}</span>
+            </div>
+            <div class="row-cell">{{ row.course?.courseName || row.courseName || '-' }}</div>
+            <div class="row-cell">{{ formatDateTime(row.startTime) }}</div>
+            <div class="row-cell">{{ formatDateTime(row.endTime) }}</div>
+            <div class="row-cell">
+              <el-tag effect="plain" :type="statusType(getStatus(row))">{{ getStatusText(getStatus(row)) }}</el-tag>
+            </div>
+            <div class="row-cell action-cell">
+              <el-button type="primary" size="small" plain round :disabled="getStatus(row) !== 'ongoing'" @click="enterExam(row.id)">
+                {{ getStatus(row) === 'finished' ? '已结束' : '进入考试' }}
+              </el-button>
+            </div>
+          </div>
+        </template>
+        <el-empty v-else description="当前暂无考试" :image-size="84" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -92,7 +95,7 @@ function statusType(s) {
   return s === 'pending' ? 'info' : s === 'finished' ? 'warning' : 'success';
 }
 function enterExam(id) {
-  ElMessage.info('考试入口保持当前页展示，不执行跳转');
+  router.push(`/student/exam-ready/${id}`);
 }
 
 function goBackDashboard() {
@@ -102,57 +105,108 @@ function goBackDashboard() {
 
 <style scoped>
 .student-exam-list {
-  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
-  box-sizing: border-box;
-  width: calc(100% / var(--dashboard-scale));
-  transform: scale(var(--dashboard-scale));
-  transform-origin: top left;
-  background: transparent;
+  padding: 8px 4px 0;
 }
-@supports (zoom: 1) {
-  .student-exam-list {
-    width: 100%;
-    transform: none;
-    zoom: var(--dashboard-scale);
-  }
-}
-.page-header {
+.page-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  min-height: 112px;
+  padding: 0 28px;
   border-radius: 20px !important;
+  position: relative;
+  overflow: hidden;
 }
-.header-left h2 {
+.page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(248, 252, 255, 0.96) 0%, rgba(240, 248, 255, 0.8) 64%, rgba(240, 248, 255, 0.28) 100%),
+    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0 1px, transparent 1px 48px);
+  pointer-events: none;
+}
+.hero-left {
+  position: relative;
+  z-index: 1;
+}
+.hero-left h2 {
   margin: 0;
-  color: #0F172A;
-  font-size: 24px;
+  color: #0f172a;
+  font-size: 22px;
 }
-.header-sub {
+.hero-sub {
   margin-top: 6px;
-  color: #64748B;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+.hero-btn {
+  position: relative;
+  z-index: 1;
 }
 .list-card {
-  padding: 16px;
   border-radius: 20px !important;
+  padding: 18px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.list-head-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(110px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) 90px 96px;
+  gap: 12px;
+  align-items: center;
+  padding: 0 12px 10px;
+  color: #8e8e93;
+  font-size: 12px;
+  font-weight: 600;
+}
+.list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+.exam-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(110px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) 90px 96px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 224, 244, 0.92);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+.row-cell {
+  color: #475569;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.title-cell .exam-title {
+  color: #0f172a;
+  font-weight: 600;
+}
+.action-cell {
+  display: flex;
+  justify-content: flex-start;
 }
 @media (max-width: 1200px) {
-  .student-exam-list {
-    --dashboard-scale: 1;
-    padding: 20px;
-    gap: 16px;
-    width: 100%;
-    transform: none;
+  .list-head-row,
+  .exam-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
-  @supports (zoom: 1) {
-    .student-exam-list {
-      zoom: 1;
-    }
+  .page-hero {
+    min-height: 96px;
+    padding: 0 20px;
   }
 }
 </style>

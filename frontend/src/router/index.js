@@ -45,12 +45,6 @@ const routes = [
     redirect: '/teacher/exams',
   },
   {
-    path: '/student/exams',
-    name: 'StudentExamList',
-    component: StudentExamList,
-    meta: { requiresAuth: true, roles: ['ROLE_STUDENT'] },
-  },
-  {
     path: '/student/exam-taking/:id',
     alias: '/student/exam/:id',
     name: 'ExamTaking',
