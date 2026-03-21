@@ -37,8 +37,10 @@
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
-            <el-avatar size="small" />
-            <span style="margin-left: 8px;">账户</span>
+            <el-avatar :size="28">
+              <el-icon><UserFilled /></el-icon>
+            </el-avatar>
+            <span style="margin-left: 8px;">{{ userName }}</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -56,7 +58,9 @@
         <div class="header-right">
           <el-dropdown>
             <span class="user-profile">
-              <el-avatar size="small" />
+              <el-avatar :size="28">
+                <el-icon><UserFilled /></el-icon>
+              </el-avatar>
               <span style="margin-left: 8px;">{{ roleLabel }}</span>
             </span>
             <template #dropdown>
@@ -82,16 +86,17 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataBoard, Reading, Folder, EditPen, DataLine, DocumentChecked, Setting } from '@element-plus/icons-vue';
+import { DataBoard, Reading, Folder, EditPen, DataLine, DocumentChecked, Setting, UserFilled } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { roles } = storeToRefs(authStore);
+const { roles, user } = storeToRefs(authStore);
 const profileDialogVisible = ref(false);
 
 const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
 const roleLabel = computed(() => (isAdmin.value ? '管理员' : '教师'));
+const userName = computed(() => user.value?.username || '用户');
 
 function goProfile() {
   profileDialogVisible.value = true;
@@ -172,6 +177,11 @@ function handleLogout() {
   cursor: pointer;
   color: #1D1D1F;
   font-weight: 500;
+}
+.user-profile :deep(.el-avatar) {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #93c5fd, #60a5fa);
+  color: #fff;
 }
 .nav-bottom {
   width: 100%;

@@ -2,7 +2,9 @@
   <el-container class="apple-layout">
     <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
       <div class="profile-card">
-        <el-avatar :size="42" />
+        <el-avatar :size="42">
+          <el-icon><UserFilled /></el-icon>
+        </el-avatar>
         <div class="profile-meta">
           <div class="profile-name">{{ userName }}</div>
           <div class="profile-sub">加油，继续保持学习节奏</div>
@@ -37,8 +39,10 @@
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
-            <el-avatar size="small" />
-            <span style="margin-left: 8px;">账户</span>
+            <el-avatar :size="28">
+              <el-icon><UserFilled /></el-icon>
+            </el-avatar>
+            <span style="margin-left: 8px;">{{ userName }}</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -62,7 +66,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataAnalysis, EditPen, House, Position, Reading, Warning } from '@element-plus/icons-vue';
+import { DataAnalysis, EditPen, House, Position, Reading, UserFilled, Warning } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();
@@ -107,6 +111,14 @@ function handleLogout() {
 }
 .profile-meta {
   min-width: 0;
+}
+.profile-card :deep(.el-avatar) {
+  flex-shrink: 0;
+}
+.user-profile :deep(.el-avatar) {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #93c5fd, #60a5fa);
+  color: #fff;
 }
 .profile-name {
   color: #1d1d1f;

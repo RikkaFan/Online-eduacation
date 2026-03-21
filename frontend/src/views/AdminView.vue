@@ -21,8 +21,10 @@
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
-            <el-avatar size="small" />
-            <span style="margin-left: 8px;">管理员</span>
+            <el-avatar :size="28">
+              <el-icon><UserFilled /></el-icon>
+            </el-avatar>
+            <span style="margin-left: 8px;">{{ userName }}</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -44,7 +46,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import { DataBoard, UserFilled, Monitor } from '@element-plus/icons-vue';
@@ -52,7 +55,9 @@ import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 const profileDialogVisible = ref(false);
+const userName = computed(() => user.value?.username || '管理员');
 
 function openProfile() {
   profileDialogVisible.value = true;
@@ -132,5 +137,10 @@ function handleLogout() {
   border-radius: 12px;
   padding: 8px 10px;
   color: #334155;
+}
+.user-profile :deep(.el-avatar) {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #93c5fd, #60a5fa);
+  color: #fff;
 }
 </style>
