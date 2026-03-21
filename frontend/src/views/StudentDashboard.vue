@@ -292,7 +292,7 @@ function goScores() {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: 40px 24px 24px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
@@ -320,8 +320,8 @@ function goScores() {
   position: relative;
   overflow: hidden;
   padding: 0 36px 0 108px;
-  height: 136px;
-  min-height: 136px;
+  height: 152px;
+  min-height: 152px;
   border-radius: 20px !important;
   isolation: isolate;
 }
@@ -385,6 +385,7 @@ function goScores() {
 }
 .metric-card {
   padding: 20px 16px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -417,7 +418,7 @@ function goScores() {
 .chart-section,
 .list-section {
   padding: 24px;
-  height: 320px;
+  height: 282px;
   display: flex;
   flex-direction: column;
   border-radius: 20px !important;
@@ -550,7 +551,7 @@ function goScores() {
 @media (max-width: 1200px) {
   .dashboard-wrapper {
     --dashboard-scale: 1;
-    padding: 24px;
+    padding: 28px 20px 20px;
     gap: 20px;
     width: 100%;
     transform: none;
@@ -562,8 +563,8 @@ function goScores() {
   }
   .welcome-banner {
     padding: 0 24px;
-    height: 124px;
-    min-height: 124px;
+    height: 136px;
+    min-height: 136px;
     align-items: center;
   }
   .welcome-banner::after {
