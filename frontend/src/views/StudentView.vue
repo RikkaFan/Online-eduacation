@@ -1,32 +1,36 @@
 <template>
   <el-container class="apple-layout">
-    <el-aside width="auto" class="apple-sidebar glass-card elastic-sidebar">
-      <div class="logo-area">
-        <h2>在线测评系统</h2>
+    <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
+      <div class="profile-card">
+        <el-avatar :size="42" />
+        <div class="profile-meta">
+          <div class="profile-name">{{ userName }}</div>
+          <div class="profile-sub">加油，继续保持学习节奏</div>
+        </div>
       </div>
       <el-menu :default-active="$route.path" router class="apple-menu">
         <el-menu-item index="/student/dashboard">
-          <el-icon><DataBoard /></el-icon>
+          <el-icon><House /></el-icon>
           <span>控制台首页</span>
         </el-menu-item>
         <el-menu-item index="/student/exams">
-          <el-icon><EditPen /></el-icon>
+          <el-icon><Position /></el-icon>
           <span>考试列表</span>
         </el-menu-item>
         <el-menu-item index="/student/scores">
-          <el-icon><DataLine /></el-icon>
+          <el-icon><DataAnalysis /></el-icon>
           <span>成绩查询</span>
         </el-menu-item>
         <el-menu-item index="/student/practice">
-          <el-icon><Notebook /></el-icon>
+          <el-icon><Warning /></el-icon>
           <span>错题本</span>
         </el-menu-item>
         <el-menu-item index="/student/favorites">
-          <el-icon><Star /></el-icon>
+          <el-icon><Reading /></el-icon>
           <span>我的收藏</span>
         </el-menu-item>
         <el-menu-item index="/student/smart-practice">
-          <el-icon><DocumentChecked /></el-icon>
+          <el-icon><EditPen /></el-icon>
           <span>自主刷题</span>
         </el-menu-item>
       </el-menu>
@@ -46,43 +50,26 @@
       </div>
     </el-aside>
 
-    <el-container>
-      <el-header class="apple-header">
-        <div class="header-left">欢迎回来！</div>
-        <div class="header-right">
-          <el-dropdown>
-            <span class="user-profile">
-              <el-avatar size="small" />
-              <span style="margin-left: 8px;">学生</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </el-header>
-
-      <el-main class="apple-main">
-        <router-view />
-      </el-main>
-    </el-container>
+    <el-main class="glass-card main-content-review">
+      <router-view />
+    </el-main>
   </el-container>
   <UserProfileDialog v-model="profileDialogVisible" />
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataBoard, EditPen, DataLine, Notebook, Star, DocumentChecked } from '@element-plus/icons-vue';
+import { DataAnalysis, EditPen, House, Position, Reading, Warning } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 const profileDialogVisible = ref(false);
+const userName = computed(() => user.value?.username || '同学');
 
 function goProfile() {
   profileDialogVisible.value = true;
@@ -96,32 +83,39 @@ function handleLogout() {
 
 <style scoped>
 .apple-layout {
+  display: flex;
   height: 100vh;
-  background-color: #F4F7FC;
+  overflow: hidden;
+  padding: 20px;
+  gap: 20px;
+  box-sizing: border-box;
+  background-color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 .apple-sidebar {
-  background-color: #FFFFFF;
-  padding: 16px 12px;
+  padding: 18px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin: 12px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
 }
-.logo-area {
-  padding: 24px 0;
-  margin-bottom: 16px;
-  width: 100%;
+.profile-card {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 8px 4px 16px;
 }
-.logo-area h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1D1D1F;
-  margin: 0;
+.profile-meta {
+  min-width: 0;
+}
+.profile-name {
+  color: #1d1d1f;
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-sub {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 2px;
 }
 .apple-menu {
   border-right: none !important;
@@ -142,20 +136,27 @@ function handleLogout() {
 ::v-deep(.apple-menu .el-menu-item:hover) {
   background-color: rgba(79, 70, 229, 0.08);
 }
-.apple-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  height: 60px;
-  border-radius: 20px;
-  margin: 12px 12px 0 0;
-  padding: 0 16px;
+.main-content-review {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 30px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
 }
-.apple-main {
-  padding: 20px;
+.main-content-review::-webkit-scrollbar {
+  width: 8px;
+}
+.main-content-review::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-content-review::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.42);
+  border-radius: 12px;
+}
+.main-content-review::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.55);
 }
 .user-profile {
   display: flex;

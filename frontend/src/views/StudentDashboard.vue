@@ -1,65 +1,52 @@
 <template>
   <div class="student-dashboard">
-    <h2 class="dash-title">
-      <el-icon class="title-icon"><DataBoard /></el-icon>
-      欢迎回来，今天想学点什么？
-    </h2>
-
-    <div class="metric-grid">
-      <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon"><el-icon><EditPen /></el-icon></div>
-        <div class="metric-label">已考场次</div>
-        <div class="metric-value">{{ stats.attendedExams }}</div>
-      </el-card>
-      <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon"><el-icon><Trophy /></el-icon></div>
-        <div class="metric-label">平均得分</div>
-        <div class="metric-value">{{ averageScoreText }} 分</div>
-      </el-card>
-      <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon"><el-icon><Warning /></el-icon></div>
-        <div class="metric-label">错题总数</div>
-        <div class="metric-value">{{ stats.totalMistakes }}</div>
-      </el-card>
-      <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon"><el-icon><Reading /></el-icon></div>
-        <div class="metric-label">参与课程</div>
-        <div class="metric-value">{{ availableCourses.length || 0 }}</div>
-      </el-card>
+    <div class="welcome-banner-hero">
+      <div class="hero-left">
+        <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
+        <p class="hero-subtitle">持续学习，稳步提升，每一次作答都在靠近更好的自己。</p>
+        <div class="hero-meta-list">
+          <div class="hero-meta-item"><span>学号</span><strong>{{ userIdText }}</strong></div>
+          <div class="hero-meta-item"><span>专业</span><strong>{{ userMajorText }}</strong></div>
+          <div v-if="reviewMode" class="hero-meta-item"><span>当前交卷时间</span><strong>{{ nowText }}</strong></div>
+        </div>
+      </div>
+      <div class="hero-art"></div>
     </div>
 
-    <el-card class="glass-card hero-banner" shadow="never">
-      <div class="hero-text">
-        <template v-if="upcomingExams.length > 0">
-          <el-icon class="hero-icon"><Promotion /></el-icon>
-          你的下一场考试《{{ upcomingExams[0]?.title }}》即将开始，请做好准备！
-        </template>
-        <template v-else>
-          <el-icon class="hero-icon"><CircleCheck /></el-icon>
-          近期暂无考试，去复习一下错题本吧！
-        </template>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-top"><el-icon class="metric-icon"><EditPen /></el-icon><span>已考场次</span></div>
+        <div class="metric-value">{{ stats.attendedExams }}</div>
       </div>
-      <template v-if="upcomingExams.length > 0">
-        <el-button type="primary" size="large" @click="enterExam(upcomingExams[0].id)">进入考场</el-button>
-      </template>
-      <template v-else>
-        <el-button type="primary" size="large" plain @click="goPractice">去刷错题</el-button>
-      </template>
-    </el-card>
+      <div class="metric-card">
+        <div class="metric-top"><el-icon class="metric-icon"><Warning /></el-icon><span>错题总数</span></div>
+        <div class="metric-value">{{ stats.totalMistakes }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top"><el-icon class="metric-icon"><DataBoard /></el-icon><span>平均得分</span></div>
+        <div class="metric-value">{{ averageScoreText }}<small> 分</small></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top"><el-icon class="metric-icon"><Reading /></el-icon><span>课程进度</span></div>
+        <div class="metric-value">{{ availableCourses.length || 0 }}</div>
+      </div>
+    </div>
 
     <div class="bottom-layout">
-      <div class="glass-card chart-section">
-        <div class="chart-head">
-          <h3><el-icon class="section-icon"><TrendCharts /></el-icon>课程学情追踪</h3>
+      <section class="chart-section">
+        <div class="section-head">
+          <h3>课程学情追踪</h3>
           <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
             <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
           </el-select>
         </div>
-        <div ref="chartRef" class="chart-panel"></div>
-      </div>
+        <div class="chart-wrap">
+          <div ref="chartRef" class="chart-panel"></div>
+        </div>
+      </section>
 
-      <div class="glass-card list-section">
-        <div class="section-header">
+      <section class="list-section">
+        <div class="section-head">
           <h3>近期考试</h3>
           <el-button link type="primary" @click="goExams">查看全部</el-button>
         </div>
@@ -72,10 +59,10 @@
               <span class="timeline-time">{{ formatDateTime(exam.startTime) }}</span>
             </div>
             <div class="timeline-title">{{ exam.title || '未命名考试' }}</div>
-            <el-button size="small" type="primary" plain @click="enterExam(exam.id)">前往</el-button>
+            <el-button size="small" type="primary" plain @click="enterExam(exam.id)">进入考场</el-button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -84,17 +71,21 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Calendar, CircleCheck, DataBoard, EditPen, Promotion, Reading, TrendCharts, Trophy, Warning } from '@element-plus/icons-vue';
+import { Calendar, DataBoard, EditPen, Reading, Warning } from '@element-plus/icons-vue';
 import { useAuthStore } from '@/store/auth';
 import { getStudentStats } from '@/api/stats';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getMyScores } from '@/api/score';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
+const reviewMode = computed(() => route.query.review === '1');
+const nowText = ref('');
+const nowTimer = ref(null);
 
 const stats = ref({
   attendedExams: 0,
@@ -110,6 +101,9 @@ const chartRef = ref(null);
 let myChart = null;
 
 const averageScoreText = computed(() => Number(stats.value.averageScore || 0).toFixed(1));
+const userName = computed(() => user.value?.username || '同学');
+const userIdText = computed(() => user.value?.id ? String(user.value.id) : '-');
+const userMajorText = computed(() => user.value?.major || user.value?.department || '-');
 
 onMounted(async () => {
   const studentId = user.value?.id;
@@ -144,11 +138,17 @@ onMounted(async () => {
   await nextTick();
   initChart();
   renderChart();
+  refreshNowText();
+  nowTimer.value = setInterval(refreshNowText, 1000);
   window.addEventListener('resize', handleChartResize);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleChartResize);
+  if (nowTimer.value) {
+    clearInterval(nowTimer.value);
+    nowTimer.value = null;
+  }
   if (myChart) {
     myChart.dispose();
     myChart = null;
@@ -259,6 +259,10 @@ function handleChartResize() {
   myChart?.resize();
 }
 
+function refreshNowText() {
+  nowText.value = new Date().toLocaleString();
+}
+
 function formatDateTime(value) {
   if (!value) return '-';
   const date = new Date(value);
@@ -294,16 +298,54 @@ function goScores() {
   gap: 24px;
 }
 .dash-title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 30px;
+  font-weight: 700;
   color: #1c1c1e;
-  margin: 0 0 20px;
+  margin: 0;
+}
+.welcome-banner-hero {
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(224, 238, 255, 0.65) 0%, rgba(255, 255, 255, 0.5) 70%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 28px;
   display: flex;
-  align-items: center;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 24px;
+}
+.hero-left {
+  flex: 1;
+}
+.hero-subtitle {
+  margin-top: 8px;
+  color: #475569;
+}
+.hero-meta-list {
+  margin-top: 18px;
+  display: grid;
   gap: 8px;
 }
-.title-icon {
-  color: #0a84ff;
+.hero-meta-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.42);
+  border-radius: 12px;
+  padding: 9px 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+.hero-meta-item strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+.hero-art {
+  width: 220px;
+  border-radius: 16px;
+  background:
+    radial-gradient(at 20% 20%, rgba(59, 130, 246, 0.2) 0px, transparent 55%),
+    radial-gradient(at 75% 75%, rgba(14, 165, 233, 0.2) 0px, transparent 50%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.22));
 }
 .metric-grid {
   display: grid;
@@ -311,95 +353,63 @@ function goScores() {
   gap: 20px;
 }
 .metric-card {
-  padding: 24px;
-  text-align: center;
+  padding: 18px 18px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
-.metric-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: #334155;
-}
-.metric-label {
+.metric-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #64748b;
   font-size: 13px;
 }
 .metric-value {
   color: #0f172a;
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
   margin-top: 6px;
 }
-.hero-banner {
-  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-  border: 1px solid #cce4ff;
-  padding: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-}
-.hero-text {
-  color: #1f2937;
+.metric-value small {
   font-size: 15px;
-  line-height: 1.6;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
+  font-weight: 600;
 }
-.hero-icon {
-  margin-right: 6px;
+.metric-icon {
   color: #0a84ff;
 }
 .bottom-layout {
   display: grid;
   grid-template-columns: 7fr 3fr;
   gap: 20px;
-  margin-top: 24px;
 }
-.chart-section {
-  padding: 24px;
+.chart-section,
+.list-section {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 20px;
 }
-.chart-head {
+.section-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
-.chart-head h3 {
+.section-head h3 {
   margin: 0;
   color: #1c1c1e;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
+  font-weight: 700;
 }
-.section-icon {
-  margin-right: 6px;
-  color: #0a84ff;
+.chart-wrap {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  padding: 10px 16px;
 }
 .chart-panel {
   height: 350px;
   width: 100%;
-  padding: 10px 20px;
-  box-sizing: border-box;
-}
-.list-section {
-  padding: 24px;
-}
-.placeholder {
-  color: #64748b;
-  padding: 8px 2px;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.section-header h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 18px;
-  font-weight: 600;
 }
 .exam-timeline {
   display: grid;
@@ -444,6 +454,10 @@ function goScores() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.placeholder {
+  color: #64748b;
+  padding: 8px 2px;
+}
 :deep(.el-button) {
   border-radius: 12px !important;
 }
@@ -451,6 +465,13 @@ function goScores() {
   border-radius: 12px !important;
 }
 @media (max-width: 1200px) {
+  .welcome-banner-hero {
+    flex-direction: column;
+  }
+  .hero-art {
+    width: 100%;
+    height: 120px;
+  }
   .metric-grid {
     grid-template-columns: repeat(2, 1fr);
   }
