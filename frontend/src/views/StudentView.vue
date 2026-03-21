@@ -1,5 +1,5 @@
 <template>
-  <el-container class="apple-layout">
+  <el-container class="apple-layout" style="height: 100vh; overflow: hidden;">
     <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
       <div class="profile-card">
         <el-avatar :size="42">
@@ -54,7 +54,7 @@
       </div>
     </el-aside>
 
-    <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden;">
+    <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden; height: 100%; display: flex; flex-direction: column;">
       <router-view />
     </el-main>
   </el-container>
