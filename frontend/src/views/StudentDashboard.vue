@@ -298,9 +298,6 @@ function goScores() {
   transform: scale(var(--dashboard-scale));
   transform-origin: top left;
   background: transparent;
-  flex: 1;
-  min-height: 800px;
-  overflow: hidden;
 }
 @supports (zoom: 1) {
   .dashboard-wrapper {
@@ -316,15 +313,15 @@ function goScores() {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .welcome-banner {
-  flex: 1.5;
-  min-height: 120px;
-  max-height: 180px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 24px;
   position: relative;
   overflow: hidden;
-  padding: 0 40px;
+  padding: 0 36px 0 108px;
+  height: 136px;
+  min-height: 136px;
   border-radius: 20px !important;
   isolation: isolate;
 }
@@ -382,16 +379,12 @@ function goScores() {
   font-size: 28px;
 }
 .metrics-grid {
-  flex: 1;
-  min-height: 100px;
-  max-height: 140px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 .metric-card {
-  height: 100%;
-  padding: 0 16px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -417,16 +410,14 @@ function goScores() {
   margin-left: 4px;
 }
 .bottom-grid {
-  flex: 4;
-  min-height: 300px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
 }
 .chart-section,
 .list-section {
-  height: 100%;
   padding: 24px;
+  height: 320px;
   display: flex;
   flex-direction: column;
   border-radius: 20px !important;
@@ -570,8 +561,10 @@ function goScores() {
     }
   }
   .welcome-banner {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0 24px;
+    height: 124px;
+    min-height: 124px;
+    align-items: center;
   }
   .welcome-banner::after {
     width: 100%;
