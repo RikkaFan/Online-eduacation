@@ -50,7 +50,7 @@
       </div>
     </el-aside>
 
-    <el-main class="glass-card main-content-review">
+    <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden;">
       <router-view />
     </el-main>
   </el-container>
@@ -135,28 +135,6 @@ function handleLogout() {
 }
 ::v-deep(.apple-menu .el-menu-item:hover) {
   background-color: rgba(79, 70, 229, 0.08);
-}
-.main-content-review {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  padding: 30px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
-}
-.main-content-review::-webkit-scrollbar {
-  width: 8px;
-}
-.main-content-review::-webkit-scrollbar-track {
-  background: transparent;
-}
-.main-content-review::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.42);
-  border-radius: 12px;
-}
-.main-content-review::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.55);
 }
 .user-profile {
   display: flex;

@@ -1,6 +1,6 @@
 <template>
-  <div class="student-dashboard">
-    <div class="welcome-banner-hero">
+  <div class="student-dashboard" style="display: flex; flex-direction: column; gap: 24px; padding: 24px;">
+    <div class="glass-card welcome-banner" style="padding: 24px; display: flex; justify-content: space-between; align-items: center;">
       <div class="hero-left">
         <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
         <p class="hero-subtitle">持续学习，稳步提升，每一次作答都在靠近更好的自己。</p>
@@ -13,39 +13,37 @@
       <div class="hero-art"></div>
     </div>
 
-    <div class="metric-grid">
-      <div class="metric-card">
+    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
         <div class="metric-top"><el-icon class="metric-icon"><EditPen /></el-icon><span>已考场次</span></div>
         <div class="metric-value">{{ stats.attendedExams }}</div>
       </div>
-      <div class="metric-card">
+      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
         <div class="metric-top"><el-icon class="metric-icon"><Warning /></el-icon><span>错题总数</span></div>
         <div class="metric-value">{{ stats.totalMistakes }}</div>
       </div>
-      <div class="metric-card">
+      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
         <div class="metric-top"><el-icon class="metric-icon"><DataBoard /></el-icon><span>平均得分</span></div>
         <div class="metric-value">{{ averageScoreText }}<small> 分</small></div>
       </div>
-      <div class="metric-card">
+      <div class="glass-card metric-item" style="padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
         <div class="metric-top"><el-icon class="metric-icon"><Reading /></el-icon><span>课程进度</span></div>
         <div class="metric-value">{{ availableCourses.length || 0 }}</div>
       </div>
     </div>
 
-    <div class="bottom-layout">
-      <section class="chart-section">
+    <div class="bottom-grid" style="display: grid; grid-template-columns: 7fr 3fr; gap: 24px;">
+      <div class="glass-card chart-section" style="padding: 24px; height: 400px; display: flex; flex-direction: column;">
         <div class="section-head">
           <h3>课程学情追踪</h3>
           <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
             <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
           </el-select>
         </div>
-        <div class="chart-wrap">
-          <div ref="chartRef" class="chart-panel"></div>
-        </div>
-      </section>
+        <div ref="chartRef" class="chart-panel"></div>
+      </div>
 
-      <section class="list-section">
+      <div class="glass-card list-section" style="padding: 24px; height: 400px; overflow-y: auto;">
         <div class="section-head">
           <h3>近期考试</h3>
           <el-button link type="primary" @click="goExams">查看全部</el-button>
@@ -62,7 +60,7 @@
             <el-button size="small" type="primary" plain @click="enterExam(exam.id)">进入考场</el-button>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   </div>
 </template>
@@ -292,25 +290,16 @@ function goScores() {
 </script>
 
 <style scoped>
-.student-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 .dash-title {
   font-size: 30px;
   font-weight: 700;
   color: #1c1c1e;
   margin: 0;
 }
-.welcome-banner-hero {
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(224, 238, 255, 0.65) 0%, rgba(255, 255, 255, 0.5) 70%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  padding: 28px;
+.welcome-banner {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
+  align-items: center;
   gap: 24px;
 }
 .hero-left {
@@ -341,22 +330,12 @@ function goScores() {
 }
 .hero-art {
   width: 220px;
+  height: 140px;
   border-radius: 16px;
   background:
     radial-gradient(at 20% 20%, rgba(59, 130, 246, 0.2) 0px, transparent 55%),
     radial-gradient(at 75% 75%, rgba(14, 165, 233, 0.2) 0px, transparent 50%),
     linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.22));
-}
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-.metric-card {
-  padding: 18px 18px 16px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 .metric-top {
   display: inline-flex;
@@ -378,18 +357,6 @@ function goScores() {
 .metric-icon {
   color: #0a84ff;
 }
-.bottom-layout {
-  display: grid;
-  grid-template-columns: 7fr 3fr;
-  gap: 20px;
-}
-.chart-section,
-.list-section {
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  padding: 20px;
-}
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -401,15 +368,9 @@ function goScores() {
   color: #1c1c1e;
   font-weight: 700;
 }
-.chart-wrap {
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  padding: 10px 16px;
-}
 .chart-panel {
-  height: 350px;
-  width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 .exam-timeline {
   display: grid;
@@ -465,17 +426,18 @@ function goScores() {
   border-radius: 12px !important;
 }
 @media (max-width: 1200px) {
-  .welcome-banner-hero {
+  .welcome-banner {
     flex-direction: column;
+    align-items: flex-start;
   }
   .hero-art {
     width: 100%;
     height: 120px;
   }
-  .metric-grid {
+  .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .bottom-layout {
+  .bottom-grid {
     grid-template-columns: 1fr;
   }
   .timeline-item {
