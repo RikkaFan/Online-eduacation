@@ -10,7 +10,6 @@
           <div v-if="reviewMode" class="hero-meta-item"><span>当前交卷时间</span><strong>{{ nowText }}</strong></div>
         </div>
       </div>
-      <div class="hero-art"></div>
     </div>
 
     <div class="metrics-grid">
@@ -345,24 +344,41 @@ function goScores() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   position: relative;
   overflow: hidden;
   padding: 18px 20px;
   min-height: 136px;
   margin-top: 2px;
+  isolation: isolate;
 }
 .welcome-banner::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(203, 225, 255, 0.18), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, rgba(248, 252, 255, 0.98) 0%, rgba(243, 249, 255, 0.95) 38%, rgba(243, 249, 255, 0.68) 58%, rgba(243, 249, 255, 0.06) 72%),
     repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0 1px, transparent 1px 48px);
+  z-index: 0;
+  pointer-events: none;
+}
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(52%, 720px);
+  background-image: url('../assets/library-banner.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: right center;
+  z-index: -1;
   pointer-events: none;
 }
 .hero-left {
   flex: 1;
+  max-width: min(60%, 720px);
   position: relative;
   z-index: 1;
   min-width: 0;
@@ -379,7 +395,8 @@ function goScores() {
 .hero-meta-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 12px;
   background: rgba(255, 255, 255, 0.42);
   border-radius: 12px;
   padding: 7px 12px;
@@ -389,46 +406,6 @@ function goScores() {
 .hero-meta-item strong {
   color: #0f172a;
   font-weight: 600;
-}
-.hero-art {
-  width: min(24%, 260px);
-  min-width: 180px;
-  height: 130px;
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(243, 248, 255, 0.95), rgba(231, 241, 255, 0.92)),
-    repeating-linear-gradient(90deg, rgba(147, 197, 253, 0.22) 0 2px, transparent 2px 38px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0 58%, rgba(203, 225, 255, 0.4) 58% 100%);
-  border: 1px solid rgba(191, 219, 254, 0.85);
-  position: relative;
-  overflow: hidden;
-}
-.hero-art::before {
-  content: '';
-  position: absolute;
-  left: 9%;
-  right: 9%;
-  bottom: 16%;
-  height: 38%;
-  border-radius: 10px;
-  background:
-    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.18) 0 9px, rgba(59, 130, 246, 0.08) 9px 18px),
-    linear-gradient(180deg, rgba(219, 234, 254, 0.92), rgba(191, 219, 254, 0.9));
-  box-shadow: 0 8px 16px rgba(30, 64, 175, 0.08);
-}
-.hero-art::after {
-  content: '';
-  position: absolute;
-  left: 14%;
-  right: 14%;
-  top: 16%;
-  height: 34%;
-  border-radius: 12px;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.95) 0 18%, transparent 19%),
-    radial-gradient(circle at 80% 32%, rgba(255, 255, 255, 0.95) 0 18%, transparent 19%),
-    linear-gradient(90deg, rgba(219, 234, 254, 0.88), rgba(239, 246, 255, 0.96));
-  border: 1px solid rgba(191, 219, 254, 0.75);
 }
 .metric-top {
   display: inline-flex;
@@ -613,9 +590,16 @@ function goScores() {
     flex-direction: column;
     align-items: flex-start;
   }
-  .hero-art {
+  .welcome-banner::after {
     width: 100%;
-    height: 120px;
+    height: 44%;
+    top: auto;
+    left: 0;
+    bottom: 0;
+    background-position: center bottom;
+  }
+  .hero-left {
+    max-width: 100%;
   }
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
