@@ -1,14 +1,15 @@
 <template>
   <div class="student-practice">
-    <el-card class="apple-card summary-card" shadow="never">
-      <div class="summary-title">错题本概览</div>
-      <div class="summary-value">累计错题：{{ mistakes.length }} 道</div>
+    <el-card class="glass-card hero-card" shadow="never">
+      <div class="summary-title">错题本</div>
+      <div class="summary-sub">聚焦薄弱知识点，支持快速复盘与巩固训练。</div>
+      <div class="summary-value">累计错题 {{ mistakes.length }} 道</div>
     </el-card>
 
     <el-empty v-if="!loading && mistakes.length === 0" description="暂无错题记录，继续保持！" />
 
     <div class="mistake-list" v-loading="loading">
-      <el-card v-for="item in mistakes" :key="item.id" class="apple-card mistake-card" shadow="never">
+      <el-card v-for="item in mistakes" :key="item.id" class="glass-card mistake-card" shadow="never">
         <div class="card-header">
           <el-tag size="small" effect="plain">{{ typeName(item.question?.type) }}</el-tag>
         </div>
@@ -26,13 +27,13 @@
           <span class="value">{{ item.question?.analysis || item.question?.explanation }}</span>
         </div>
         <div class="action-row">
-          <el-button class="ai-tutor-btn" type="primary" plain @click="onSummonAiTutor(item)">✨ 召唤 AI 私教讲题</el-button>
-          <el-button type="warning" plain @click="onFavorite(item)">⭐ 收藏本题</el-button>
+          <el-button class="ai-tutor-btn" type="primary" plain round @click="onSummonAiTutor(item)">AI 私教讲题</el-button>
+          <el-button type="warning" plain round @click="onFavorite(item)">收藏本题</el-button>
         </div>
       </el-card>
     </div>
 
-    <el-dialog v-model="aiDialogVisible" title="💡 AI 专属私教辅导中..." width="620px">
+    <el-dialog v-model="aiDialogVisible" title="AI 专属私教辅导中" width="620px">
       <div v-loading="aiLoading" class="ai-dialog-body">
         <div v-if="!aiLoading" class="ai-chat-bubble">{{ aiReply || 'AI 私教暂时没有给出回复，请稍后重试。' }}</div>
       </div>
@@ -129,33 +130,41 @@ async function onSummonAiTutor(item) {
 
 <style scoped>
 .student-practice {
-  padding: 0;
+  display: grid;
+  gap: 20px;
+  padding: 8px 4px 0;
 }
-.apple-card {
-  border-radius: 16px;
-  border: none;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
-.summary-card {
-  margin-bottom: 16px;
+.hero-card {
+  padding: 22px 24px;
 }
 .summary-title {
-  color: #6E6E73;
-  font-size: 14px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+}
+.summary-sub {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
 }
 .summary-value {
-  margin-top: 8px;
-  font-size: 24px;
+  margin-top: 14px;
+  font-size: 26px;
   font-weight: 600;
-  color: #1D1D1F;
+  color: #0f172a;
 }
 .mistake-list {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 .mistake-card {
-  padding: 4px 2px;
+  padding: 18px 18px 16px;
 }
 .card-header {
   display: flex;

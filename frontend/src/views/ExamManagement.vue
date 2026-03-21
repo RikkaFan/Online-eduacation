@@ -607,8 +607,20 @@ watch(() => createForm.courseId, (value) => {
 </script>
 
 <style scoped>
+.exam-management {
+  display: grid;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+}
 .toolbar {
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  padding: 16px 18px;
 }
 .toolbar-row {
   display: flex;
@@ -616,7 +628,8 @@ watch(() => createForm.courseId, (value) => {
   align-items: center;
 }
 .mt-12 {
-  margin-top: 12px;
+  margin-top: 0;
+  padding: 18px;
 }
 .smart-rule-box {
   border: 1px dashed #bfdbfe;

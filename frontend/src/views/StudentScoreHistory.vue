@@ -1,7 +1,10 @@
 <template>
   <div class="student-score-history">
-    <div class="page-header"><h2>我的成绩</h2></div>
-    <el-card shadow="never">
+    <div class="glass-card page-hero">
+      <h2>我的成绩</h2>
+      <div class="hero-sub">查看每次考试得分与交卷时间，支持快速回看试卷。</div>
+    </div>
+    <el-card class="glass-card table-card" shadow="never">
       <el-table :data="scores" v-loading="loading" empty-text="暂无成绩记录" stripe>
         <el-table-column label="考试名称" min-width="180">
           <template #default="{ row }">{{ row.exam?.title || '-' }}</template>
@@ -12,7 +15,7 @@
         </el-table-column>
         <el-table-column label="操作" width="140" align="center">
           <template #default="{ row }">
-            <el-button size="small" type="primary" plain @click="goReview(row)">🔍 查看试卷</el-button>
+            <el-button size="small" type="primary" plain round @click="goReview(row)">查看试卷</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -56,6 +59,34 @@ function formatDateTime(v) {
 </script>
 
 <style scoped>
-.student-score-history { padding: 20px; }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.student-score-history {
+  display: grid;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.page-hero {
+  padding: 22px 24px;
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+.page-hero h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+}
+.hero-sub {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+.table-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  padding: 18px;
+}
 </style>

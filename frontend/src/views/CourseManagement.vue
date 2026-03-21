@@ -343,12 +343,18 @@ function formatDateTime(value) {
 
 <style scoped>
 .course-management {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 8px 4px 0;
+  display: grid;
+  gap: 20px;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .page-card {
-  padding: 16px;
+  padding: 20px;
 }
 .action-bar {
   display: flex;
@@ -376,6 +382,7 @@ function formatDateTime(value) {
 }
 .drawer-card {
   margin-bottom: 14px;
+  padding: 14px;
 }
 .evaluation-stats {
   display: grid;
@@ -412,7 +419,7 @@ function formatDateTime(value) {
   justify-content: space-between;
   align-items: flex-start;
   padding: 12px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
@@ -436,7 +443,7 @@ function formatDateTime(value) {
 }
 .evaluation-item {
   padding: 12px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }

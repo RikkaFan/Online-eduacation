@@ -231,11 +231,19 @@ function formatDateTime(value) {
 <style scoped>
 .teacher-grading {
   display: grid;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 
 .list-card,
 .work-card {
   min-height: calc(100vh - 132px);
+  padding: 16px;
 }
 
 .panel-head {
@@ -254,7 +262,7 @@ function formatDateTime(value) {
 
 .paper-list {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   max-height: calc(100vh - 210px);
   overflow-y: auto;
   padding-right: 2px;
@@ -299,14 +307,14 @@ function formatDateTime(value) {
 
 .question-list {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   max-height: calc(100vh - 220px);
   overflow-y: auto;
   padding-right: 2px;
 }
 
 .question-card {
-  padding: 14px;
+  padding: 16px;
   border-radius: 14px;
   border: 1px solid rgba(226, 232, 240, 0.9);
   background: rgba(255, 255, 255, 0.72);

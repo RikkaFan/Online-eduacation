@@ -2,6 +2,7 @@
   <div class="student-smart-practice">
     <el-card class="glass-card top-panel" shadow="never">
       <div class="title">自主刷题</div>
+      <div class="sub-title">按课程生成练习卷，提交后即时查看答案解析。</div>
       <div class="tools">
         <el-select v-model="selectedCourseId" placeholder="请选择课程" style="width: 260px" clearable>
           <el-option v-for="course in courses" :key="course.id" :label="course.courseName || `课程#${course.id}`" :value="course.id" />
@@ -55,6 +56,7 @@ import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { getCourses } from '@/api/course';
 import { generatePractice } from '@/api/question';
+import { parseOptionDisplayItems } from '@/utils/questionOptions';
 
 const courses = ref([]);
 const selectedCourseId = ref(null);
@@ -64,8 +66,7 @@ const submitted = ref(false);
 const answers = ref({});
 
 function optionItems(options) {
-  if (!options || typeof options !== 'string') return [];
-  return options.split(',').map(item => item.trim()).filter(Boolean);
+  return parseOptionDisplayItems(options || '');
 }
 
 function optionLabel(optionText) {
@@ -117,16 +118,28 @@ onMounted(loadCourses);
 <style scoped>
 .student-smart-practice {
   display: grid;
-  gap: 14px;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .top-panel {
-  padding: 16px;
+  padding: 22px 24px;
 }
 .title {
-  font-size: 24px;
+  font-size: 26px;
   color: #0F172A;
   font-weight: 700;
-  margin-bottom: 12px;
+}
+.sub-title {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  color: #64748b;
+  font-size: 13px;
 }
 .tools {
   display: flex;
@@ -135,10 +148,10 @@ onMounted(loadCourses);
 }
 .question-list {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 .question-card {
-  padding: 12px;
+  padding: 18px;
 }
 .question-head {
   display: flex;
@@ -164,9 +177,9 @@ onMounted(loadCourses);
 }
 .analysis-box {
   margin-top: 12px;
-  background: rgba(248, 250, 252, 0.8);
-  border-radius: 10px;
-  padding: 10px;
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 12px;
+  padding: 12px;
   line-height: 1.7;
 }
 .label {

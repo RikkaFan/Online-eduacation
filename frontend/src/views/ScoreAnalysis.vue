@@ -1,7 +1,10 @@
 <template>
   <div class="score-analysis">
-    <div class="action-bar">
-      <h2>成绩分析</h2>
+    <div class="glass-card action-bar">
+      <div>
+        <h2>成绩分析</h2>
+        <div class="bar-sub">查看成绩分布、统计指标并导出分析数据。</div>
+      </div>
       <div class="action-tools">
         <el-select v-model="selectedExamId" placeholder="选择考试" filterable clearable @change="onExamChange" style="width: 320px">
           <el-option v-for="e in exams" :key="e.id" :label="examLabel(e)" :value="e.id" />
@@ -13,9 +16,9 @@
     </div>
 
     <div v-if="selectedExamId" class="stat-cards">
-      <el-card class="stat-card"><div class="stat-title">最高分</div><div class="stat-value">{{ stat.max }}</div></el-card>
-      <el-card class="stat-card"><div class="stat-title">最低分</div><div class="stat-value">{{ stat.min }}</div></el-card>
-      <el-card class="stat-card"><div class="stat-title">平均分</div><div class="stat-value">{{ stat.avg }}</div></el-card>
+      <el-card class="glass-card stat-card"><div class="stat-title">最高分</div><div class="stat-value">{{ stat.max }}</div></el-card>
+      <el-card class="glass-card stat-card"><div class="stat-title">最低分</div><div class="stat-value">{{ stat.min }}</div></el-card>
+      <el-card class="glass-card stat-card"><div class="stat-title">平均分</div><div class="stat-value">{{ stat.avg }}</div></el-card>
     </div>
 
     <el-card v-if="selectedExamId" class="glass-card distribution-card" shadow="never">
@@ -33,7 +36,7 @@
         </el-table-column>
         <el-table-column prop="score" label="得分" width="120" align="center" />
         <el-table-column label="交卷时间" min-width="180">
-          <template #default="{ row }">-</template>
+          <template #default="{ row }">{{ formatDateTime(row.submittedAt) }}</template>
         </el-table-column>
       </el-table>
     </el-card>
@@ -207,23 +210,48 @@ function renderDistributionChart() {
 function handleChartResize() {
   distributionChartInstance?.resize();
 }
+
+function formatDateTime(v) {
+  if (!v) return '-';
+  const d = typeof v === 'string' ? new Date(v) : v;
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString();
+}
 </script>
 
 <style scoped>
-.score-analysis { padding: 20px; }
+.score-analysis {
+  display: grid;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+}
 .action-bar {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+}
+.bar-sub {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
 }
 .action-tools {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.stat-cards { display: flex; gap: 12px; margin-bottom: 12px; }
-.stat-card { width: 200px; text-align: center; }
+.stat-cards { display: flex; gap: 16px; }
+.stat-card { width: 220px; text-align: center; padding: 18px; }
 .stat-title { font-size: 14px; color: #666; }
 .stat-value { font-size: 24px; font-weight: 600; color: #111; }
-.distribution-card { margin-bottom: 12px; }
+.distribution-card { padding: 18px; }
 .distribution-title {
   margin-bottom: 10px;
   color: #0F172A;

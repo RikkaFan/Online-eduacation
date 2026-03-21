@@ -1,6 +1,6 @@
 <template>
   <div class="question-management-container">
-    <h2 class="page-title">📚 题库管理中心</h2>
+    <h2 class="page-title">题库管理中心</h2>
 
     <div class="glass-card toolbar-card">
       <div class="toolbar-left">
@@ -389,9 +389,9 @@ const handleImport = async (file) => {
 
 <style scoped>
 .question-management-container {
-  padding: 20px;
-  min-height: calc(100vh - 100px);
-  background: #f5f5f7;
+  padding: 8px 4px 0;
+  min-height: auto;
+  background: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   display: flex;
   flex-direction: column;
@@ -405,14 +405,14 @@ const handleImport = async (file) => {
   color: #1d1d1f;
 }
 .glass-card {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(212, 224, 244, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
   backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 16px;
+  border-radius: 20px;
 }
 .toolbar-card {
-  padding: 14px 16px;
+  padding: 18px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -430,7 +430,7 @@ const handleImport = async (file) => {
   padding: 0 8px;
 }
 .table-card {
-  padding: 14px;
+  padding: 18px;
 }
 .table-header {
   display: flex;

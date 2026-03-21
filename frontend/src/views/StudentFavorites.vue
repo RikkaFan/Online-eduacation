@@ -38,6 +38,7 @@
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { getFavorites, toggleFavorite } from '@/api/favorite';
+import { parseOptionDisplayItems } from '@/utils/questionOptions';
 
 const loading = ref(false);
 const favorites = ref([]);
@@ -50,8 +51,7 @@ function typeName(type) {
 }
 
 function optionItems(options) {
-  if (!options || typeof options !== 'string') return [];
-  return options.split(',').map(s => s.trim()).filter(Boolean);
+  return parseOptionDisplayItems(options || '');
 }
 
 async function loadFavorites() {
@@ -85,13 +85,20 @@ onMounted(loadFavorites);
 <style scoped>
 .student-favorites {
   display: grid;
-  gap: 14px;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .header-card {
-  padding: 16px;
+  padding: 22px 24px;
 }
 .page-title {
-  font-size: 24px;
+  font-size: 26px;
   color: #0F172A;
   font-weight: 700;
 }
@@ -101,10 +108,10 @@ onMounted(loadFavorites);
 }
 .favorite-list {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 .favorite-card {
-  padding: 14px;
+  padding: 18px;
 }
 .card-top {
   display: flex;

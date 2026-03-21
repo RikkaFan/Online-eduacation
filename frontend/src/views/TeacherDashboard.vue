@@ -147,7 +147,14 @@ function goScore() {
 <style scoped>
 .teacher-dashboard {
   display: grid;
-  gap: 16px;
+  gap: 20px;
+  padding: 8px 4px 0;
+}
+.glass-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 
 .board-card {
@@ -155,7 +162,7 @@ function goScore() {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  padding: 22px;
+  padding: 24px;
 }
 
 .board-left {
@@ -201,7 +208,7 @@ function goScore() {
 }
 
 .section-card {
-  padding: 18px;
+  padding: 20px;
 }
 
 .section-header {
@@ -218,11 +225,11 @@ function goScore() {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
 .action-card {
-  padding: 16px;
+  padding: 18px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
