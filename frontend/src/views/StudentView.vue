@@ -86,13 +86,14 @@ function handleLogout() {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  padding: 20px;
-  gap: 20px;
+  padding: 16px;
+  gap: 16px;
   box-sizing: border-box;
   background-color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 .apple-sidebar {
+  width: clamp(188px, 13vw, 236px) !important;
   padding: 18px 14px;
   display: flex;
   flex-direction: column;
@@ -124,9 +125,9 @@ function handleLogout() {
 ::v-deep(.apple-menu .el-menu-item) {
   border-radius: 12px;
   margin-bottom: 4px;
-  color: #334155;
-  height: 48px;
-  line-height: 48px;
+  color: #475569;
+  height: 46px;
+  line-height: 46px;
 }
 ::v-deep(.apple-menu .el-menu-item.is-active) {
   background-color: #E0E7FF;

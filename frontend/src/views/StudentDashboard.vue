@@ -1,5 +1,6 @@
 <template>
   <div class="student-dashboard" style="display: flex; flex-direction: column; gap: 24px; padding: 24px;">
+    <div class="page-label">Student Dashboard</div>
     <div class="glass-card welcome-banner" style="padding: 24px; display: flex; justify-content: space-between; align-items: center;">
       <div class="hero-left">
         <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
@@ -47,21 +48,25 @@
         <h3 style="font-size: 18px; font-weight: 600; color: #1c1c1e; margin-bottom: 20px;">近期考试</h3>
         <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
         <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
-          <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+          <div class="exam-head-row">
+            <span>课程名称</span>
+            <span>日期</span>
+            <span>操作</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
             <div
               v-for="exam in upcomingExamsView"
               :key="exam.id"
-              class="exam-card-item glass-card"
-              style="padding: 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease; background: rgba(255,255,255,0.4);"
+              class="exam-card-item"
             >
-              <div style="display: flex; gap: 12px; align-items: center;">
-                <el-icon style="font-size: 20px; color: #007AFF;"><Calendar /></el-icon>
-                <div>
-                  <div style="font-size: 14px; font-weight: 600; color: #1c1c1e;">{{ exam.title || '未命名考试' }}</div>
-                  <div style="font-size: 12px; color: #8E8E93; margin-top: 4px;">{{ exam.displayTime }}</div>
-                </div>
+              <div class="exam-col title-col">
+                <el-icon class="exam-cal-icon"><Calendar /></el-icon>
+                <span class="exam-name">{{ exam.title || '未命名考试' }}</span>
               </div>
-              <el-button size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
+              <div class="exam-col time-col">{{ exam.displayTime }}</div>
+              <div class="exam-col action-col">
+                <el-button size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
+              </div>
             </div>
           </div>
         </div>
@@ -300,6 +305,13 @@ function goScores() {
 </script>
 
 <style scoped>
+.page-label {
+  font-size: 42px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
 .dash-title {
   font-size: 30px;
   font-weight: 700;
@@ -311,9 +323,22 @@ function goScores() {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(203, 225, 255, 0.18), rgba(255, 255, 255, 0)),
+    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0 1px, transparent 1px 48px);
+  pointer-events: none;
 }
 .hero-left {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 .hero-subtitle {
   margin-top: 8px;
@@ -367,6 +392,9 @@ function goScores() {
 .metric-icon {
   color: #0a84ff;
 }
+.metric-item {
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.03);
+}
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -391,6 +419,50 @@ function goScores() {
   overflow-y: auto;
   overflow-x: hidden;
   transition: all 0.3s ease;
+}
+.exam-head-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  color: #8e8e93;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px 8px;
+}
+.exam-card-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.4);
+}
+.exam-col {
+  display: flex;
+  align-items: center;
+}
+.exam-cal-icon {
+  font-size: 18px;
+  color: #007AFF;
+  margin-right: 8px;
+}
+.exam-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.time-col {
+  font-size: 12px;
+  color: #8E8E93;
+}
+.action-col {
+  justify-content: flex-end;
 }
 .exam-list-container::-webkit-scrollbar {
   width: 6px;
@@ -431,6 +503,14 @@ function goScores() {
   }
   .bottom-grid {
     grid-template-columns: 1fr;
+  }
+  .exam-head-row,
+  .exam-card-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .action-col {
+    justify-content: flex-start;
   }
 }
 </style>
