@@ -2,7 +2,7 @@
   <div class="teacher-dashboard">
     <div class="glass-card welcome-banner">
       <div class="hero-left">
-        <h2 class="hero-title">欢迎回来，教师！</h2>
+        <h2 class="hero-title">欢迎回来，{{ userName }}！</h2>
         <p class="hero-subtitle">从这里快速掌握课程、考试与题库运行状态。</p>
       </div>
     </div>
@@ -25,8 +25,8 @@
       </div>
       <div class="glass-card metric-card">
         <el-icon class="metric-icon"><UserFilled /></el-icon>
-        <div class="metric-label">系统用户</div>
-        <div class="metric-value">{{ adminStats.totalUsers }}</div>
+        <div class="metric-label">待阅卷数</div>
+        <div class="metric-value">{{ pendingGradingCount }}</div>
       </div>
     </div>
 
@@ -58,28 +58,35 @@
         <div class="section-header">
           <h3>最新动态</h3>
         </div>
-        <div v-if="loadingActivity" class="placeholder">正在加载动态...</div>
-        <ul v-else class="activity-list">
-          <li v-for="item in latestActivities" :key="item.key" class="activity-item">
-            <div class="activity-main">{{ item.title }}</div>
-            <div class="activity-sub">{{ item.sub }}</div>
-          </li>
-        </ul>
+        <div class="activity-scroll">
+          <div v-if="loadingActivity" class="placeholder">正在加载动态...</div>
+          <ul v-else class="activity-list">
+            <li v-for="item in latestActivities" :key="item.key" class="activity-item">
+              <div class="activity-main">{{ item.title }}</div>
+              <div class="activity-sub">{{ item.sub }}</div>
+            </li>
+          </ul>
+        </div>
       </el-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { DataLine, EditPen, FolderOpened, Reading, UserFilled } from '@element-plus/icons-vue';
 import { getAdminStats } from '@/api/stats';
 import { getCourses } from '@/api/course';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
+import { getPendingGrading } from '@/api/score';
+import { useAuthStore } from '@/store/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
 const adminStats = ref({
   totalCourses: 0,
   totalExams: 0,
@@ -89,6 +96,8 @@ const adminStats = ref({
 
 const loadingActivity = ref(false);
 const latestActivities = ref([]);
+const pendingGradingCount = ref(0);
+const userName = computed(() => user.value?.username || '教师');
 
 onMounted(async () => {
   try {
@@ -96,6 +105,12 @@ onMounted(async () => {
     adminStats.value = { ...adminStats.value, ...(data || {}) };
   } catch (e) {
     ElMessage.error(e.message || '加载统计数据失败');
+  }
+  try {
+    const pendingList = await getPendingGrading();
+    pendingGradingCount.value = Array.isArray(pendingList) ? pendingList.length : 0;
+  } catch {
+    pendingGradingCount.value = 0;
   }
 
   loadingActivity.value = true;
@@ -153,9 +168,23 @@ function goScore() {
 
 <style scoped>
 .teacher-dashboard {
-  display: grid;
+  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-  padding: 8px 4px 0;
+  padding: 52px 24px 12px;
+  box-sizing: border-box;
+  width: calc(100% / var(--dashboard-scale));
+  transform: scale(var(--dashboard-scale));
+  transform-origin: top left;
+  background: transparent;
+}
+@supports (zoom: 1) {
+  .teacher-dashboard {
+    width: 100%;
+    transform: none;
+    zoom: var(--dashboard-scale);
+  }
 }
 .glass-card {
   border-radius: 20px !important;
@@ -165,20 +194,26 @@ function goScore() {
 }
 
 .welcome-banner {
-  min-height: 148px;
-  padding: 0 36px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  gap: 24px;
   position: relative;
   overflow: hidden;
+  padding: 0 36px 0 108px;
+  height: 164px;
+  min-height: 164px;
+  border-radius: 20px !important;
+  isolation: isolate;
 }
 .welcome-banner::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(248, 252, 255, 0.96) 0%, rgba(240, 248, 255, 0.86) 54%, rgba(240, 248, 255, 0.24) 100%),
-    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0 1px, transparent 1px 48px);
+    linear-gradient(90deg, rgba(248, 252, 255, 0.98) 0%, rgba(243, 249, 255, 0.94) 50%, rgba(243, 249, 255, 0.2) 72%),
+    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.12) 0 1px, transparent 1px 52px);
+  z-index: 0;
   pointer-events: none;
 }
 .welcome-banner::after {
@@ -187,37 +222,47 @@ function goScore() {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 48%;
+  width: 50%;
   background-image: url('../assets/library-banner.svg');
   background-size: cover;
   background-position: center center;
   mask-image: linear-gradient(to right, transparent, black 40%);
   -webkit-mask-image: linear-gradient(to right, transparent, black 40%);
-  opacity: 0.88;
+  z-index: 0;
   pointer-events: none;
+  opacity: 0.9;
 }
 .hero-left {
+  flex: 1;
+  max-width: min(56%, 660px);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 12px;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  min-width: 0;
 }
 .hero-title {
-  margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  color: #0f172a;
+  color: #1c1c1e;
+  margin: 0;
 }
 .hero-subtitle {
-  margin-top: 10px;
-  color: #64748b;
+  margin-top: 14px;
   font-size: 14px;
+  font-weight: 400;
+  color: #8E8E93;
 }
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 .metric-card {
-  min-height: 112px;
+  min-height: 108px;
   padding: 18px 14px;
   display: flex;
   flex-direction: column;
@@ -225,6 +270,7 @@ function goScore() {
   align-items: center;
   gap: 8px;
   text-align: center;
+  border-radius: 20px !important;
 }
 .metric-icon {
   color: #0a84ff;
@@ -243,13 +289,20 @@ function goScore() {
 }
 .bottom-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
 }
 
 .section-card {
-  padding: 20px;
-  min-height: 320px;
+  height: 270px;
+  min-height: 0;
+}
+.section-card :deep(.el-card__body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .section-header {
@@ -258,19 +311,25 @@ function goScore() {
 
 .section-header h3 {
   margin: 0;
-  color: #0F172A;
-  font-size: 18px;
-  font-weight: 600;
+  color: #1c1c1e;
+  font-weight: 700;
 }
 
 .action-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-content: start;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .action-card {
   padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -280,6 +339,9 @@ function goScore() {
 }
 
 .action-icon {
+  width: 100%;
+  display: flex;
+  justify-content: center;
   font-size: 26px;
   color: #4F46E5;
 }
@@ -307,6 +369,29 @@ function goScore() {
   display: grid;
   gap: 12px;
 }
+.activity-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 10px;
+  padding-right: 4px;
+}
+.activity-scroll::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.activity-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.activity-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+.section-card:hover .activity-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(200, 200, 200, 0.55);
+}
 
 .activity-item {
   padding: 14px;
@@ -326,11 +411,52 @@ function goScore() {
   font-size: 13px;
 }
 @media (max-width: 1200px) {
+  .teacher-dashboard {
+    --dashboard-scale: 1;
+    padding: 36px 20px 12px;
+    gap: 20px;
+    width: 100%;
+    transform: none;
+  }
+  @supports (zoom: 1) {
+    .teacher-dashboard {
+      zoom: 1;
+    }
+  }
+  .welcome-banner {
+    padding: 0 24px;
+    height: 136px;
+    min-height: 136px;
+    align-items: center;
+  }
+  .welcome-banner::after {
+    width: 100%;
+    height: 44%;
+    top: auto;
+    left: 0;
+    bottom: 0;
+    background-position: center bottom;
+  }
+  .hero-left {
+    max-width: 100%;
+  }
   .metrics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
   .bottom-grid {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .teacher-dashboard {
+    padding: 28px 16px 10px;
+    gap: 16px;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-title {
+    font-size: 28px;
   }
 }
 </style>

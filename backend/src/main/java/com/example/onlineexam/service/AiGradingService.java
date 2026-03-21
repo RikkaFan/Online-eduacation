@@ -47,19 +47,24 @@ public class AiGradingService {
         headers.setBearerAuth(apiKey.trim());
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String systemPrompt = "你是一个严格的阅卷老师。请根据标准答案对学生的回答进行打分。要求：只返回一个 0 到 "
-                + max + " 之间的纯数字，不要包含任何其他文字或标点。";
-        String userPrompt = "题目：" + safe(questionContent)
-                + "\n标准答案：" + safe(standardAnswer)
-                + "\n学生回答：" + safe(studentAnswer)
-                + "\n满分：" + max;
+        String systemContent = "你是一个极其严格的高校阅卷专家。请对比【标准答案】和【学生回答】进行打分。\n"
+                + "【绝对打分规则】：\n"
+                + "1. 必须『按要点给分』。请在内心先拆解标准答案有几个核心要点。如果标准答案有N个要点，学生只覆盖了M个要点（M<N），最高得分绝不能超过 (M/N)*满分。\n"
+                + "2. 严禁『只看对错，不看完整度』。如果学生回答的内容虽然完全正确（哪怕是直接抄的标准答案的部分段落），但漏掉了其他核心要点，必须严格扣除漏答分数！\n"
+                + "3. 学生作答如果完全偏题或未作答，给0分。\n"
+                + "【输出要求】：\n"
+                + "不要输出你的思考过程，不要输出任何标点符号或解释，必须且只能返回一个 0 到 " + max + " 之间的纯数字！";
+        String userContent = "题目：" + safe(questionContent) + "\n"
+                + "标准答案：" + safe(standardAnswer) + "\n"
+                + "学生回答：" + safe(studentAnswer) + "\n"
+                + "本题满分：" + max;
 
         Map<String, Object> body = Map.of(
                 "model", "deepseek-chat",
                 "temperature", 0.1,
                 "messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user", "content", userPrompt)
+                        Map.of("role", "system", "content", systemContent),
+                        Map.of("role", "user", "content", userContent)
                 )
         );
 

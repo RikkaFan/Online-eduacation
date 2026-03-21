@@ -10,7 +10,9 @@ import java.util.Optional;
 
 public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
     List<ExamResult> findByExamId(Long examId);
+    List<ExamResult> findByExamIdAndExam_Course_TeacherId(Long examId, Long teacherId);
     List<ExamResult> findByStudentId(Long studentId);
+    List<ExamResult> findByStudentIdAndExam_Course_TeacherId(Long studentId, Long teacherId);
     void deleteByExamId(Long examId);
     void deleteByStudent_Id(Long studentId);
     long countByStudentId(Long studentId);

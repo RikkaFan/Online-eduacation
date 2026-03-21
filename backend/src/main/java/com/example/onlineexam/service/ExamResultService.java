@@ -2,7 +2,12 @@ package com.example.onlineexam.service;
 
 import com.example.onlineexam.model.*;
 import com.example.onlineexam.repository.*;
+import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,28 +108,49 @@ public class ExamResultService {
     }
 
     public List<ExamResult> getResultsByExam(Long examId) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return examResultRepository.findByExamIdAndExam_Course_TeacherId(examId, current.getId());
+        }
         return examResultRepository.findByExamId(examId);
     }
 
     public List<ExamResult> getResultsByStudent(Long studentId) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return examResultRepository.findByStudentIdAndExam_Course_TeacherId(studentId, current.getId());
+        }
         return examResultRepository.findByStudentId(studentId);
     }
 
     public List<StudentAnswer> getMistakesByStudent(Long studentId) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return studentAnswerRepository.findMistakesByStudentIdAndTeacherId(studentId, current.getId());
+        }
         return studentAnswerRepository.findMistakesByStudentId(studentId);
     }
 
     public List<StudentAnswer> getPendingGrading() {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return studentAnswerRepository.findPendingSubjectiveAnswersByTeacherId(current.getId());
+        }
         return studentAnswerRepository.findPendingSubjectiveAnswers();
     }
 
     public List<StudentAnswer> getGradedResults() {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return studentAnswerRepository.findFullyGradedSubjectiveAnswersByTeacherId(current.getId());
+        }
         return studentAnswerRepository.findFullyGradedSubjectiveAnswers();
     }
 
     public StudentAnswer gradeByAi(Long studentAnswerId) {
         StudentAnswer answer = studentAnswerRepository.findById(studentAnswerId)
                 .orElseThrow(() -> new RuntimeException("StudentAnswer not found with id: " + studentAnswerId));
+        enforceTeacherOwnership(answer);
         String type = normalizeType(answer.getQuestion().getType());
         if (!"SUBJECTIVE".equals(type)) {
             throw new RuntimeException("该题不是主观题，无需 AI 批改");
@@ -146,6 +172,7 @@ public class ExamResultService {
     public StudentAnswer gradeManual(Long studentAnswerId, Integer score) {
         StudentAnswer answer = studentAnswerRepository.findById(studentAnswerId)
                 .orElseThrow(() -> new RuntimeException("StudentAnswer not found with id: " + studentAnswerId));
+        enforceTeacherOwnership(answer);
         int maxScore = maxScoreForQuestion(answer.getExam(), normalizeType(answer.getQuestion().getType()));
         int safeScore = score == null ? 0 : Math.max(0, Math.min(score, maxScore));
         answer.setScore(safeScore);
@@ -225,5 +252,42 @@ public class ExamResultService {
 
     private int safeScore(Integer value) {
         return value == null || value < 0 ? 1 : value;
+    }
+
+    private void enforceTeacherOwnership(StudentAnswer answer) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current == null || !isTeacherOnly()) {
+            return;
+        }
+        Long ownerId = answer.getExam() == null || answer.getExam().getCourse() == null
+                ? null
+                : answer.getExam().getCourse().getTeacherId();
+        if (ownerId == null || !ownerId.equals(current.getId())) {
+            throw new AccessDeniedException("无权限批改其他教师试卷");
+        }
+    }
+
+    private UserDetailsImpl getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl user) {
+            return user;
+        }
+        return null;
+    }
+
+    private boolean isTeacherOnly() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        boolean teacher = false;
+        boolean admin = false;
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_TEACHER".equals(authority.getAuthority())) {
+                teacher = true;
+            }
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                admin = true;
+            }
+        }
+        return teacher && !admin;
     }
 }

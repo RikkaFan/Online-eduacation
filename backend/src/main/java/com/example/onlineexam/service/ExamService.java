@@ -8,7 +8,12 @@ import com.example.onlineexam.repository.ExamRepository;
 import com.example.onlineexam.repository.ExamResultRepository;
 import com.example.onlineexam.repository.QuestionRepository;
 import com.example.onlineexam.repository.StudentAnswerRepository;
+import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,14 +44,30 @@ public class ExamService {
     private StudentAnswerRepository studentAnswerRepository;
 
     public List<Exam> getExamsByCourse(Long courseId) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            if (!courseRepository.existsByIdAndTeacherId(courseId, current.getId())) {
+                throw new AccessDeniedException("无权限访问其他教师课程考试");
+            }
+            return examRepository.findByCourse_IdAndCourse_TeacherId(courseId, current.getId());
+        }
         return examRepository.findByCourse_Id(courseId);
     }
 
     public Optional<Exam> getExamById(Long id) {
-        return examRepository.findById(id);
+        Optional<Exam> examOptional = examRepository.findById(id);
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            return examOptional.filter(exam -> exam.getCourse() != null && current.getId().equals(exam.getCourse().getTeacherId()));
+        }
+        return examOptional;
     }
 
     public Exam createExam(Long courseId, Exam exam, int numberOfQuestions, List<Long> questionIds) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly() && !courseRepository.existsByIdAndTeacherId(courseId, current.getId())) {
+            throw new AccessDeniedException("无权限在其他教师课程下创建考试");
+        }
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + courseId));
         exam.setCourse(course);
@@ -88,6 +109,13 @@ public class ExamService {
     public Exam updateExam(Long id, Exam examDetails) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly()) {
+            Long teacherId = exam.getCourse() == null ? null : exam.getCourse().getTeacherId();
+            if (teacherId == null || !teacherId.equals(current.getId())) {
+                throw new AccessDeniedException("无权限修改其他教师考试");
+            }
+        }
         normalizeExamTime(examDetails);
 
         exam.setTitle(examDetails.getTitle());
@@ -109,6 +137,10 @@ public class ExamService {
 
     @Transactional
     public void deleteExam(Long id) {
+        UserDetailsImpl current = getCurrentUser();
+        if (current != null && isTeacherOnly() && !examRepository.existsByIdAndCourse_TeacherId(id, current.getId())) {
+            throw new AccessDeniedException("无权限删除其他教师考试");
+        }
         examResultRepository.deleteByExamId(id);
         studentAnswerRepository.deleteByExam_Id(id);
         examRepository.deleteExamQuestionsByExamId(id);
@@ -172,5 +204,29 @@ public class ExamService {
             long minutes = Duration.between(exam.getStartTime(), exam.getEndTime()).toMinutes();
             exam.setDurationInMinutes((int) Math.max(1, minutes));
         }
+    }
+
+    private UserDetailsImpl getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl user) {
+            return user;
+        }
+        return null;
+    }
+
+    private boolean isTeacherOnly() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        boolean teacher = false;
+        boolean admin = false;
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_TEACHER".equals(authority.getAuthority())) {
+                teacher = true;
+            }
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                admin = true;
+            }
+        }
+        return teacher && !admin;
     }
 }

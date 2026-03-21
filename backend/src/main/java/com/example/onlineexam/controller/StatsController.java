@@ -7,6 +7,8 @@ import com.example.onlineexam.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +23,11 @@ public class StatsController {
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public AdminStatsResponse getAdminStats() {
-        return statsService.getAdminStats();
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserDetailsImpl userDetails)) {
+            throw new AccessDeniedException("无权查看统计数据");
+        }
+        return statsService.getAdminStats(userDetails.getId(), isTeacherOnly());
     }
 
     @GetMapping("/student/{studentId}")
@@ -35,5 +41,21 @@ public class StatsController {
             throw new AccessDeniedException("无权查看他人的统计数据");
         }
         return statsService.getStudentStats(userDetails.getId());
+    }
+
+    private boolean isTeacherOnly() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        boolean teacher = false;
+        boolean admin = false;
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_TEACHER".equals(authority.getAuthority())) {
+                teacher = true;
+            }
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                admin = true;
+            }
+        }
+        return teacher && !admin;
     }
 }

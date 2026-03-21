@@ -13,7 +13,9 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByDeletedFalse();
     List<Question> findByCategoryIdAndDeletedFalse(Long categoryId);
     List<Question> findByCourseIdAndDeletedFalse(Long courseId);
+    List<Question> findByCourseIdInAndDeletedFalse(Collection<Long> courseIds);
     Optional<Question> findByIdAndDeletedFalse(Long id);
     List<Question> findAllByIdInAndDeletedFalse(Collection<Long> ids);
     long countByDeletedFalse();
+    long countByDeletedFalseAndCourseIdIn(Collection<Long> courseIds);
 }

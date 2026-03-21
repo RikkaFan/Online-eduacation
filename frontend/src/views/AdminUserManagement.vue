@@ -1,8 +1,13 @@
 <template>
-  <div class="admin-user-management">
-    <el-card class="apple-card" shadow="never">
+  <div class="admin-user-management page-shell">
+    <div class="glass-card page-hero">
+      <h2 class="hero-title">用户管理</h2>
+      <p class="hero-subtitle">统一管理平台账号、角色分配与身份信息。</p>
+    </div>
+
+    <el-card class="glass-card panel-card" shadow="never">
       <div class="toolbar">
-        <el-button type="primary" @click="openCreateDialog">新增用户</el-button>
+        <el-button class="primary-btn" type="primary" @click="openCreateDialog">新增用户</el-button>
         <el-input
           v-model="keyword"
           placeholder="按用户名搜索"
@@ -216,26 +221,102 @@ onMounted(loadUsers);
 </script>
 
 <style scoped>
-.admin-user-management {
-  padding: 0;
+.page-shell {
+  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 40px 24px 24px;
+  box-sizing: border-box;
+  width: calc(100% / var(--dashboard-scale));
+  transform: scale(var(--dashboard-scale));
+  transform-origin: top left;
+  background: transparent;
 }
-
-.apple-card {
-  border: none;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+@supports (zoom: 1) {
+  .page-shell {
+    width: 100%;
+    transform: none;
+    zoom: var(--dashboard-scale);
+  }
+}
+.glass-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(212, 224, 244, 0.96) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+}
+.page-hero {
+  padding: 24px;
+  border-radius: 20px !important;
+}
+.hero-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+.hero-subtitle {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #8E8E93;
+}
+.panel-card {
+  border-radius: 20px !important;
+}
+.panel-card :deep(.el-card__body) {
+  padding: 24px;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .role-tag {
   margin-right: 6px;
+  border-radius: 12px !important;
+}
+.primary-btn {
+  border-radius: 12px !important;
+}
+.panel-card :deep(.el-input__wrapper) {
+  border-radius: 12px !important;
+}
+.panel-card :deep(.el-table) {
+  --el-table-header-bg-color: rgba(246, 250, 255, 0.9);
+  --el-table-row-hover-bg-color: rgba(236, 246, 255, 0.65);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.panel-card :deep(.el-dialog) {
+  border-radius: 20px;
+}
+@media (max-width: 1200px) {
+  .page-shell {
+    --dashboard-scale: 1;
+    padding: 28px 20px 20px;
+    gap: 20px;
+    width: 100%;
+    transform: none;
+  }
+  @supports (zoom: 1) {
+    .page-shell {
+      zoom: 1;
+    }
+  }
+}
+@media (max-width: 760px) {
+  .page-shell {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 }
 </style>

@@ -15,6 +15,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,6 +41,7 @@ public class ExamController {
     public ResponseEntity<?> getExamById(@PathVariable Long id) {
         Exam exam = examService.getExamById(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        exam.setQuestions(sortQuestions(exam.getQuestions()));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && isStudentOnly(authentication)) {
             return ResponseEntity.ok(toStudentExamDTO(exam));
@@ -51,7 +54,7 @@ public class ExamController {
     public List<Question> getExamQuestions(@PathVariable Long id) {
         Exam exam = examService.getExamById(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
-        return exam.getQuestions();
+        return sortQuestions(exam.getQuestions());
     }
 
     @PostMapping("/courses/{courseId}/exams")
@@ -102,9 +105,9 @@ public class ExamController {
     }
 
     private StudentExamDTO toStudentExamDTO(Exam exam) {
-        List<StudentQuestionDTO> questions = exam.getQuestions() == null
-                ? List.of()
-                : exam.getQuestions().stream().map(this::toStudentQuestionDTO).collect(Collectors.toList());
+        List<StudentQuestionDTO> questions = sortQuestions(exam.getQuestions()).stream()
+                .map(this::toStudentQuestionDTO)
+                .collect(Collectors.toList());
         return new StudentExamDTO(
                 exam.getId(),
                 exam.getCourse(),
@@ -123,6 +126,38 @@ public class ExamController {
                 exam.getTotalScore(),
                 questions
         );
+    }
+
+    private List<Question> sortQuestions(List<Question> questions) {
+        if (questions == null || questions.isEmpty()) {
+            return List.of();
+        }
+        return questions.stream()
+                .sorted(Comparator.comparingInt((Question q) -> typeOrder(q.getType()))
+                        .thenComparing(q -> q.getId() == null ? Long.MAX_VALUE : q.getId()))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private int typeOrder(String type) {
+        return switch (normalizeType(type)) {
+            case "MULTIPLE" -> 2;
+            case "JUDGE" -> 3;
+            case "SUBJECTIVE" -> 4;
+            default -> 1;
+        };
+    }
+
+    private String normalizeType(String type) {
+        if (type == null || type.trim().isEmpty()) {
+            return "SINGLE";
+        }
+        String normalized = type.trim().toUpperCase();
+        return switch (normalized) {
+            case "MULTIPLE", "MULTIPLE_CHOICE" -> "MULTIPLE";
+            case "JUDGE", "TRUE_FALSE" -> "JUDGE";
+            case "SUBJECTIVE" -> "SUBJECTIVE";
+            default -> "SINGLE";
+        };
     }
 
     private StudentQuestionDTO toStudentQuestionDTO(Question question) {

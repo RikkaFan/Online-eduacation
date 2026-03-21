@@ -52,6 +52,19 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
             join fetch sa.exam e
             join fetch sa.student s
             join fetch sa.question q
+            where (sa.graded is null or sa.graded = false)
+              and q.type = 'SUBJECTIVE'
+              and e.course.teacherId = :teacherId
+            order by sa.id desc
+            """)
+    List<StudentAnswer> findPendingSubjectiveAnswersByTeacherId(@Param("teacherId") Long teacherId);
+
+    @Query("""
+            select sa
+            from StudentAnswer sa
+            join fetch sa.exam e
+            join fetch sa.student s
+            join fetch sa.question q
             where q.type = 'SUBJECTIVE'
               and exists (
                 select 1
@@ -73,6 +86,50 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Lo
             order by sa.id desc
             """)
     List<StudentAnswer> findFullyGradedSubjectiveAnswers();
+
+    @Query("""
+            select sa
+            from StudentAnswer sa
+            join fetch sa.exam e
+            join fetch sa.student s
+            join fetch sa.question q
+            where q.type = 'SUBJECTIVE'
+              and e.course.teacherId = :teacherId
+              and exists (
+                select 1
+                from StudentAnswer sx
+                join sx.question qx
+                where sx.exam.id = sa.exam.id
+                  and sx.student.id = sa.student.id
+                  and qx.type = 'SUBJECTIVE'
+              )
+              and not exists (
+                select 1
+                from StudentAnswer sy
+                join sy.question qy
+                where sy.exam.id = sa.exam.id
+                  and sy.student.id = sa.student.id
+                  and qy.type = 'SUBJECTIVE'
+                  and sy.score is null
+              )
+            order by sa.id desc
+            """)
+    List<StudentAnswer> findFullyGradedSubjectiveAnswersByTeacherId(@Param("teacherId") Long teacherId);
+
+    @Query("""
+            select sa
+            from StudentAnswer sa
+            join fetch sa.question q
+            join sa.exam e
+            where sa.student.id = :studentId
+              and e.course.teacherId = :teacherId
+              and (
+                sa.selectedAnswer is null
+                or sa.selectedAnswer = ''
+                or sa.selectedAnswer <> q.answer
+              )
+            """)
+    List<StudentAnswer> findMistakesByStudentIdAndTeacherId(@Param("studentId") Long studentId, @Param("teacherId") Long teacherId);
 
     List<StudentAnswer> findByExam_IdAndStudent_Id(Long examId, Long studentId);
 

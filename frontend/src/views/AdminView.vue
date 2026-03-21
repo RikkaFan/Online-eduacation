@@ -1,23 +1,25 @@
 <template>
   <el-container class="apple-layout">
-    <el-aside width="auto" class="apple-sidebar glass-card elastic-sidebar">
+    <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
       <div class="logo-area">
         <h2>管理控制台</h2>
       </div>
-      <el-menu :default-active="$route.path" router class="apple-menu">
-        <el-menu-item index="/admin/dashboard">
-          <el-icon><DataBoard /></el-icon>
-          <span>控制台首页</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/users">
-          <el-icon><UserFilled /></el-icon>
-          <span>用户管理</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/logs">
-          <el-icon><Monitor /></el-icon>
-          <span>日志审计</span>
-        </el-menu-item>
-      </el-menu>
+      <div class="menu-wrap">
+        <el-menu :default-active="$route.path" router class="apple-menu">
+          <el-menu-item index="/admin/dashboard">
+            <el-icon><DataBoard /></el-icon>
+            <span>控制台首页</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/users">
+            <el-icon><UserFilled /></el-icon>
+            <span>用户管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/logs">
+            <el-icon><Monitor /></el-icon>
+            <span>日志审计</span>
+          </el-menu-item>
+        </el-menu>
+      </div>
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
@@ -37,7 +39,7 @@
     </el-aside>
 
     <el-container>
-      <el-main class="apple-main">
+      <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden;">
         <router-view />
       </el-main>
     </el-container>
@@ -71,35 +73,44 @@ function handleLogout() {
 
 <style scoped>
 .apple-layout {
+  display: flex;
   height: 100vh;
-  background-color: #F4F7FC;
+  overflow: hidden;
+  padding: 16px;
+  gap: 14px;
+  box-sizing: border-box;
+  background-color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
 .apple-sidebar {
-  background-color: #FFFFFF;
+  width: clamp(174px, 12.2vw, 218px) !important;
   padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  margin: 12px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 
 .logo-area {
-  padding: 24px 0;
-  margin-bottom: 16px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 8px 6px 10px;
+  color: #1d1d1f;
+  position: relative;
+  top: 18px;
+  text-align: center;
 }
 
 .logo-area h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1D1D1F;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: 0.02em;
   margin: 0;
+}
+.menu-wrap {
+  display: flex;
+  align-items: center;
+}
+.menu-wrap .apple-menu {
+  width: 100%;
 }
 
 .apple-menu {
@@ -110,9 +121,9 @@ function handleLogout() {
 ::v-deep(.apple-menu .el-menu-item) {
   border-radius: 12px;
   margin-bottom: 4px;
-  color: #334155;
-  height: 48px;
-  line-height: 48px;
+  color: #475569;
+  height: 46px;
+  line-height: 46px;
 }
 
 ::v-deep(.apple-menu .el-menu-item.is-active) {
@@ -121,26 +132,29 @@ function handleLogout() {
   font-weight: 600;
 }
 
-.apple-main {
-  padding: 20px;
-}
-
 .nav-bottom {
-  padding-top: 12px;
+  width: 100%;
+  margin-bottom: 16px;
 }
 
 .user-profile {
   display: flex;
   align-items: center;
   cursor: pointer;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 8px 10px;
-  color: #334155;
+  color: #1D1D1F;
+  font-weight: 500;
 }
 .user-profile :deep(.el-avatar) {
   flex-shrink: 0;
   background: linear-gradient(135deg, #93c5fd, #60a5fa);
   color: #fff;
+}
+@media (max-width: 1200px) {
+  .logo-area {
+    top: 10px;
+  }
+  .logo-area h2 {
+    font-size: 16px;
+  }
 }
 </style>

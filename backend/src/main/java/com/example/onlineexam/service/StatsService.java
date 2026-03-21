@@ -6,6 +6,8 @@ import com.example.onlineexam.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class StatsService {
 
@@ -27,7 +29,21 @@ public class StatsService {
     @Autowired
     private StudentAnswerRepository studentAnswerRepository;
 
-    public AdminStatsResponse getAdminStats() {
+    public AdminStatsResponse getAdminStats(Long currentUserId, boolean teacherOnly) {
+        if (teacherOnly && currentUserId != null) {
+            List<Long> courseIds = courseRepository.findByTeacherId(currentUserId).stream()
+                    .map(course -> course.getId())
+                    .toList();
+            long totalCourses = courseRepository.countByTeacherId(currentUserId);
+            long totalExams = examRepository.countByCourse_TeacherId(currentUserId);
+            long totalQuestions = courseIds.isEmpty() ? 0 : questionRepository.countByDeletedFalseAndCourseIdIn(courseIds);
+            return new AdminStatsResponse(
+                    totalCourses,
+                    totalExams,
+                    totalQuestions,
+                    userRepository.count()
+            );
+        }
         return new AdminStatsResponse(
                 courseRepository.count(),
                 examRepository.count(),

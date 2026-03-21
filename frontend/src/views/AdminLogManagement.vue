@@ -1,5 +1,10 @@
 <template>
-  <div class="admin-log-management">
+  <div class="admin-log-management page-shell">
+    <div class="glass-card page-hero">
+      <h2 class="hero-title">日志审计</h2>
+      <p class="hero-subtitle">追踪系统关键操作轨迹，定位异常行为与审计事件。</p>
+    </div>
+
     <el-card class="glass-card panel-card" shadow="never">
       <div class="panel-header">
         <h2>系统操作行为审计</h2>
@@ -70,21 +75,88 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.admin-log-management {
-  padding: 0;
+.page-shell {
+  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 40px 24px 24px;
+  box-sizing: border-box;
+  width: calc(100% / var(--dashboard-scale));
+  transform: scale(var(--dashboard-scale));
+  transform-origin: top left;
+  background: transparent;
 }
-
+@supports (zoom: 1) {
+  .page-shell {
+    width: 100%;
+    transform: none;
+    zoom: var(--dashboard-scale);
+  }
+}
+.glass-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(212, 224, 244, 0.96) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+}
+.page-hero {
+  padding: 24px;
+  border-radius: 20px !important;
+}
+.hero-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+.hero-subtitle {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #8E8E93;
+}
 .panel-card {
-  padding: 6px 6px 2px;
+  border-radius: 20px !important;
 }
-
+.panel-card :deep(.el-card__body) {
+  padding: 24px;
+}
 .panel-header {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
-
 .panel-header h2 {
   margin: 0;
-  font-size: 24px;
-  color: #0F172A;
+  font-size: 22px;
+  color: #1c1c1e;
+  font-weight: 700;
+}
+.panel-card :deep(.el-table) {
+  --el-table-header-bg-color: rgba(246, 250, 255, 0.9);
+  --el-table-row-hover-bg-color: rgba(236, 246, 255, 0.65);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.panel-card :deep(.el-tag) {
+  border-radius: 12px !important;
+}
+@media (max-width: 1200px) {
+  .page-shell {
+    --dashboard-scale: 1;
+    padding: 28px 20px 20px;
+    gap: 20px;
+    width: 100%;
+    transform: none;
+  }
+  @supports (zoom: 1) {
+    .page-shell {
+      zoom: 1;
+    }
+  }
+}
+@media (max-width: 760px) {
+  .page-shell {
+    padding: 20px 16px;
+    gap: 16px;
+  }
 }
 </style>

@@ -16,8 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
+import com.example.onlineexam.security.UserDetailsImpl;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -127,6 +130,7 @@ public class QuestionController {
         }
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("课程不存在: " + courseId));
+        enforceTeacherCourseOwnership(course);
 
         List<Question> toSave = new ArrayList<>();
         try {
@@ -210,5 +214,20 @@ public class QuestionController {
 
     private boolean isBlank(String text) {
         return text == null || text.trim().isEmpty();
+    }
+
+    private void enforceTeacherCourseOwnership(Course course) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof UserDetailsImpl user)) {
+            return;
+        }
+        boolean teacher = auth.getAuthorities().stream().anyMatch(a -> "ROLE_TEACHER".equals(a.getAuthority()));
+        boolean admin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (teacher && !admin) {
+            Long ownerId = course == null ? null : course.getTeacherId();
+            if (ownerId == null || !ownerId.equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("无权限导入到其他教师课程");
+            }
+        }
     }
 }

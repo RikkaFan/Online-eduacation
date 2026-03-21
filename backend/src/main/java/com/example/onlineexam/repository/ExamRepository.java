@@ -10,6 +10,9 @@ import java.util.List;
 
 public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findByCourse_Id(Long courseId);
+    List<Exam> findByCourse_IdAndCourse_TeacherId(Long courseId, Long teacherId);
+    boolean existsByIdAndCourse_TeacherId(Long examId, Long teacherId);
+    long countByCourse_TeacherId(Long teacherId);
     void deleteByCourse_Id(Long courseId);
 
     @Modifying

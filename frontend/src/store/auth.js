@@ -59,8 +59,16 @@ export const useAuthStore = defineStore('auth', () => {
     let lastError;
     for (const url of [...new Set(endpoints)]) {
       try {
-        response = await requestLogin(url, credentials);
-        break;
+        const currentResponse = await requestLogin(url, credentials);
+        if (currentResponse.ok) {
+          response = currentResponse;
+          break;
+        }
+        if (currentResponse.status === 401 || currentResponse.status === 403 || currentResponse.status === 400) {
+          response = currentResponse;
+          break;
+        }
+        response = currentResponse;
       } catch (e) {
         lastError = e;
       }

@@ -4,36 +4,38 @@
       <div class="logo-area">
         <h2>在线测评系统</h2>
       </div>
-      <el-menu :default-active="$route.path" router class="apple-menu">
-        <el-menu-item index="/teacher/dashboard">
-          <el-icon><DataBoard /></el-icon>
-          <span>控制台首页</span>
-        </el-menu-item>
-        <el-menu-item index="/teacher/courses">
-          <el-icon><Reading /></el-icon>
-          <span>课程管理</span>
-        </el-menu-item>
-        <el-menu-item index="/teacher/questions">
-          <el-icon><Folder /></el-icon>
-          <span>题库管理</span>
-        </el-menu-item>
-        <el-menu-item index="/teacher/exams">
-          <el-icon><EditPen /></el-icon>
-          <span>考试管理</span>
-        </el-menu-item>
-        <el-menu-item index="/teacher/scores">
-          <el-icon><DataLine /></el-icon>
-          <span>成绩分析</span>
-        </el-menu-item>
-        <el-menu-item index="/teacher/grading">
-          <el-icon><DocumentChecked /></el-icon>
-          <span>阅卷管理</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/users" v-if="isAdmin">
-          <el-icon><Setting /></el-icon>
-          <span>系统管理</span>
-        </el-menu-item>
-      </el-menu>
+      <div class="menu-wrap">
+        <el-menu :default-active="$route.path" router class="apple-menu">
+          <el-menu-item index="/teacher/dashboard">
+            <el-icon><DataBoard /></el-icon>
+            <span>控制台首页</span>
+          </el-menu-item>
+          <el-menu-item index="/teacher/courses">
+            <el-icon><Reading /></el-icon>
+            <span>课程管理</span>
+          </el-menu-item>
+          <el-menu-item index="/teacher/questions">
+            <el-icon><Folder /></el-icon>
+            <span>题库管理</span>
+          </el-menu-item>
+          <el-menu-item index="/teacher/exams">
+            <el-icon><EditPen /></el-icon>
+            <span>考试管理</span>
+          </el-menu-item>
+          <el-menu-item index="/teacher/scores">
+            <el-icon><DataLine /></el-icon>
+            <span>成绩分析</span>
+          </el-menu-item>
+          <el-menu-item index="/teacher/grading">
+            <el-icon><DocumentChecked /></el-icon>
+            <span>阅卷管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/users" v-if="isAdmin">
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </el-menu-item>
+        </el-menu>
+      </div>
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
@@ -53,27 +55,7 @@
     </el-aside>
 
     <el-container>
-      <el-header class="apple-header">
-        <div class="header-left">欢迎回来！</div>
-        <div class="header-right">
-          <el-dropdown>
-            <span class="user-profile">
-              <el-avatar :size="28">
-                <el-icon><UserFilled /></el-icon>
-              </el-avatar>
-              <span style="margin-left: 8px;">{{ roleLabel }}</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </el-header>
-
-      <el-main class="apple-main">
+      <el-main style="padding: 0; background: transparent; overflow-y: auto; overflow-x: hidden;">
         <router-view />
       </el-main>
     </el-container>
@@ -95,7 +77,6 @@ const { roles, user } = storeToRefs(authStore);
 const profileDialogVisible = ref(false);
 
 const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'));
-const roleLabel = computed(() => (isAdmin.value ? '管理员' : '教师'));
 const userName = computed(() => user.value?.username || '用户');
 
 function goProfile() {
@@ -110,32 +91,41 @@ function handleLogout() {
 
 <style scoped>
 .apple-layout {
+  display: flex;
   height: 100vh;
-  background-color: #F4F7FC;
+  overflow: hidden;
+  padding: 16px;
+  gap: 14px;
+  box-sizing: border-box;
+  background-color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 .apple-sidebar {
-  background-color: #FFFFFF;
+  width: clamp(174px, 12.2vw, 218px) !important;
   padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  margin: 12px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 .logo-area {
-  padding: 24px 0;
-  margin-bottom: 16px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 8px 6px 10px;
+  color: #1d1d1f;
+  position: relative;
+  top: 18px;
+  text-align: center;
 }
 .logo-area h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1D1D1F;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: 0.02em;
   margin: 0;
+}
+.menu-wrap {
+  display: flex;
+  align-items: center;
+}
+.menu-wrap .apple-menu {
+  width: 100%;
 }
 .apple-menu {
   border-right: none !important;
@@ -145,8 +135,8 @@ function handleLogout() {
   border-radius: 12px;
   margin-bottom: 4px;
   color: #334155;
-  height: 48px;
-  line-height: 48px;
+  height: 46px;
+  line-height: 46px;
 }
 ::v-deep(.apple-menu .el-menu-item.is-active) {
   background-color: #E0E7FF;
@@ -155,21 +145,6 @@ function handleLogout() {
 }
 ::v-deep(.apple-menu .el-menu-item:hover) {
   background-color: rgba(79, 70, 229, 0.08);
-}
-.apple-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  height: 60px;
-  border-radius: 20px;
-  margin: 12px 12px 0 0;
-  padding: 0 16px;
-}
-.apple-main {
-  padding: 20px;
 }
 .user-profile {
   display: flex;
@@ -189,5 +164,13 @@ function handleLogout() {
 }
 :deep(.el-tooltip__trigger:focus-visible) {
   outline: none;
+}
+@media (max-width: 1200px) {
+  .logo-area {
+    top: 10px;
+  }
+  .logo-area h2 {
+    font-size: 16px;
+  }
 }
 </style>
