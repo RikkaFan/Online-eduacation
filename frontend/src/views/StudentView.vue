@@ -1,41 +1,37 @@
 <template>
   <el-container class="apple-layout">
     <el-aside width="auto" class="glass-card elastic-sidebar apple-sidebar">
-      <div class="profile-card">
-        <el-avatar :size="42">
-          <el-icon><UserFilled /></el-icon>
-        </el-avatar>
-        <div class="profile-meta">
-          <div class="profile-name">{{ userName }}</div>
-          <div class="profile-sub">加油，继续保持学习节奏</div>
-        </div>
+      <div class="sidebar-title">
+        在线教育测评系统
       </div>
-      <el-menu :default-active="$route.path" router class="apple-menu">
-        <el-menu-item index="/student/dashboard">
-          <el-icon><House /></el-icon>
-          <span>控制台首页</span>
-        </el-menu-item>
-        <el-menu-item index="/student/exams">
-          <el-icon><Position /></el-icon>
-          <span>考试列表</span>
-        </el-menu-item>
-        <el-menu-item index="/student/scores">
-          <el-icon><DataAnalysis /></el-icon>
-          <span>成绩查询</span>
-        </el-menu-item>
-        <el-menu-item index="/student/practice">
-          <el-icon><Warning /></el-icon>
-          <span>错题本</span>
-        </el-menu-item>
-        <el-menu-item index="/student/favorites">
-          <el-icon><Reading /></el-icon>
-          <span>我的收藏</span>
-        </el-menu-item>
-        <el-menu-item index="/student/smart-practice">
-          <el-icon><EditPen /></el-icon>
-          <span>自主刷题</span>
-        </el-menu-item>
-      </el-menu>
+      <div class="menu-wrap">
+        <el-menu :default-active="$route.path" router class="apple-menu">
+          <el-menu-item index="/student/dashboard">
+            <el-icon><House /></el-icon>
+            <span>控制台首页</span>
+          </el-menu-item>
+          <el-menu-item index="/student/exams">
+            <el-icon><Position /></el-icon>
+            <span>考试列表</span>
+          </el-menu-item>
+          <el-menu-item index="/student/scores">
+            <el-icon><DataAnalysis /></el-icon>
+            <span>成绩查询</span>
+          </el-menu-item>
+          <el-menu-item index="/student/practice">
+            <el-icon><Warning /></el-icon>
+            <span>错题本</span>
+          </el-menu-item>
+          <el-menu-item index="/student/favorites">
+            <el-icon><Reading /></el-icon>
+            <span>我的收藏</span>
+          </el-menu-item>
+          <el-menu-item index="/student/smart-practice">
+            <el-icon><EditPen /></el-icon>
+            <span>自主刷题</span>
+          </el-menu-item>
+        </el-menu>
+      </div>
       <div class="nav-bottom">
         <el-dropdown placement="right-end">
           <div class="user-profile">
@@ -99,37 +95,27 @@ function handleLogout() {
 .apple-sidebar {
   width: clamp(174px, 12.2vw, 218px) !important;
   padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
-.profile-card {
+.sidebar-title {
+  padding: 8px 6px 10px;
+  color: #1d1d1f;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.menu-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 4px 16px;
-  margin-top: clamp(62px, 8vh, 82px);
 }
-.profile-meta {
-  min-width: 0;
-}
-.profile-card :deep(.el-avatar) {
-  flex-shrink: 0;
+.menu-wrap .apple-menu {
+  width: 100%;
 }
 .user-profile :deep(.el-avatar) {
   flex-shrink: 0;
   background: linear-gradient(135deg, #93c5fd, #60a5fa);
   color: #fff;
-}
-.profile-name {
-  color: #1d1d1f;
-  font-size: 15px;
-  font-weight: 700;
-}
-.profile-sub {
-  color: #64748b;
-  font-size: 12px;
-  margin-top: 2px;
 }
 .apple-menu {
   border-right: none !important;
@@ -162,8 +148,9 @@ function handleLogout() {
   margin-bottom: 16px;
 }
 @media (max-width: 1200px) {
-  .profile-card {
-    margin-top: 28px;
+  .sidebar-title {
+    padding-top: 4px;
+    padding-bottom: 8px;
   }
 }
 </style>
