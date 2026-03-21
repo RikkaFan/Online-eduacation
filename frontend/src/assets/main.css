@@ -19,3 +19,17 @@ a,
     background-color: rgba(79, 70, 229, 0.08);
   }
 }
+
+/* 现代化弹性侧边栏 (苹果式平滑缩放) */
+.elastic-sidebar {
+  width: clamp(200px, 15vw, 280px) !important;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow-x: hidden;
+}
+
+/* 确保 Element Plus 菜单完美适应外层弹性容器 */
+.elastic-sidebar .el-menu {
+  border-right: none !important;
+  width: 100% !important;
+}

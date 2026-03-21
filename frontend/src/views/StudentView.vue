@@ -1,6 +1,6 @@
 <template>
   <el-container class="apple-layout">
-    <el-aside width="240px" class="apple-sidebar glass-card">
+    <el-aside width="auto" class="apple-sidebar glass-card elastic-sidebar">
       <div class="logo-area">
         <h2>在线测评系统</h2>
       </div>
