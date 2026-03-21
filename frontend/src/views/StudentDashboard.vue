@@ -48,9 +48,9 @@
         <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
         <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar">
           <div class="exam-head-row">
-            <span>课程名称</span>
-            <span>日期</span>
-            <span>入口</span>
+            <span class="exam-head-course">课程名称</span>
+            <span class="exam-head-date">日期</span>
+            <span class="exam-head-entry">入口</span>
           </div>
           <div class="exam-body-grid">
             <div
@@ -308,8 +308,9 @@ function goScores() {
   --dashboard-scale: clamp(0.84, calc((100vw - 300px) / 1360), 1);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
   padding: 24px;
+  box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
   transform-origin: top left;
@@ -322,10 +323,17 @@ function goScores() {
   }
 }
 .dashboard-canvas {
-  border-radius: 24px;
+  border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(239, 245, 255, 0.72) 0%, rgba(246, 249, 255, 0.5) 100%);
-  border: 1px solid rgba(228, 236, 250, 0.8);
+    linear-gradient(180deg, rgba(228, 236, 250, 0.92) 0%, rgba(242, 247, 255, 0.88) 100%);
+  border: 1px solid rgba(209, 223, 245, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+:deep(.glass-card) {
+  border-radius: 16px !important;
+  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04), 0 1px 4px rgba(15, 23, 42, 0.03) !important;
 }
 .dash-title {
   font-size: 30px;
@@ -340,7 +348,8 @@ function goScores() {
   gap: 24px;
   position: relative;
   overflow: hidden;
-  padding: 24px;
+  padding: 18px 20px;
+  min-height: 136px;
   margin-top: 2px;
 }
 .welcome-banner::before {
@@ -359,13 +368,13 @@ function goScores() {
   min-width: 0;
 }
 .hero-subtitle {
-  margin-top: 8px;
+  margin-top: 6px;
   color: #475569;
 }
 .hero-meta-list {
-  margin-top: 18px;
+  margin-top: 12px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 .hero-meta-item {
   display: flex;
@@ -373,7 +382,7 @@ function goScores() {
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.42);
   border-radius: 12px;
-  padding: 9px 12px;
+  padding: 7px 12px;
   color: #64748b;
   font-size: 13px;
 }
@@ -384,12 +393,42 @@ function goScores() {
 .hero-art {
   width: min(24%, 260px);
   min-width: 180px;
-  height: 148px;
+  height: 130px;
   border-radius: 16px;
   background:
-    radial-gradient(at 20% 20%, rgba(59, 130, 246, 0.2) 0px, transparent 55%),
-    radial-gradient(at 75% 75%, rgba(14, 165, 233, 0.2) 0px, transparent 50%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.22));
+    linear-gradient(180deg, rgba(243, 248, 255, 0.95), rgba(231, 241, 255, 0.92)),
+    repeating-linear-gradient(90deg, rgba(147, 197, 253, 0.22) 0 2px, transparent 2px 38px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0 58%, rgba(203, 225, 255, 0.4) 58% 100%);
+  border: 1px solid rgba(191, 219, 254, 0.85);
+  position: relative;
+  overflow: hidden;
+}
+.hero-art::before {
+  content: '';
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 16%;
+  height: 38%;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.18) 0 9px, rgba(59, 130, 246, 0.08) 9px 18px),
+    linear-gradient(180deg, rgba(219, 234, 254, 0.92), rgba(191, 219, 254, 0.9));
+  box-shadow: 0 8px 16px rgba(30, 64, 175, 0.08);
+}
+.hero-art::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 16%;
+  height: 34%;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.95) 0 18%, transparent 19%),
+    radial-gradient(circle at 80% 32%, rgba(255, 255, 255, 0.95) 0 18%, transparent 19%),
+    linear-gradient(90deg, rgba(219, 234, 254, 0.88), rgba(239, 246, 255, 0.96));
+  border: 1px solid rgba(191, 219, 254, 0.75);
 }
 .metric-top {
   display: inline-flex;
@@ -412,28 +451,29 @@ function goScores() {
   color: #0a84ff;
 }
 .metric-item {
-  padding: 24px;
+  padding: 16px 20px;
+  min-height: 88px;
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
 }
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 .bottom-grid {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(360px, 4fr);
-  gap: 24px;
+  gap: 16px;
 }
 .chart-section,
 .list-section {
-  padding: 24px;
-  height: clamp(360px, 43vh, 430px);
+  padding: 18px 20px;
+  height: clamp(300px, 35vh, 350px);
   display: flex;
   flex-direction: column;
 }
@@ -466,12 +506,20 @@ function goScores() {
 }
 .exam-head-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.9fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
   align-items: center;
   color: #8e8e93;
   font-size: 12px;
   font-weight: 600;
   padding: 0 16px 10px;
+}
+.exam-head-course {
+  text-align: left;
+}
+.exam-head-date,
+.exam-head-entry {
+  justify-self: start;
+  padding-left: 6px;
 }
 .exam-body-grid {
   display: grid;
@@ -480,14 +528,14 @@ function goScores() {
 }
 .exam-card-item {
   padding: 16px 18px;
-  border-radius: 12px;
+  border-radius: 14px;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.9fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
   align-items: center;
-  border: none;
+  border: 1px solid rgba(212, 224, 244, 0.92);
   box-shadow: 0 4px 12px rgba(0,0,0,0.02);
   transition: all 0.3s ease;
-  background: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.86);
 }
 .exam-col {
   display: flex;
@@ -511,9 +559,13 @@ function goScores() {
   color: #8E8E93;
   line-height: 1.45;
   white-space: nowrap;
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 6px;
 }
 .action-col {
-  justify-content: flex-end;
+  justify-content: flex-start;
+  padding-left: 6px;
 }
 .entry-btn {
   min-width: 58px;
@@ -535,7 +587,8 @@ function goScores() {
 }
 :deep(.exam-card-item:hover) {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.58) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(187, 207, 240, 0.95);
 }
 :deep(.el-button) {
   border-radius: 12px !important;
