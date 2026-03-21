@@ -108,7 +108,7 @@ function handleLogout() {
   align-items: center;
   gap: 10px;
   padding: 8px 4px 16px;
-  margin-top: clamp(44px, 6vh, 62px);
+  margin-top: clamp(62px, 8vh, 82px);
 }
 .profile-meta {
   min-width: 0;
@@ -163,7 +163,7 @@ function handleLogout() {
 }
 @media (max-width: 1200px) {
   .profile-card {
-    margin-top: 20px;
+    margin-top: 28px;
   }
 }
 </style>
