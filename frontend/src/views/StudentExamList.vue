@@ -9,7 +9,10 @@
     <div class="glass-card list-card">
       <div class="list-head-row">
         <span>课程名称</span>
+        <span>课程</span>
         <span>日期</span>
+        <span>倒计时</span>
+        <span>状态</span>
         <span>入口</span>
       </div>
       <div v-loading="loading" class="list-scroll">
@@ -19,10 +22,15 @@
               <el-icon class="exam-cal-icon"><Calendar /></el-icon>
               <span class="exam-title">{{ row.title || '未命名考试' }}</span>
             </div>
+            <div class="row-cell">{{ row.course?.courseName || row.courseName || '-' }}</div>
             <div class="row-cell">{{ formatDateTime(row.startTime) }}</div>
+            <div class="row-cell">{{ formatCountdown(row) }}</div>
+            <div class="row-cell status-cell">
+              <el-tag effect="plain" :type="statusType(getStatus(row))">{{ getStatusText(getStatus(row)) }}</el-tag>
+            </div>
             <div class="row-cell action-cell">
               <el-button type="primary" size="small" plain round :disabled="getStatus(row) !== 'ongoing'" @click="enterExam(row.id)">
-                {{ getStatus(row) === 'finished' ? '已结束' : '进入考试' }}
+                {{ getStatus(row) === 'finished' ? '已结束' : getStatus(row) === 'pending' ? '未开始' : '进入考试' }}
               </el-button>
             </div>
           </div>
@@ -80,6 +88,30 @@ function getStatus(exam) {
   if (start && now < start) return 'pending';
   if (end && now > end) return 'finished';
   return 'ongoing';
+}
+function getStatusText(s) {
+  return s === 'pending' ? '未开始' : s === 'finished' ? '已结束' : '进行中';
+}
+function statusType(s) {
+  return s === 'pending' ? 'info' : s === 'finished' ? 'warning' : 'success';
+}
+function formatCountdown(exam) {
+  const status = getStatus(exam);
+  if (status === 'finished') return '已结束';
+  const now = Date.now();
+  const target = status === 'pending'
+    ? new Date(exam.startTime || 0).getTime()
+    : new Date(exam.endTime || 0).getTime();
+  if (!target || Number.isNaN(target)) return '-';
+  const diff = target - now;
+  if (diff <= 0) return status === 'pending' ? '即将开始' : '即将结束';
+  const totalMinutes = Math.floor(diff / 60000);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}天${hours}时`;
+  if (hours > 0) return `${hours}时${minutes}分`;
+  return `${minutes}分钟`;
 }
 function enterExam(id) {
   router.push(`/student/exam-ready/${id}`);
@@ -139,7 +171,7 @@ function enterExam(id) {
 }
 .list-head-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 18px;
   align-items: center;
   text-align: center;
@@ -158,7 +190,7 @@ function enterExam(id) {
 }
 .exam-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 18px;
   align-items: center;
   padding: 16px 18px;
@@ -185,6 +217,13 @@ function enterExam(id) {
 .title-cell .exam-title {
   color: #0f172a;
   font-weight: 600;
+}
+.title-cell {
+  justify-content: flex-start;
+  text-align: left;
+}
+.status-cell {
+  justify-content: center;
 }
 .action-cell {
   justify-content: center;
