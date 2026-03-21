@@ -87,14 +87,14 @@ function handleLogout() {
   height: 100vh;
   overflow: hidden;
   padding: 16px;
-  gap: 16px;
+  gap: 14px;
   box-sizing: border-box;
   background-color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 .apple-sidebar {
-  width: clamp(188px, 13vw, 236px) !important;
-  padding: 18px 14px;
+  width: clamp(174px, 12.2vw, 218px) !important;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
