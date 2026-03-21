@@ -2,18 +2,8 @@
   <div class="dashboard-wrapper">
     <div class="glass-card welcome-banner">
       <div class="hero-left">
-        <h2 class="hero-title">👋 欢迎回来，{{ userName }}！</h2>
+        <h2 class="hero-title">欢迎回来，{{ userName }}！</h2>
         <p class="hero-subtitle">今天想复习点什么？保持学习的节奏。</p>
-        <div class="hero-meta-list">
-          <div class="hero-meta-item"><span>学号</span><strong>{{ userIdText }}</strong></div>
-          <div class="hero-meta-item"><span>专业</span><strong>{{ userMajorText }}</strong></div>
-          <div v-if="reviewMode" class="hero-meta-item"><span>当前交卷时间</span><strong>{{ nowText }}</strong></div>
-        </div>
-      </div>
-      <div class="hero-illustration">
-        <div class="hero-sheet">
-          <el-icon><EditPen /></el-icon>
-        </div>
       </div>
     </div>
 
@@ -87,7 +77,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
 import { storeToRefs } from 'pinia';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Calendar, DataBoard, EditPen, Reading, Warning } from '@element-plus/icons-vue';
 import { useAuthStore } from '@/store/auth';
@@ -96,12 +86,8 @@ import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getMyScores } from '@/api/score';
 
 const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
-const reviewMode = computed(() => route.query.review === '1');
-const nowText = ref('');
-const nowTimer = ref(null);
 
 const stats = ref({
   attendedExams: 0,
@@ -118,8 +104,6 @@ let myChart = null;
 
 const averageScoreText = computed(() => Number(stats.value.averageScore || 0).toFixed(1));
 const userName = computed(() => user.value?.username || '同学');
-const userIdText = computed(() => user.value?.id ? String(user.value.id) : '-');
-const userMajorText = computed(() => user.value?.major || user.value?.department || '-');
 const totalAnswered = computed(() => allScores.value.length || stats.value.attendedExams || 0);
 const upcomingExamsView = computed(() => upcomingExams.value.map(exam => ({
   ...exam,
@@ -159,17 +143,11 @@ onMounted(async () => {
   await nextTick();
   initChart();
   renderChart();
-  refreshNowText();
-  nowTimer.value = setInterval(refreshNowText, 1000);
   window.addEventListener('resize', handleChartResize);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleChartResize);
-  if (nowTimer.value) {
-    clearInterval(nowTimer.value);
-    nowTimer.value = null;
-  }
   if (myChart) {
     myChart.dispose();
     myChart = null;
@@ -280,10 +258,6 @@ function handleChartResize() {
   myChart?.resize();
 }
 
-function refreshNowText() {
-  nowText.value = new Date().toLocaleString();
-}
-
 function formatDateTime(value) {
   if (!value) return '-';
   const date = new Date(value);
@@ -317,8 +291,8 @@ function goScores() {
   --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 36px;
+  gap: 20px;
+  padding: 24px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
@@ -345,8 +319,10 @@ function goScores() {
   gap: 24px;
   position: relative;
   overflow: hidden;
-  padding: 40px;
-  min-height: 164px;
+  padding: 0 36px;
+  height: 120px;
+  min-height: 120px;
+  border-radius: 20px !important;
   isolation: isolate;
 }
 .welcome-banner::before {
@@ -365,13 +341,15 @@ function goScores() {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(46%, 620px);
-  background-image: url('../assets/exam-banner.svg');
+  width: 50%;
+  background-image: url('../assets/library-banner.svg');
   background-size: cover;
-  background-repeat: no-repeat;
-  background-position: right center;
-  z-index: -1;
+  background-position: center center;
+  mask-image: linear-gradient(to right, transparent, black 40%);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 40%);
+  z-index: 0;
   pointer-events: none;
+  opacity: 0.9;
 }
 .hero-left {
   flex: 1;
@@ -381,7 +359,7 @@ function goScores() {
   flex-direction: column;
   justify-content: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   min-width: 0;
 }
 .hero-title {
@@ -396,55 +374,6 @@ function goScores() {
   font-weight: 400;
   color: #8E8E93;
 }
-.hero-illustration {
-  width: min(32%, 280px);
-  min-width: 220px;
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-}
-.hero-sheet {
-  width: 148px;
-  height: 118px;
-  border-radius: 18px;
-  border: 1px solid rgba(187, 212, 247, 0.9);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(241, 248, 255, 0.94)),
-    repeating-linear-gradient(180deg, rgba(160, 190, 235, 0.22) 0 1px, transparent 1px 13px);
-  box-shadow: 0 10px 26px rgba(54, 99, 181, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.hero-sheet .el-icon {
-  font-size: 40px;
-  color: #5A93F1;
-}
-.hero-meta-list {
-  margin-top: 14px;
-  width: min(460px, 100%);
-  display: grid;
-  gap: 10px;
-}
-.hero-meta-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.56);
-  border-radius: 12px;
-  padding: 10px 14px;
-  color: #64748b;
-  font-size: 14px;
-}
-.hero-meta-item strong {
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 700;
-}
 .metric-icon {
   color: #0a84ff;
   font-size: 28px;
@@ -455,14 +384,14 @@ function goScores() {
   gap: 24px;
 }
 .metric-card {
-  height: 140px;
-  padding: 24px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   text-align: center;
+  border-radius: 20px !important;
 }
 .metric-label {
   font-size: 14px;
@@ -488,9 +417,10 @@ function goScores() {
 .chart-section,
 .list-section {
   padding: 24px;
-  height: clamp(314px, 36vh, 360px);
+  height: 320px;
   display: flex;
   flex-direction: column;
+  border-radius: 20px !important;
 }
 .section-head {
   display: flex;
@@ -644,12 +574,6 @@ function goScores() {
   }
   .hero-left {
     max-width: 100%;
-  }
-  .hero-illustration {
-    width: 100%;
-    min-width: 0;
-    justify-content: flex-start;
-    padding-top: 8px;
   }
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
