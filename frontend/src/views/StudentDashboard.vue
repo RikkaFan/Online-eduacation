@@ -320,8 +320,8 @@ function goScores() {
   position: relative;
   overflow: hidden;
   padding: 0 36px 0 108px;
-  height: 152px;
-  min-height: 152px;
+  height: 164px;
+  min-height: 164px;
   border-radius: 20px !important;
   isolation: isolate;
 }
@@ -358,7 +358,7 @@ function goScores() {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-top: 6px;
+  padding-top: 12px;
   position: relative;
   z-index: 2;
   min-width: 0;
@@ -370,7 +370,7 @@ function goScores() {
   margin: 0;
 }
 .hero-subtitle {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 14px;
   font-weight: 400;
   color: #8E8E93;
@@ -385,8 +385,8 @@ function goScores() {
   gap: 24px;
 }
 .metric-card {
-  padding: 20px 16px;
-  min-height: 120px;
+  padding: 18px 14px;
+  min-height: 108px;
   display: flex;
   flex-direction: column;
   justify-content: center;
