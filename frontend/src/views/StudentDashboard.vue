@@ -1,33 +1,42 @@
 <template>
-  <div class="student-dashboard dashboard-canvas">
+  <div class="dashboard-wrapper">
     <div class="glass-card welcome-banner">
       <div class="hero-left">
-        <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
-        <p class="hero-subtitle">持续学习，稳步提升，每一次作答都在靠近更好的自己。</p>
+        <h2 class="hero-title">👋 欢迎回来，{{ userName }}！</h2>
+        <p class="hero-subtitle">今天想复习点什么？保持学习的节奏。</p>
         <div class="hero-meta-list">
           <div class="hero-meta-item"><span>学号</span><strong>{{ userIdText }}</strong></div>
           <div class="hero-meta-item"><span>专业</span><strong>{{ userMajorText }}</strong></div>
           <div v-if="reviewMode" class="hero-meta-item"><span>当前交卷时间</span><strong>{{ nowText }}</strong></div>
         </div>
       </div>
+      <div class="hero-illustration">
+        <div class="hero-sheet">
+          <el-icon><EditPen /></el-icon>
+        </div>
+      </div>
     </div>
 
     <div class="metrics-grid">
-      <div class="glass-card metric-item">
-        <div class="metric-top"><el-icon class="metric-icon"><EditPen /></el-icon><span>已考场次</span></div>
-        <div class="metric-value">{{ stats.attendedExams }}</div>
+      <div class="glass-card metric-card">
+        <el-icon class="metric-icon"><EditPen /></el-icon>
+        <div class="metric-label">已考场次</div>
+        <div class="metric-number">{{ stats.attendedExams }}</div>
       </div>
-      <div class="glass-card metric-item">
-        <div class="metric-top"><el-icon class="metric-icon"><Warning /></el-icon><span>错题总数</span></div>
-        <div class="metric-value">{{ stats.totalMistakes }}</div>
+      <div class="glass-card metric-card">
+        <el-icon class="metric-icon"><Warning /></el-icon>
+        <div class="metric-label">错题总数</div>
+        <div class="metric-number">{{ stats.totalMistakes }}</div>
       </div>
-      <div class="glass-card metric-item">
-        <div class="metric-top"><el-icon class="metric-icon"><DataBoard /></el-icon><span>平均得分</span></div>
-        <div class="metric-value">{{ averageScoreText }}<small> 分</small></div>
+      <div class="glass-card metric-card">
+        <el-icon class="metric-icon"><DataBoard /></el-icon>
+        <div class="metric-label">平均得分</div>
+        <div class="metric-number">{{ averageScoreText }}<small>分</small></div>
       </div>
-      <div class="glass-card metric-item">
-        <div class="metric-top"><el-icon class="metric-icon"><Reading /></el-icon><span>课程进度</span></div>
-        <div class="metric-value">{{ availableCourses.length || 0 }}</div>
+      <div class="glass-card metric-card">
+        <el-icon class="metric-icon"><Reading /></el-icon>
+        <div class="metric-label">累计作答</div>
+        <div class="metric-number">{{ totalAnswered }}</div>
       </div>
     </div>
 
@@ -43,7 +52,7 @@
       </div>
 
       <div class="glass-card list-section">
-        <h3 style="font-size: 18px; font-weight: 600; color: #1c1c1e; margin-bottom: 20px;">近期考试</h3>
+        <h3 class="list-title">近期考试</h3>
         <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
         <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar">
           <div class="exam-head-row">
@@ -111,6 +120,7 @@ const averageScoreText = computed(() => Number(stats.value.averageScore || 0).to
 const userName = computed(() => user.value?.username || '同学');
 const userIdText = computed(() => user.value?.id ? String(user.value.id) : '-');
 const userMajorText = computed(() => user.value?.major || user.value?.department || '-');
+const totalAnswered = computed(() => allScores.value.length || stats.value.attendedExams || 0);
 const upcomingExamsView = computed(() => upcomingExams.value.map(exam => ({
   ...exam,
   displayTime: formatDateTime(exam.startTime)
@@ -303,53 +313,40 @@ function goScores() {
 </script>
 
 <style scoped>
-.student-dashboard {
-  --dashboard-scale: clamp(0.88, calc((100vw - 280px) / 1400), 1);
+.dashboard-wrapper {
+  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 32px 24px 24px;
+  gap: 24px;
+  padding: 36px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
   transform-origin: top left;
+  background: transparent;
 }
 @supports (zoom: 1) {
-  .student-dashboard {
+  .dashboard-wrapper {
     width: 100%;
     transform: none;
     zoom: var(--dashboard-scale);
   }
 }
-.dashboard-canvas {
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(228, 236, 250, 0.92) 0%, rgba(242, 247, 255, 0.88) 100%);
-  border: 1px solid rgba(209, 223, 245, 0.95);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-}
 :deep(.glass-card) {
   border-radius: 16px !important;
-  border: 1px solid rgba(212, 224, 244, 0.95) !important;
+  border: 1px solid rgba(212, 224, 244, 0.96) !important;
   background: rgba(255, 255, 255, 0.84) !important;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04), 0 1px 4px rgba(15, 23, 42, 0.03) !important;
-}
-.dash-title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #1c1c1e;
-  margin: 0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03) !important;
 }
 .welcome-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
   position: relative;
   overflow: hidden;
-  padding: 18px 24px;
-  min-height: 142px;
-  margin-top: 2px;
+  padding: 40px;
+  min-height: 164px;
   isolation: isolate;
 }
 .welcome-banner::before {
@@ -357,8 +354,8 @@ function goScores() {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(248, 252, 255, 0.98) 0%, rgba(243, 249, 255, 0.95) 38%, rgba(243, 249, 255, 0.68) 58%, rgba(243, 249, 255, 0.06) 72%),
-    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0 1px, transparent 1px 48px);
+    linear-gradient(90deg, rgba(248, 252, 255, 0.98) 0%, rgba(243, 249, 255, 0.94) 50%, rgba(243, 249, 255, 0.2) 72%),
+    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.12) 0 1px, transparent 1px 52px);
   z-index: 0;
   pointer-events: none;
 }
@@ -368,7 +365,7 @@ function goScores() {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(52%, 720px);
+  width: min(46%, 620px);
   background-image: url('../assets/exam-banner.svg');
   background-size: cover;
   background-repeat: no-repeat;
@@ -378,8 +375,8 @@ function goScores() {
 }
 .hero-left {
   flex: 1;
-  max-width: min(58%, 700px);
-  height: 100%;
+  max-width: min(56%, 660px);
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -387,78 +384,110 @@ function goScores() {
   z-index: 1;
   min-width: 0;
 }
+.hero-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin: 0;
+}
 .hero-subtitle {
   margin-top: 8px;
-  color: #475569;
+  font-size: 14px;
+  font-weight: 400;
+  color: #8E8E93;
+}
+.hero-illustration {
+  width: min(32%, 280px);
+  min-width: 220px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.hero-sheet {
+  width: 148px;
+  height: 118px;
+  border-radius: 18px;
+  border: 1px solid rgba(187, 212, 247, 0.9);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(241, 248, 255, 0.94)),
+    repeating-linear-gradient(180deg, rgba(160, 190, 235, 0.22) 0 1px, transparent 1px 13px);
+  box-shadow: 0 10px 26px rgba(54, 99, 181, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-sheet .el-icon {
+  font-size: 40px;
+  color: #5A93F1;
 }
 .hero-meta-list {
-  margin-top: 12px;
-  width: min(420px, 100%);
+  margin-top: 14px;
+  width: min(460px, 100%);
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 .hero-meta-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
   background: rgba(255, 255, 255, 0.56);
-  border-radius: 10px;
-  padding: 7px 12px;
+  border-radius: 12px;
+  padding: 10px 14px;
   color: #64748b;
-  font-size: 13px;
-}
-.hero-meta-item span {
-  padding-left: 2px;
+  font-size: 14px;
 }
 .hero-meta-item strong {
   color: #0f172a;
-  font-weight: 600;
-  padding-right: 4px;
-}
-.metric-top {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #64748b;
-  font-size: 13px;
-}
-.metric-value {
-  color: #0f172a;
-  font-size: 30px;
+  font-size: 14px;
   font-weight: 700;
-  margin-top: 6px;
-}
-.metric-value small {
-  font-size: 15px;
-  font-weight: 600;
 }
 .metric-icon {
   color: #0a84ff;
-}
-.metric-item {
-  padding: 14px 18px;
-  min-height: 94px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  font-size: 28px;
 }
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.metric-card {
+  height: 140px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.metric-label {
+  font-size: 14px;
+  color: #8E8E93;
+  font-weight: 500;
+}
+.metric-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1c1c1e;
+  line-height: 1;
+}
+.metric-number small {
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 4px;
 }
 .bottom-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
+  gap: 24px;
 }
 .chart-section,
 .list-section {
-  padding: 16px 18px;
+  padding: 24px;
   height: clamp(314px, 36vh, 360px);
   display: flex;
   flex-direction: column;
@@ -473,6 +502,12 @@ function goScores() {
   margin: 0;
   color: #1c1c1e;
   font-weight: 700;
+}
+.list-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1c1c1e;
 }
 .chart-panel {
   flex: 1;
@@ -583,15 +618,15 @@ function goScores() {
   border-radius: 12px !important;
 }
 @media (max-width: 1200px) {
-  .student-dashboard {
+  .dashboard-wrapper {
     --dashboard-scale: 1;
-    padding: 20px;
-    gap: 14px;
+    padding: 24px;
+    gap: 20px;
     width: 100%;
     transform: none;
   }
   @supports (zoom: 1) {
-    .student-dashboard {
+    .dashboard-wrapper {
       zoom: 1;
     }
   }
@@ -610,6 +645,12 @@ function goScores() {
   .hero-left {
     max-width: 100%;
   }
+  .hero-illustration {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -626,14 +667,14 @@ function goScores() {
   }
 }
 @media (max-width: 760px) {
-  .student-dashboard {
-    padding: 16px;
+  .dashboard-wrapper {
+    padding: 20px 16px;
     gap: 16px;
   }
   .metrics-grid {
     grid-template-columns: 1fr;
   }
-  .dash-title {
+  .hero-title {
     font-size: 28px;
   }
 }
