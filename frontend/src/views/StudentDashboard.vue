@@ -307,8 +307,8 @@ function goScores() {
   --dashboard-scale: clamp(0.88, calc((100vw - 280px) / 1400), 1);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 32px 24px 24px;
+  gap: 12px;
+  padding: 20px 22px 22px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
@@ -348,7 +348,7 @@ function goScores() {
   position: relative;
   overflow: hidden;
   padding: 16px 20px;
-  min-height: 128px;
+  min-height: 122px;
   margin-top: 2px;
   isolation: isolate;
 }
@@ -429,7 +429,7 @@ function goScores() {
 }
 .metric-item {
   padding: 14px 18px;
-  min-height: 94px;
+  min-height: 100px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -440,17 +440,17 @@ function goScores() {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 .bottom-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 .chart-section,
 .list-section {
-  padding: 16px 18px;
-  height: clamp(314px, 36vh, 360px);
+  padding: 14px 16px;
+  height: clamp(220px, 26vh, 252px);
   display: flex;
   flex-direction: column;
 }
@@ -458,7 +458,7 @@ function goScores() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .section-head h3 {
   margin: 0;
@@ -501,10 +501,10 @@ function goScores() {
 .exam-body-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 10px;
 }
 .exam-card-item {
-  padding: 16px 18px;
+  padding: 12px 14px;
   border-radius: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
