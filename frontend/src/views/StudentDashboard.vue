@@ -43,23 +43,29 @@
         <div ref="chartRef" class="chart-panel"></div>
       </div>
 
-      <div class="glass-card list-section" style="padding: 24px; height: 400px; overflow-y: auto;">
-        <div class="section-head">
-          <h3>近期考试</h3>
-          <el-button link type="primary" @click="goExams">查看全部</el-button>
-        </div>
+      <div class="glass-card list-section" style="padding: 24px; height: 400px; display: flex; flex-direction: column;">
+        <h3 style="font-size: 18px; font-weight: 600; color: #1c1c1e; margin-bottom: 20px;">近期考试</h3>
         <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
-        <el-empty v-else-if="upcomingExams.length === 0" description="近期没有待考安排" :image-size="80" />
-        <div v-else class="exam-timeline">
-          <div v-for="exam in upcomingExams" :key="exam.id" class="timeline-item">
-            <div class="timeline-left">
-              <el-icon class="calendar-icon"><Calendar /></el-icon>
-              <span class="timeline-time">{{ formatDateTime(exam.startTime) }}</span>
+        <div v-else-if="upcomingExamsView.length > 0" class="exam-list-container custom-scrollbar" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+          <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+            <div
+              v-for="exam in upcomingExamsView"
+              :key="exam.id"
+              class="exam-card-item glass-card"
+              style="padding: 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease; background: rgba(255,255,255,0.4);"
+            >
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <el-icon style="font-size: 20px; color: #007AFF;"><Calendar /></el-icon>
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: #1c1c1e;">{{ exam.title || '未命名考试' }}</div>
+                  <div style="font-size: 12px; color: #8E8E93; margin-top: 4px;">{{ exam.displayTime }}</div>
+                </div>
+              </div>
+              <el-button size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
             </div>
-            <div class="timeline-title">{{ exam.title || '未命名考试' }}</div>
-            <el-button size="small" type="primary" plain @click="enterExam(exam.id)">进入考场</el-button>
           </div>
         </div>
+        <el-empty v-else description="近期没有待考安排" :image-size="80" />
       </div>
     </div>
   </div>
@@ -102,6 +108,10 @@ const averageScoreText = computed(() => Number(stats.value.averageScore || 0).to
 const userName = computed(() => user.value?.username || '同学');
 const userIdText = computed(() => user.value?.id ? String(user.value.id) : '-');
 const userMajorText = computed(() => user.value?.major || user.value?.department || '-');
+const upcomingExamsView = computed(() => upcomingExams.value.map(exam => ({
+  ...exam,
+  displayTime: formatDateTime(exam.startTime)
+})));
 
 onMounted(async () => {
   const studentId = user.value?.id;
@@ -372,52 +382,34 @@ function goScores() {
   flex: 1;
   min-height: 0;
 }
-.exam-timeline {
-  display: grid;
-  gap: 10px;
-}
-.timeline-item {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-.timeline-item:hover {
-  background: rgba(255, 255, 255, 0.62);
-}
-.timeline-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #64748b;
-  min-width: 0;
-}
-.calendar-icon {
-  font-size: 16px;
-  color: #64748b;
-}
-.timeline-time {
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.timeline-title {
-  color: #0f172a;
-  font-weight: 600;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .placeholder {
   color: #64748b;
   padding: 8px 2px;
+}
+.exam-list-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+.exam-list-container::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.exam-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.exam-list-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+.exam-list-container:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(200, 200, 200, 0.5) !important;
+}
+:deep(.exam-card-item:hover) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.58) !important;
 }
 :deep(.el-button) {
   border-radius: 12px !important;
@@ -439,11 +431,6 @@ function goScores() {
   }
   .bottom-grid {
     grid-template-columns: 1fr;
-  }
-  .timeline-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    align-items: flex-start;
   }
 }
 </style>
