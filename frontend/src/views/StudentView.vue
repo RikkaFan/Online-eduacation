@@ -101,9 +101,12 @@ function handleLogout() {
 .sidebar-title {
   padding: 8px 6px 10px;
   color: #1d1d1f;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-align: center;
+  position: relative;
+  top: 10px;
 }
 .menu-wrap {
   display: flex;
@@ -149,8 +152,8 @@ function handleLogout() {
 }
 @media (max-width: 1200px) {
   .sidebar-title {
-    padding-top: 4px;
-    padding-bottom: 8px;
+    font-size: 16px;
+    top: 6px;
   }
 }
 </style>
