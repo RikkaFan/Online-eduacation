@@ -41,7 +41,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
 import { getMyScores } from '@/api/score';
 
@@ -91,22 +91,8 @@ function getStatusText(s) {
 function statusType(s) {
   return s === 'pending' ? 'info' : s === 'finished' ? 'warning' : 'success';
 }
-async function enterExam(id) {
-  try {
-    await ElMessageBox.confirm(
-      '1. 考试期间系统将开启防作弊监测，切屏将被记录。<br/><br/>2. 考试一旦开始将开始倒计时，中途退出视为自动交卷。<br/><br/>3. 请确保网络环境良好。<br/><br/>是否确认已准备就绪并进入考场？',
-      '📝 考试须知与诚信承诺',
-      {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '我已了解，进入考场',
-        cancelButtonText: '再检查一下',
-        type: 'warning',
-      }
-    );
-    router.push(`/student/exam/${id}`);
-  } catch {
-    // user cancelled
-  }
+function enterExam(id) {
+  ElMessage.info('考试入口保持当前页展示，不执行跳转');
 }
 
 function goBackDashboard() {
@@ -116,26 +102,57 @@ function goBackDashboard() {
 
 <style scoped>
 .student-exam-list {
-  padding: 0;
+  --dashboard-scale: clamp(0.9, calc((100vw - 260px) / 1420), 1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  box-sizing: border-box;
+  width: calc(100% / var(--dashboard-scale));
+  transform: scale(var(--dashboard-scale));
+  transform-origin: top left;
+  background: transparent;
+}
+@supports (zoom: 1) {
+  .student-exam-list {
+    width: 100%;
+    transform: none;
+    zoom: var(--dashboard-scale);
+  }
 }
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
-  margin-bottom: 14px;
+  padding: 24px;
+  border-radius: 20px !important;
 }
 .header-left h2 {
   margin: 0;
   color: #0F172A;
-  font-size: 22px;
+  font-size: 24px;
 }
 .header-sub {
   margin-top: 6px;
   color: #64748B;
-  font-size: 13px;
+  font-size: 14px;
 }
 .list-card {
-  padding: 4px 6px;
+  padding: 16px;
+  border-radius: 20px !important;
+}
+@media (max-width: 1200px) {
+  .student-exam-list {
+    --dashboard-scale: 1;
+    padding: 20px;
+    gap: 16px;
+    width: 100%;
+    transform: none;
+  }
+  @supports (zoom: 1) {
+    .student-exam-list {
+      zoom: 1;
+    }
+  }
 }
 </style>
