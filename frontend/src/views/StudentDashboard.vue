@@ -1,78 +1,77 @@
 <template>
   <div class="student-dashboard">
-    <el-card class="glass-card welcome-board" shadow="never">
-      <div class="welcome-left">
-        <div class="welcome-title">欢迎回来，准备好今天的学习了吗？</div>
-        <div class="welcome-sub">保持节奏，稳步提升，每一次练习都算数。</div>
-      </div>
-      <div class="welcome-right">
-        <div class="metric-item">
-          <div class="metric-label">已考场次</div>
-          <div class="metric-value">{{ stats.attendedExams }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">错题总数</div>
-          <div class="metric-value">{{ stats.totalMistakes }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">平均分</div>
-          <div class="metric-value">{{ averageScoreText }}</div>
-        </div>
-      </div>
-    </el-card>
+    <h2 class="dash-title">👋 欢迎回来，今天想学点什么？</h2>
 
-    <div class="glass-card" style="margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; color: #1c1c1e; font-weight: 600;">📈 课程学情追踪</h3>
-        <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
-          <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
-        </el-select>
-      </div>
-      <div ref="chartRef" style="height: 350px; width: 100%;"></div>
+    <div class="metric-grid">
+      <el-card class="glass-card metric-card" shadow="never">
+        <div class="metric-icon">📝</div>
+        <div class="metric-label">已考场次</div>
+        <div class="metric-value">{{ stats.attendedExams }}</div>
+      </el-card>
+      <el-card class="glass-card metric-card" shadow="never">
+        <div class="metric-icon">🎯</div>
+        <div class="metric-label">平均得分</div>
+        <div class="metric-value">{{ averageScoreText }} 分</div>
+      </el-card>
+      <el-card class="glass-card metric-card" shadow="never">
+        <div class="metric-icon">🚨</div>
+        <div class="metric-label">错题总数</div>
+        <div class="metric-value">{{ stats.totalMistakes }}</div>
+      </el-card>
+      <el-card class="glass-card metric-card" shadow="never">
+        <div class="metric-icon">📚</div>
+        <div class="metric-label">参与课程</div>
+        <div class="metric-value">{{ availableCourses.length || 0 }}</div>
+      </el-card>
     </div>
 
-    <el-row :gutter="20">
-      <el-col :span="16">
-        <el-card class="glass-card section-card" shadow="never">
-          <div class="section-header">
-            <h3>近期待考</h3>
-            <el-button link type="primary" @click="goExams">查看全部</el-button>
-          </div>
-          <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
-          <div v-else-if="upcomingExams.length === 0" class="placeholder">近期暂无考试安排</div>
-          <div v-else class="exam-grid">
-            <div v-for="exam in upcomingExams" :key="exam.id" class="glass-card exam-card">
-              <div class="exam-title">{{ exam.title || '未命名考试' }}</div>
-              <div class="exam-meta">课程：{{ exam.course?.courseName || exam.course?.name || '-' }}</div>
-              <div class="exam-meta">时间：{{ formatDateTime(exam.startTime) }}</div>
-              <el-button type="primary" round @click="enterExam(exam.id)">前往考试</el-button>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+    <el-card class="glass-card hero-banner" shadow="never">
+      <div class="hero-text">
+        <template v-if="upcomingExams.length > 0">
+          🚀 你的下一场考试《{{ upcomingExams[0]?.title }}》即将开始，请做好准备！
+        </template>
+        <template v-else>
+          ✅ 近期暂无考试，去复习一下错题本吧！
+        </template>
+      </div>
+      <template v-if="upcomingExams.length > 0">
+        <el-button type="primary" size="large" @click="enterExam(upcomingExams[0].id)">进入考场</el-button>
+      </template>
+      <template v-else>
+        <el-button type="primary" size="large" plain @click="goPractice">去刷错题</el-button>
+      </template>
+    </el-card>
 
-      <el-col :span="8">
-        <el-card class="glass-card section-card" shadow="never">
-          <div class="section-header">
-            <h3>快捷入口</h3>
+    <div class="bottom-layout">
+      <div class="glass-card chart-section">
+        <div class="chart-head">
+          <h3>📈 课程学情追踪</h3>
+          <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
+            <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
+          </el-select>
+        </div>
+        <div ref="chartRef" class="chart-panel"></div>
+      </div>
+
+      <div class="glass-card list-section">
+        <div class="section-header">
+          <h3>近期考试</h3>
+          <el-button link type="primary" @click="goExams">查看全部</el-button>
+        </div>
+        <div v-if="loadingExams" class="placeholder">正在加载考试安排...</div>
+        <el-empty v-else-if="upcomingExams.length === 0" description="近期没有待考安排" :image-size="80" />
+        <div v-else class="exam-timeline">
+          <div v-for="exam in upcomingExams" :key="exam.id" class="timeline-item">
+            <div class="timeline-left">
+              <span class="calendar-icon">📅</span>
+              <span class="timeline-time">{{ formatDateTime(exam.startTime) }}</span>
+            </div>
+            <div class="timeline-title">{{ exam.title || '未命名考试' }}</div>
+            <el-button size="small" type="primary" plain @click="enterExam(exam.id)">前往</el-button>
           </div>
-          <div class="quick-links">
-            <div class="glass-card quick-card" @click="goPractice">
-              <div class="quick-title">错题本</div>
-              <div class="quick-sub">查看错题与解析</div>
-            </div>
-            <div class="glass-card quick-card" @click="goCourses">
-              <div class="quick-title">全部课程</div>
-              <div class="quick-sub">进入课程学习区</div>
-            </div>
-            <div class="glass-card quick-card" @click="goScores">
-              <div class="quick-title">成绩查询</div>
-              <div class="quick-sub">回看历史成绩</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -262,7 +261,7 @@ function formatDateTime(value) {
 }
 
 function enterExam(id) {
-  router.push(`/student/exam/${id}`);
+  router.push(`/student/exam-ready/${id}`);
 }
 
 function goExams() {
@@ -284,129 +283,148 @@ function goScores() {
 
 <style scoped>
 .student-dashboard {
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-
-.welcome-board {
+.dash-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin: 0 0 20px;
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.metric-card {
+  padding: 18px 16px;
+  text-align: center;
+}
+.metric-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+.metric-label {
+  color: #64748b;
+  font-size: 13px;
+}
+.metric-value {
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.hero-banner {
+  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  border: 1px solid #cce4ff;
+  padding: 16px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  padding: 22px;
+  gap: 14px;
 }
-
-.welcome-left {
-  flex: 1;
+.hero-text {
+  color: #1f2937;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 500;
 }
-
-.welcome-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0F172A;
-}
-
-.welcome-sub {
-  margin-top: 8px;
-  color: #64748B;
-}
-
-.welcome-right {
+.bottom-layout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(90px, 1fr));
-  gap: 12px;
+  grid-template-columns: 7fr 3fr;
+  gap: 20px;
+  margin-top: 24px;
 }
-
-.metric-item {
-  text-align: center;
-  padding: 12px 10px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.metric-label {
-  color: #64748B;
-  font-size: 13px;
-}
-
-.metric-value {
-  color: #0F172A;
-  font-size: 24px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.section-card {
+.chart-section {
   padding: 18px;
-  height: 100%;
 }
-
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.chart-head h3 {
+  margin: 0;
+  color: #1c1c1e;
+  font-weight: 600;
+}
+.chart-panel {
+  height: 350px;
+  width: 100%;
+}
+.list-section {
+  padding: 18px;
+}
+.placeholder {
+  color: #64748b;
+  padding: 8px 2px;
+}
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
-
 .section-header h3 {
   margin: 0;
-  color: #0F172A;
+  color: #0f172a;
   font-size: 18px;
   font-weight: 600;
 }
-
-.placeholder {
-  color: #64748B;
-  padding: 8px 2px;
-}
-
-.exam-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.exam-card {
-  padding: 14px;
-  display: grid;
-  gap: 8px;
-}
-
-.exam-title {
-  color: #0F172A;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.exam-meta {
-  color: #64748B;
-  font-size: 13px;
-}
-
-.quick-links {
+.exam-timeline {
   display: grid;
   gap: 10px;
 }
-
-.quick-card {
-  padding: 14px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.timeline-item {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  transition: background-color .2s ease;
 }
-
-.quick-card:hover {
-  transform: translateY(-2px);
+.timeline-item:hover {
+  background: rgba(248, 250, 252, 0.9);
 }
-
-.quick-title {
-  color: #0F172A;
+.timeline-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  min-width: 0;
+}
+.calendar-icon {
+  font-size: 16px;
+}
+.timeline-time {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-title {
+  color: #0f172a;
   font-weight: 600;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-.quick-sub {
-  color: #64748B;
-  font-size: 13px;
-  margin-top: 4px;
+@media (max-width: 1200px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bottom-layout {
+    grid-template-columns: 1fr;
+  }
+  .timeline-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: flex-start;
+  }
 }
 </style>
