@@ -307,8 +307,8 @@ function goScores() {
   --dashboard-scale: clamp(0.88, calc((100vw - 280px) / 1400), 1);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 22px 22px;
+  gap: 14px;
+  padding: 32px 24px 24px;
   box-sizing: border-box;
   width: calc(100% / var(--dashboard-scale));
   transform: scale(var(--dashboard-scale));
@@ -347,8 +347,8 @@ function goScores() {
   gap: 16px;
   position: relative;
   overflow: hidden;
-  padding: 16px 20px;
-  min-height: 122px;
+  padding: 18px 24px;
+  min-height: 142px;
   margin-top: 2px;
   isolation: isolate;
 }
@@ -369,7 +369,7 @@ function goScores() {
   right: 0;
   bottom: 0;
   width: min(52%, 720px);
-  background-image: url('../assets/library-banner.svg');
+  background-image: url('../assets/exam-banner.svg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: right center;
@@ -379,33 +379,42 @@ function goScores() {
 .hero-left {
   flex: 1;
   max-width: min(58%, 700px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   position: relative;
   z-index: 1;
   min-width: 0;
 }
 .hero-subtitle {
-  margin-top: 6px;
+  margin-top: 8px;
   color: #475569;
 }
 .hero-meta-list {
-  margin-top: 10px;
+  margin-top: 12px;
+  width: min(420px, 100%);
   display: grid;
-  gap: 5px;
+  gap: 8px;
 }
 .hero-meta-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.42);
+  justify-content: space-between;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.56);
   border-radius: 10px;
-  padding: 6px 10px;
+  padding: 7px 12px;
   color: #64748b;
   font-size: 13px;
+}
+.hero-meta-item span {
+  padding-left: 2px;
 }
 .hero-meta-item strong {
   color: #0f172a;
   font-weight: 600;
+  padding-right: 4px;
 }
 .metric-top {
   display: inline-flex;
@@ -429,7 +438,7 @@ function goScores() {
 }
 .metric-item {
   padding: 14px 18px;
-  min-height: 100px;
+  min-height: 94px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -440,17 +449,17 @@ function goScores() {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 .bottom-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 .chart-section,
 .list-section {
-  padding: 14px 16px;
-  height: clamp(220px, 26vh, 252px);
+  padding: 16px 18px;
+  height: clamp(314px, 36vh, 360px);
   display: flex;
   flex-direction: column;
 }
@@ -458,7 +467,7 @@ function goScores() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .section-head h3 {
   margin: 0;
@@ -501,10 +510,10 @@ function goScores() {
 .exam-body-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 14px;
 }
 .exam-card-item {
-  padding: 12px 14px;
+  padding: 16px 18px;
   border-radius: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
