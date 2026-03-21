@@ -1,6 +1,5 @@
 <template>
   <div class="student-dashboard dashboard-canvas">
-    <div class="page-label">Student Dashboard</div>
     <div class="glass-card welcome-banner">
       <div class="hero-left">
         <h2 class="dash-title">欢迎回来，{{ userName }}</h2>
@@ -51,7 +50,7 @@
           <div class="exam-head-row">
             <span>课程名称</span>
             <span>日期</span>
-            <span>操作</span>
+            <span>入口</span>
           </div>
           <div class="exam-body-grid">
             <div
@@ -65,7 +64,7 @@
               </div>
               <div class="exam-col time-col">{{ exam.displayTime }}</div>
               <div class="exam-col action-col">
-                <el-button size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
+                <el-button class="entry-btn" size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
               </div>
             </div>
           </div>
@@ -317,13 +316,6 @@ function goScores() {
     linear-gradient(180deg, rgba(239, 245, 255, 0.72) 0%, rgba(246, 249, 255, 0.5) 100%);
   border: 1px solid rgba(228, 236, 250, 0.8);
 }
-.page-label {
-  font-size: clamp(34px, 3vw, 46px);
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.6px;
-  line-height: 1;
-}
 .dash-title {
   font-size: 30px;
   font-weight: 700;
@@ -338,6 +330,7 @@ function goScores() {
   position: relative;
   overflow: hidden;
   padding: 24px;
+  margin-top: 2px;
 }
 .welcome-banner::before {
   content: '';
@@ -423,7 +416,7 @@ function goScores() {
 }
 .bottom-grid {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(320px, 3fr);
+  grid-template-columns: minmax(0, 6fr) minmax(360px, 4fr);
   gap: 24px;
 }
 .chart-section,
@@ -467,15 +460,15 @@ function goScores() {
   color: #8e8e93;
   font-size: 12px;
   font-weight: 600;
-  padding: 0 14px 8px;
+  padding: 0 16px 10px;
 }
 .exam-body-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 .exam-card-item {
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr auto;
@@ -505,9 +498,13 @@ function goScores() {
 .time-col {
   font-size: 12px;
   color: #8E8E93;
+  line-height: 1.45;
 }
 .action-col {
   justify-content: flex-end;
+}
+.entry-btn {
+  min-width: 58px;
 }
 .exam-list-container::-webkit-scrollbar {
   width: 6px;
@@ -538,9 +535,6 @@ function goScores() {
   .student-dashboard {
     padding: 20px;
     gap: 20px;
-  }
-  .page-label {
-    font-size: 34px;
   }
   .welcome-banner {
     flex-direction: column;
