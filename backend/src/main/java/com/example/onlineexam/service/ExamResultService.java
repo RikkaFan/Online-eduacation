@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -83,6 +85,7 @@ public class ExamResultService {
             studentAnswerRepository.save(persistedAnswer);
         }
 
+        LocalDateTime submittedAt = LocalDateTime.now();
         ExamResult examResult = examResultRepository.findByExam_IdAndStudent_Id(examId, studentId)
                 .orElseGet(() -> {
                     ExamResult er = new ExamResult();
@@ -92,6 +95,8 @@ public class ExamResultService {
                 });
         examResult.setScore(totalScore);
         examResult.setStatus(STATUS_PENDING);
+        examResult.setSubmittedAt(submittedAt);
+        examResult.setActualDurationSeconds(calculateActualDurationSeconds(exam, submittedAt));
 
         examResultRepository.save(examResult);
         return refreshExamResultScore(examId, studentId);
@@ -174,6 +179,15 @@ public class ExamResultService {
         examResult.setScore(total);
         examResult.setStatus(!hasSubjective || allSubjectiveGraded ? STATUS_COMPLETED : STATUS_PENDING);
         return examResultRepository.save(examResult);
+    }
+
+    private Integer calculateActualDurationSeconds(Exam exam, LocalDateTime submittedAt) {
+        if (exam == null || submittedAt == null || exam.getStartTime() == null) return null;
+        Duration duration = Duration.between(exam.getStartTime(), submittedAt);
+        if (duration.isNegative()) return 0;
+        long seconds = duration.getSeconds();
+        if (seconds > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        return (int) seconds;
     }
 
     private String normalizeType(String type) {

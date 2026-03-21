@@ -12,6 +12,10 @@
         <div class="left-main">
           <div class="info-title">考试信息</div>
           <div class="info-item"><span>考试名称</span><strong>{{ review.examTitle || '-' }}</strong></div>
+          <div class="info-item"><span>考试时间</span><strong>{{ timeRangeText }}</strong></div>
+          <div class="info-item"><span>考试时长</span><strong>{{ durationText }}</strong></div>
+          <div class="info-item"><span>交卷时间</span><strong>{{ formatDateTime(review.submittedAt) }}</strong></div>
+          <div class="info-item"><span>实际用时</span><strong>{{ actualDurationText }}</strong></div>
           <div class="info-item"><span>试卷总分</span><strong>{{ scoreText(review.totalScore) }}</strong></div>
           <div class="info-item"><span>学生得分</span><strong>{{ scoreText(review.studentScore) }}</strong></div>
           <div v-if="hasPendingSubjective" class="pending-tip">包含未批改的主观题，当前总分为暂定分</div>
@@ -193,9 +197,36 @@ const viewMode = ref('single');
 const currentIndex = ref(0);
 const review = ref({
   examTitle: '',
+  examStartTime: null,
+  examEndTime: null,
+  durationInMinutes: 0,
+  submittedAt: null,
+  actualDurationSeconds: null,
   totalScore: 0,
   studentScore: null,
   answers: []
+});
+const timeRangeText = computed(() => {
+  const start = formatDateTime(review.value.examStartTime);
+  const end = formatDateTime(review.value.examEndTime);
+  if (start === '-' && end === '-') return '-';
+  return `${start} 至 ${end}`;
+});
+const durationText = computed(() => {
+  const minutes = Number(review.value.durationInMinutes || 0);
+  if (Number.isFinite(minutes) && minutes > 0) return `${minutes} 分钟`;
+  if (review.value.actualDurationSeconds) return actualDurationText.value;
+  return '-';
+});
+const actualDurationText = computed(() => {
+  const sec = Number(review.value.actualDurationSeconds || 0);
+  if (!Number.isFinite(sec) || sec <= 0) return '-';
+  const hours = Math.floor(sec / 3600);
+  const minutes = Math.floor((sec % 3600) / 60);
+  const seconds = sec % 60;
+  if (hours > 0) return `${hours}时${minutes}分${seconds}秒`;
+  if (minutes > 0) return `${minutes}分${seconds}秒`;
+  return `${seconds}秒`;
 });
 
 const questionsWithIndex = computed(() => (review.value.answers || []).map((q, i) => ({ ...q, originalIndex: i, displayNumber: i + 1 })));
@@ -271,6 +302,11 @@ async function loadReview() {
     const answers = Array.isArray(data.answers) ? data.answers : [];
     review.value = {
       examTitle: data.examTitle || '',
+      examStartTime: data.examStartTime || null,
+      examEndTime: data.examEndTime || null,
+      durationInMinutes: data.durationInMinutes ?? 0,
+      submittedAt: data.submittedAt || null,
+      actualDurationSeconds: data.actualDurationSeconds ?? null,
       totalScore: data.totalScore ?? 0,
       studentScore: data.studentScore ?? null,
       answers: answers.map(item => ({
@@ -290,6 +326,13 @@ async function loadReview() {
 }
 
 onMounted(loadReview);
+
+function formatDateTime(v) {
+  if (!v) return '-';
+  const d = typeof v === 'string' ? new Date(v) : v;
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString();
+}
 </script>
 
 <style scoped>

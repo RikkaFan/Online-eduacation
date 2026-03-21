@@ -42,6 +42,11 @@
             {{ formatDateTime(row.endTime) }}
           </template>
         </el-table-column>
+        <el-table-column prop="durationInMinutes" label="考试时长" width="120" align="center">
+          <template #default="{ row }">
+            {{ Number(row.durationInMinutes || 0) > 0 ? `${row.durationInMinutes} 分钟` : '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="220">
           <template #default="{ row }">
             <el-button size="small" type="info" plain @click="openPreview(row)">
@@ -94,6 +99,10 @@
             value-format="YYYY-MM-DDTHH:mm:ss"
             :default-time="defaultEndTime"
           />
+        </el-form-item>
+        <el-form-item label="考试时长" prop="durationInMinutes">
+          <el-input-number v-model="createForm.durationInMinutes" :min="1" :step="5" controls-position="right" />
+          <span style="margin-left: 8px; color: #64748b; font-size: 12px;">分钟</span>
         </el-form-item>
         <el-form-item label="组卷策略">
           <el-radio-group v-model="createForm.generateMode">
@@ -292,6 +301,7 @@ const createForm = reactive({
   title: '',
   startTime: '',
   endTime: '',
+  durationInMinutes: 0,
   singleCount: 0,
   singleScore: 0,
   singleTotal: 0,
@@ -359,6 +369,7 @@ const rules = {
   title: [{ required: true, message: '请输入考试名称', trigger: 'blur' }],
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  durationInMinutes: [{ required: true, message: '请填写考试时长', trigger: 'change' }],
 };
 
 const defaultStartTime = new Date(2000, 1, 1, 9, 0, 0);
@@ -439,6 +450,7 @@ function openCreateDialog() {
   createForm.title = '';
   createForm.startTime = '';
   createForm.endTime = '';
+  createForm.durationInMinutes = 0;
   createForm.singleCount = 0;
   createForm.singleScore = 0;
   createForm.singleTotal = 0;
@@ -470,10 +482,16 @@ async function submitCreate() {
   }
   submitting.value = true;
   try {
+    if (new Date(createForm.endTime).getTime() <= new Date(createForm.startTime).getTime()) {
+      ElMessage.warning('结束时间必须晚于开始时间');
+      submitting.value = false;
+      return;
+    }
     const examPayload = {
       title: createForm.title,
       startTime: createForm.startTime,
       endTime: createForm.endTime,
+      durationInMinutes: resolveDurationInMinutes(),
       singleCount: createForm.singleCount,
       singleScore: createForm.singleScore,
       multipleCount: createForm.multipleCount,
@@ -526,6 +544,17 @@ async function submitCreate() {
   } finally {
     submitting.value = false;
   }
+}
+
+function resolveDurationInMinutes() {
+  const explicit = Number(createForm.durationInMinutes || 0);
+  if (Number.isFinite(explicit) && explicit > 0) return Math.floor(explicit);
+  const start = createForm.startTime ? new Date(createForm.startTime).getTime() : 0;
+  const end = createForm.endTime ? new Date(createForm.endTime).getTime() : 0;
+  if (start > 0 && end > start) {
+    return Math.max(1, Math.floor((end - start) / 60000));
+  }
+  return 1;
 }
 
 async function onDelete(row) {

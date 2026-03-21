@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +50,7 @@ public class ExamService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + courseId));
         exam.setCourse(course);
+        normalizeExamTime(exam);
 
         List<Question> selectedQuestions = new ArrayList<>();
         if (questionIds != null && !questionIds.isEmpty()) {
@@ -86,8 +88,10 @@ public class ExamService {
     public Exam updateExam(Long id, Exam examDetails) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        normalizeExamTime(examDetails);
 
         exam.setTitle(examDetails.getTitle());
+        exam.setDurationInMinutes(examDetails.getDurationInMinutes());
         exam.setStartTime(examDetails.getStartTime());
         exam.setEndTime(examDetails.getEndTime());
         exam.setSingleCount(examDetails.getSingleCount());
@@ -157,5 +161,16 @@ public class ExamService {
             case "SUBJECTIVE" -> "SUBJECTIVE";
             default -> "SINGLE";
         };
+    }
+
+    private void normalizeExamTime(Exam exam) {
+        if (exam == null) return;
+        if (exam.getStartTime() != null && exam.getEndTime() != null && !exam.getEndTime().isAfter(exam.getStartTime())) {
+            throw new RuntimeException("考试结束时间必须晚于开始时间");
+        }
+        if (exam.getDurationInMinutes() <= 0 && exam.getStartTime() != null && exam.getEndTime() != null) {
+            long minutes = Duration.between(exam.getStartTime(), exam.getEndTime()).toMinutes();
+            exam.setDurationInMinutes((int) Math.max(1, minutes));
+        }
     }
 }

@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,7 +82,7 @@ public class ExamResultController {
                         result.getExam() == null ? "-" : result.getExam().getTitle(),
                         result.getExam() == null || result.getExam().getCourse() == null ? "-" : result.getExam().getCourse().getCourseName(),
                         result.getScore(),
-                        "-"
+                        formatDateTime(result.getSubmittedAt())
                 ))
                 .collect(Collectors.toList());
 
@@ -142,6 +144,11 @@ public class ExamResultController {
         payload.put("examTitle", examResult.getExam() == null ? "-" : examResult.getExam().getTitle());
         payload.put("totalScore", examResult.getExam() == null ? 0 : examResult.getExam().getTotalScore());
         payload.put("studentScore", studentScore);
+        payload.put("examStartTime", examResult.getExam() == null ? null : examResult.getExam().getStartTime());
+        payload.put("examEndTime", examResult.getExam() == null ? null : examResult.getExam().getEndTime());
+        payload.put("durationInMinutes", examResult.getExam() == null ? null : examResult.getExam().getDurationInMinutes());
+        payload.put("submittedAt", examResult.getSubmittedAt());
+        payload.put("actualDurationSeconds", examResult.getActualDurationSeconds());
         payload.put("answers", answerList);
         return ResponseEntity.ok(payload);
     }
@@ -199,5 +206,10 @@ public class ExamResultController {
                 String.valueOf(studentAnswerValue)
         );
         return ResponseEntity.ok(Map.of("explanation", explanation));
+    }
+
+    private String formatDateTime(LocalDateTime value) {
+        if (value == null) return "-";
+        return value.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
     }
 }

@@ -2,6 +2,7 @@ package com.example.onlineexam.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -22,4 +23,8 @@ public class ExamResult {
     private double score;
 
     private String status;
+
+    private LocalDateTime submittedAt;
+
+    private Integer actualDurationSeconds;
 }

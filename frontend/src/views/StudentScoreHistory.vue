@@ -8,7 +8,7 @@
         </el-table-column>
         <el-table-column prop="score" label="得分" width="120" align="center" />
         <el-table-column label="交卷时间" min-width="180">
-          <template #default> - </template>
+          <template #default="{ row }">{{ formatDateTime(row.submittedAt) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="140" align="center">
           <template #default="{ row }">
@@ -45,6 +45,13 @@ function goReview(row) {
   const examId = row?.examId || row?.exam?.id;
   if (!examId) return;
   router.push('/student/exam-review/' + examId);
+}
+
+function formatDateTime(v) {
+  if (!v) return '-';
+  const d = typeof v === 'string' ? new Date(v) : v;
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString();
 }
 </script>
 
