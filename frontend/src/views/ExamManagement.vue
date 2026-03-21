@@ -44,7 +44,9 @@
         </el-table-column>
         <el-table-column label="操作" width="220">
           <template #default="{ row }">
-            <el-button size="small" type="info" plain @click="openPreview(row)">🔍 预览试卷</el-button>
+            <el-button size="small" type="info" plain @click="openPreview(row)">
+              <el-icon style="margin-right: 6px;"><View /></el-icon>预览试卷
+            </el-button>
             <el-popconfirm
               title="确定删除该考试？"
               confirm-button-text="删除"
@@ -95,8 +97,8 @@
         </el-form-item>
         <el-form-item label="组卷策略">
           <el-radio-group v-model="createForm.generateMode">
-            <el-radio-button label="random">🎲 系统自动化组卷</el-radio-button>
-            <el-radio-button label="manual">✍️ 手动勾选题目</el-radio-button>
+            <el-radio-button label="random"><el-icon style="margin-right: 6px;"><Operation /></el-icon>系统自动化组卷</el-radio-button>
+            <el-radio-button label="manual"><el-icon style="margin-right: 6px;"><EditPen /></el-icon>手动勾选题目</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <div class="smart-rule-box">
@@ -212,7 +214,7 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="previewVisible" title="📝 试卷全真预览" size="50%">
+    <el-drawer v-model="previewVisible" title="试卷全真预览" size="50%">
       <div v-loading="previewLoading" class="preview-container">
         <div v-if="previewQuestions.length === 0" class="preview-empty">暂无题目数据</div>
         <div v-else>
@@ -250,8 +252,8 @@
             </template>
 
             <div class="answer-tip">
-              <div>💡 标准答案：{{ q.answer || '暂无' }}</div>
-              <div v-if="q.type === 'SUBJECTIVE'">💡 解析：{{ q.analysis || '暂无' }}</div>
+              <div><el-icon style="margin-right: 6px;"><InfoFilled /></el-icon>标准答案：{{ q.answer || '暂无' }}</div>
+              <div v-if="q.type === 'SUBJECTIVE'"><el-icon style="margin-right: 6px;"><Tickets /></el-icon>解析：{{ q.analysis || '暂无' }}</div>
             </div>
           </div>
         </div>
@@ -264,9 +266,11 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
+import { EditPen, InfoFilled, Operation, Tickets, View } from '@element-plus/icons-vue';
 import { getCourses } from '@/api/course';
 import { getExamsByCourse, createExam, deleteExam, getExamQuestions } from '@/api/exam';
 import { getQuestionsByCourse } from '@/api/question';
+import { parseLabeledOptions } from '@/utils/questionOptions';
 
 const route = useRoute();
 const router = useRouter();
@@ -413,18 +417,7 @@ function previewTypeName(type) {
 }
 
 function parsePreviewOptions(q) {
-  const raw = q.options || '';
-  return raw.split(',').map(s => s.trim()).filter(Boolean).map(chunk => {
-    const idx = chunk.indexOf(':');
-    if (idx > 0) {
-      return { key: chunk.slice(0, idx).trim(), text: chunk.slice(idx + 1).trim() };
-    }
-    const dotIndex = chunk.indexOf('.');
-    if (dotIndex > 0) {
-      return { key: chunk.slice(0, dotIndex).trim(), text: chunk.slice(dotIndex + 1).trim() };
-    }
-    return { key: chunk, text: chunk };
-  });
+  return parseLabeledOptions(q.options || '');
 }
 
 async function loadAvailableQuestions(courseId) {

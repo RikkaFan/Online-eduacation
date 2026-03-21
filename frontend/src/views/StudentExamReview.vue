@@ -29,7 +29,9 @@
                 <span class="q-no">{{ currentQuestion.displayNumber }}.</span>
                 <span class="q-content">{{ currentQuestion.content }}</span>
                 <el-tag class="q-type" size="small">{{ typeName(currentQuestion.type) }}</el-tag>
-                <el-tag v-if="isPending(currentQuestion)" type="warning" effect="dark">⏳ 待批改</el-tag>
+                <el-tag v-if="isPending(currentQuestion)" type="warning" effect="dark">
+                  <span class="inline-icon-text"><el-icon><Clock /></el-icon>待批改</span>
+                </el-tag>
                 <el-tag v-else :type="scoreTagType(currentQuestion)" effect="dark">得分：{{ currentQuestion.score || 0 }} 分</el-tag>
               </div>
             </div>
@@ -64,8 +66,8 @@
               </el-radio-group>
             </template>
             <div class="analysis-box">
-              <div><span class="analysis-label">💡 标准答案：</span>{{ currentQuestion.answer || '-' }}</div>
-              <div><span class="analysis-label">📝 解析：</span>{{ currentQuestion.analysis || '暂无解析' }}</div>
+              <div><span class="analysis-label"><el-icon><InfoFilled /></el-icon>标准答案：</span>{{ currentQuestion.answer || '-' }}</div>
+              <div><span class="analysis-label"><el-icon><Tickets /></el-icon>解析：</span>{{ currentQuestion.analysis || '暂无解析' }}</div>
             </div>
             <div class="single-footer">
               <el-button class="nav-btn" size="large" :disabled="currentIndex <= 0" @click="prevQuestion">上一题</el-button>
@@ -79,7 +81,9 @@
               <span class="q-no">{{ q.displayNumber }}.</span>
               <span class="q-content">{{ q.content }}</span>
               <el-tag class="q-type" size="small">{{ typeName(q.type) }}</el-tag>
-              <el-tag v-if="isPending(q)" type="warning" effect="dark">⏳ 待批改</el-tag>
+              <el-tag v-if="isPending(q)" type="warning" effect="dark">
+                <span class="inline-icon-text"><el-icon><Clock /></el-icon>待批改</span>
+              </el-tag>
               <el-tag v-else :type="scoreTagType(q)" effect="dark">得分：{{ q.score || 0 }} 分</el-tag>
             </div>
             <template v-if="normalizeType(q.type) === 'SUBJECTIVE'">
@@ -106,8 +110,8 @@
               </el-radio-group>
             </template>
             <div class="analysis-box">
-              <div><span class="analysis-label">💡 标准答案：</span>{{ q.answer || '-' }}</div>
-              <div><span class="analysis-label">📝 解析：</span>{{ q.analysis || '暂无解析' }}</div>
+              <div><span class="analysis-label"><el-icon><InfoFilled /></el-icon>标准答案：</span>{{ q.answer || '-' }}</div>
+              <div><span class="analysis-label"><el-icon><Tickets /></el-icon>解析：</span>{{ q.analysis || '暂无解析' }}</div>
             </div>
           </div>
         </div>
@@ -176,6 +180,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { Clock, InfoFilled, Tickets } from '@element-plus/icons-vue';
 import { getExamReview } from '@/api/score';
 import { parseLabeledOptions } from '@/utils/questionOptions';
 
@@ -430,6 +435,14 @@ onMounted(loadReview);
 .analysis-label {
   color: #0f172a;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.inline-icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .single-footer {
   display: flex;

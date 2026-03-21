@@ -1,25 +1,28 @@
 <template>
   <div class="student-dashboard">
-    <h2 class="dash-title">👋 欢迎回来，今天想学点什么？</h2>
+    <h2 class="dash-title">
+      <el-icon class="title-icon"><DataBoard /></el-icon>
+      欢迎回来，今天想学点什么？
+    </h2>
 
     <div class="metric-grid">
       <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon">📝</div>
+        <div class="metric-icon"><el-icon><EditPen /></el-icon></div>
         <div class="metric-label">已考场次</div>
         <div class="metric-value">{{ stats.attendedExams }}</div>
       </el-card>
       <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon">🎯</div>
+        <div class="metric-icon"><el-icon><Trophy /></el-icon></div>
         <div class="metric-label">平均得分</div>
         <div class="metric-value">{{ averageScoreText }} 分</div>
       </el-card>
       <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon">🚨</div>
+        <div class="metric-icon"><el-icon><Warning /></el-icon></div>
         <div class="metric-label">错题总数</div>
         <div class="metric-value">{{ stats.totalMistakes }}</div>
       </el-card>
       <el-card class="glass-card metric-card" shadow="never">
-        <div class="metric-icon">📚</div>
+        <div class="metric-icon"><el-icon><Reading /></el-icon></div>
         <div class="metric-label">参与课程</div>
         <div class="metric-value">{{ availableCourses.length || 0 }}</div>
       </el-card>
@@ -28,10 +31,12 @@
     <el-card class="glass-card hero-banner" shadow="never">
       <div class="hero-text">
         <template v-if="upcomingExams.length > 0">
-          🚀 你的下一场考试《{{ upcomingExams[0]?.title }}》即将开始，请做好准备！
+          <el-icon class="hero-icon"><Promotion /></el-icon>
+          你的下一场考试《{{ upcomingExams[0]?.title }}》即将开始，请做好准备！
         </template>
         <template v-else>
-          ✅ 近期暂无考试，去复习一下错题本吧！
+          <el-icon class="hero-icon"><CircleCheck /></el-icon>
+          近期暂无考试，去复习一下错题本吧！
         </template>
       </div>
       <template v-if="upcomingExams.length > 0">
@@ -45,7 +50,7 @@
     <div class="bottom-layout">
       <div class="glass-card chart-section">
         <div class="chart-head">
-          <h3>📈 课程学情追踪</h3>
+          <h3><el-icon class="section-icon"><TrendCharts /></el-icon>课程学情追踪</h3>
           <el-select v-model="selectedCourse" placeholder="请选择课程" @change="renderChart" style="width: 200px;">
             <el-option v-for="c in availableCourses" :key="c" :label="c" :value="c" />
           </el-select>
@@ -63,7 +68,7 @@
         <div v-else class="exam-timeline">
           <div v-for="exam in upcomingExams" :key="exam.id" class="timeline-item">
             <div class="timeline-left">
-              <span class="calendar-icon">📅</span>
+              <el-icon class="calendar-icon"><Calendar /></el-icon>
               <span class="timeline-time">{{ formatDateTime(exam.startTime) }}</span>
             </div>
             <div class="timeline-title">{{ exam.title || '未命名考试' }}</div>
@@ -81,6 +86,7 @@ import * as echarts from 'echarts';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { Calendar, CircleCheck, DataBoard, EditPen, Promotion, Reading, TrendCharts, Trophy, Warning } from '@element-plus/icons-vue';
 import { useAuthStore } from '@/store/auth';
 import { getStudentStats } from '@/api/stats';
 import { getAllExamsByAllCourses } from '@/api/examTaking';
@@ -292,6 +298,12 @@ function goScores() {
   font-weight: 600;
   color: #1c1c1e;
   margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.title-icon {
+  color: #0a84ff;
 }
 .metric-grid {
   display: grid;
@@ -305,6 +317,7 @@ function goScores() {
 .metric-icon {
   font-size: 24px;
   margin-bottom: 8px;
+  color: #334155;
 }
 .metric-label {
   color: #64748b;
@@ -330,6 +343,12 @@ function goScores() {
   font-size: 15px;
   line-height: 1.6;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+.hero-icon {
+  margin-right: 6px;
+  color: #0a84ff;
 }
 .bottom-layout {
   display: grid;
@@ -350,6 +369,12 @@ function goScores() {
   margin: 0;
   color: #1c1c1e;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+.section-icon {
+  margin-right: 6px;
+  color: #0a84ff;
 }
 .chart-panel {
   height: 350px;
@@ -399,6 +424,7 @@ function goScores() {
 }
 .calendar-icon {
   font-size: 16px;
+  color: #64748b;
 }
 .timeline-time {
   font-size: 12px;

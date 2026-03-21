@@ -75,7 +75,7 @@
                     :disabled="activeTab === 'graded'"
                     @click="handleAIAutoGrade(q)"
                   >
-                    ✨ AI 智能批改
+                    AI 智能批改
                   </el-button>
                   <el-button
                     type="primary"
@@ -193,7 +193,7 @@ async function handleAIAutoGrade(question) {
     const finalScore = res?.score ?? res?.data?.score ?? res;
     if (finalScore !== undefined && finalScore !== null) {
       question.giveScore = Number(finalScore);
-      ElMessage.success(`🎉 AI 批改成功，建议给分：${question.giveScore} 分`);
+      ElMessage.success(`AI 批改成功，建议给分：${question.giveScore} 分`);
       await loadList();
     } else {
       ElMessage.warning('未能读取到分数，请检查后端返回格式');
