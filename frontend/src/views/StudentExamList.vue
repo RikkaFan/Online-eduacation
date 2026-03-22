@@ -64,12 +64,17 @@ const hasEnrolledCourse = ref(true);
 onMounted(async () => {
   loading.value = true;
   try {
-    const [allExams, myScores, enrolledCourses] = await Promise.all([
-      getEnrolledExams(),
+    const [myScores, enrolledCourses] = await Promise.all([
       getMyScores().catch(() => []),
       getMyEnrolledCourses().catch(() => []),
     ]);
     hasEnrolledCourse.value = Array.isArray(enrolledCourses) && enrolledCourses.length > 0;
+    const enrolledIds = new Set((enrolledCourses || []).map(item => item?.id).filter(Boolean));
+    const allExamsRaw = await getEnrolledExams();
+    const allExams = (allExamsRaw || []).filter(exam => {
+      if (!hasEnrolledCourse.value) return false;
+      return enrolledIds.has(exam?.course?.id);
+    });
     const submittedExamIds = new Set((myScores || []).map(s => s?.exam?.id).filter(Boolean));
     exams.value = (allExams || []).sort((a, b) => new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime()).map(exam => ({
       ...exam,

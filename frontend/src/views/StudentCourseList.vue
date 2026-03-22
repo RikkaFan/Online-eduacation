@@ -2,12 +2,10 @@
   <div class="student-course-list">
     <header class="dashboard-header">
       <h1>我的课程</h1>
-      <el-switch
-        v-model="onlyEnrolled"
-        inline-prompt
-        active-text="仅看已选"
-        inactive-text="全部课程"
-      />
+      <div class="course-filter-tabs glass-chip">
+        <el-button :type="onlyEnrolled ? 'primary' : 'default'" round @click="onlyEnrolled = true">仅看已选</el-button>
+        <el-button :type="!onlyEnrolled ? 'primary' : 'default'" round @click="onlyEnrolled = false">全部课程</el-button>
+      </div>
     </header>
     <el-row :gutter="24">
       <el-col :span="6" v-for="c in visibleCourses" :key="c.id" style="margin-bottom: 24px;">
@@ -324,6 +322,23 @@ async function handleDownloadMaterial(chapter) {
 }
 .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding-bottom: 16px; margin-bottom: 24px; }
 .dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 400; color: #1E293B; }
+.course-filter-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+}
+.glass-chip {
+  border: 1px solid rgba(212, 224, 244, 0.92);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(14px) saturate(170%);
+}
+.course-filter-tabs .el-button {
+  min-width: 96px;
+  border: none;
+}
 .lms-course-card { border-radius: 16px; border: 1px solid rgba(226, 232, 240, 0.8); transition: box-shadow 0.2s; cursor: pointer; background: white; height: 100%; }
 .lms-course-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .card-content { padding: 16px; display: grid; gap: 10px; }

@@ -5,8 +5,10 @@ import com.alibaba.excel.read.listener.PageReadListener;
 import com.example.onlineexam.annotation.LogAction;
 import com.example.onlineexam.model.Course;
 import com.example.onlineexam.model.Question;
+import com.example.onlineexam.model.QuestionFavorite;
 import com.example.onlineexam.payload.request.QuestionExcelDTO;
 import com.example.onlineexam.repository.CourseRepository;
+import com.example.onlineexam.repository.QuestionFavoriteRepository;
 import com.example.onlineexam.repository.QuestionRepository;
 import com.example.onlineexam.service.QuestionService;
 import com.example.onlineexam.service.QuestionTextImportService;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,9 @@ public class QuestionController {
     @Autowired
     private QuestionTextImportService questionTextImportService;
 
+    @Autowired
+    private QuestionFavoriteRepository questionFavoriteRepository;
+
     @GetMapping
     public List<Question> getAllQuestions() {
         return questionService.getAllQuestions();
@@ -71,6 +77,33 @@ public class QuestionController {
     @GetMapping("/course/{courseId}")
     public List<Question> getQuestionsByCourse(@PathVariable Long courseId) {
         return questionService.getQuestionsByCourseId(courseId);
+    }
+
+    @PostMapping("/{questionId}/favorite")
+    @PreAuthorize("hasRole('STUDENT')")
+    public Map<String, Object> toggleFavoriteCompat(@PathVariable Long questionId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = userDetails.getId();
+        int removed = questionFavoriteRepository.deleteByUserIdAndQuestionId(userId, questionId);
+        if (removed > 0) {
+            return Map.<String, Object>of("favorited", false, "questionId", questionId);
+        }
+        Question question = questionRepository.findByIdAndDeletedFalse(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+        QuestionFavorite favorite = new QuestionFavorite();
+        favorite.setUserId(userId);
+        favorite.setQuestion(question);
+        favorite.setCreateTime(LocalDateTime.now());
+        questionFavoriteRepository.save(favorite);
+        return Map.<String, Object>of("favorited", true, "questionId", questionId);
+    }
+
+    @GetMapping("/{questionId}/favorite/check")
+    @PreAuthorize("hasRole('STUDENT')")
+    public boolean checkFavoriteCompat(@PathVariable Long questionId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = userDetails.getId();
+        return questionFavoriteRepository.existsByUserIdAndQuestionId(userId, questionId);
     }
 
     @GetMapping("/practice/generate")

@@ -20,6 +20,9 @@ export async function getEnrolledExams() {
     method: 'GET',
     headers: getAuthHeaders(),
   });
+  if (res.status === 404) {
+    return getAllExamsByAllCourses();
+  }
   if (!res.ok) {
     const t = await res.text();
     throw new Error(`获取已选课程考试失败: ${res.status} ${t}`);

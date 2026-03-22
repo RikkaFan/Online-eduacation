@@ -14,6 +14,10 @@
           <el-tag size="small" effect="plain">{{ typeName(item.question?.type) }}</el-tag>
         </div>
         <div class="question-content">{{ item.question?.content || '-' }}</div>
+        <div class="meta-row">
+          <el-tag size="small" type="info" effect="light">课程：{{ item.exam?.course?.courseName || '未知课程' }}</el-tag>
+          <el-tag size="small" type="primary" effect="light">考试：{{ item.exam?.title || '练习错题' }}</el-tag>
+        </div>
         <div class="answer-row">
           <span class="label">你的答案：</span>
           <span class="value wrong">{{ item.selectedAnswer || '未作答' }}</span>
@@ -177,6 +181,12 @@ async function onSummonAiTutor(item) {
   line-height: 1.7;
   color: #1D1D1F;
   margin-bottom: 10px;
+}
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .answer-row,
 .analysis {
