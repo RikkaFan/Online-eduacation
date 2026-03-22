@@ -156,17 +156,12 @@ public class QuestionService {
     private boolean isTeacherOnly() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return false;
-        boolean teacher = false;
-        boolean admin = false;
         for (GrantedAuthority authority : auth.getAuthorities()) {
             if ("ROLE_TEACHER".equals(authority.getAuthority())) {
-                teacher = true;
-            }
-            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
-                admin = true;
+                return true;
             }
         }
-        return teacher && !admin;
+        return false;
     }
 
     private boolean ownsCourse(Long teacherId, Long courseId) {

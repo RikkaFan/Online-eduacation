@@ -51,21 +51,29 @@
             </template>
             <template v-else-if="normalizeType(currentQuestion.type) === 'JUDGE'">
               <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group" disabled>
-                <el-radio label="T">正确 (True)</el-radio>
-                <el-radio label="F">错误 (False)</el-radio>
+                <el-radio class="option-row" label="T">
+                  <span class="option-key">T</span>
+                  <span class="option-text">正确 (True)</span>
+                </el-radio>
+                <el-radio class="option-row" label="F">
+                  <span class="option-key">F</span>
+                  <span class="option-text">错误 (False)</span>
+                </el-radio>
               </el-radio-group>
             </template>
             <template v-else-if="isMultipleType(currentQuestion.type)">
               <el-checkbox-group v-model="currentQuestion.selectedAnswerArray" class="options-group" disabled>
-                <el-checkbox v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-checkbox class="option-row" v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-checkbox>
               </el-checkbox-group>
             </template>
             <template v-else>
               <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group" disabled>
-                <el-radio v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-radio class="option-row" v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-radio>
               </el-radio-group>
             </template>
@@ -95,21 +103,29 @@
             </template>
             <template v-else-if="normalizeType(q.type) === 'JUDGE'">
               <el-radio-group v-model="q.selectedAnswer" class="options-group" disabled>
-                <el-radio label="T">正确 (True)</el-radio>
-                <el-radio label="F">错误 (False)</el-radio>
+                <el-radio class="option-row" label="T">
+                  <span class="option-key">T</span>
+                  <span class="option-text">正确 (True)</span>
+                </el-radio>
+                <el-radio class="option-row" label="F">
+                  <span class="option-key">F</span>
+                  <span class="option-text">错误 (False)</span>
+                </el-radio>
               </el-radio-group>
             </template>
             <template v-else-if="isMultipleType(q.type)">
               <el-checkbox-group v-model="q.selectedAnswerArray" class="options-group" disabled>
-                <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-checkbox class="option-row" v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-checkbox>
               </el-checkbox-group>
             </template>
             <template v-else>
               <el-radio-group v-model="q.selectedAnswer" class="options-group" disabled>
-                <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-radio class="option-row" v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-radio>
               </el-radio-group>
             </template>
@@ -458,11 +474,56 @@ function formatDateTime(v) {
 .options-group {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
-.options-group :deep(.el-radio),
-.options-group :deep(.el-checkbox) {
-  margin-bottom: 12px;
+.options-group :deep(.el-radio.option-row),
+.options-group :deep(.el-checkbox.option-row) {
+  width: 100%;
+  margin: 0;
   margin-right: 0;
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+}
+.options-group :deep(.el-radio__input),
+.options-group :deep(.el-checkbox__input) {
+  display: none;
+}
+.options-group :deep(.el-radio__label),
+.options-group :deep(.el-checkbox__label) {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #1e293b;
+  font-size: 16px;
+  line-height: 1.64;
+  padding: 0;
+  white-space: normal;
+}
+.option-key {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid rgba(191, 219, 254, 0.95);
+  background: rgba(255, 255, 255, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #64748b;
+}
+.options-group :deep(.is-checked.option-row .option-key) {
+  border-color: rgba(10, 132, 255, 0.72);
+  color: #0a84ff;
+}
+.option-text {
+  flex: 1;
+  margin-top: 5px;
+  text-align: left;
 }
 .answer-input {
   margin-top: 4px;

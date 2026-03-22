@@ -147,36 +147,44 @@ onMounted(loadExam);
 
 <style scoped>
 .exam-ready-page {
-  min-height: 100vh;
+  --glass-bg: rgba(255, 255, 255, 0.84);
+  --glass-border: rgba(212, 224, 244, 0.95);
+  --glass-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  min-height: calc(100vh - 12px);
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 24px;
-  padding-top: 10vh;
+  padding: 36px 24px 24px;
+}
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 22px;
 }
 .exam-ready-card {
-  width: min(600px, 100%);
-  padding: 34px 26px 30px;
-  border-radius: 22px;
+  width: min(680px, 100%);
+  padding: 34px 30px 30px;
   text-align: center;
 }
 .ready-title {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
   color: #1c1c1e;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 .ready-exam-name {
-  margin-top: -14px;
-  margin-bottom: 22px;
-  font-size: 22px;
+  margin-bottom: 20px;
+  font-size: 24px;
   color: #1e293b;
   font-weight: 600;
+  line-height: 1.5;
 }
 .ready-desc {
   margin: 0 auto;
-  width: 80%;
-  margin-bottom: 40px;
+  width: 88%;
+  margin-bottom: 34px;
 }
 .label-wrap {
   display: inline-flex;
@@ -189,16 +197,16 @@ onMounted(loadExam);
   color: #0a84ff;
 }
 .enter-btn {
-  width: 80%;
+  width: 88%;
   margin: 0 auto;
   display: block;
-  height: 48px;
+  height: 50px;
   font-size: 16px;
-  font-weight: 600;
-  border-radius: 14px;
+  font-weight: 700;
+  border-radius: 16px;
   background: linear-gradient(135deg, #0a84ff, #3ea0ff);
   border: none;
-  box-shadow: 0 10px 20px rgba(10, 132, 255, 0.28);
+  box-shadow: 0 10px 20px rgba(10, 132, 255, 0.24);
   animation: pulseGlow 2.2s ease-in-out infinite;
 }
 .ready-hint {
@@ -208,7 +216,7 @@ onMounted(loadExam);
 }
 @media (max-width: 760px) {
   .exam-ready-card {
-    width: min(92vw, 600px);
+    width: min(94vw, 680px);
     padding: 24px 16px 22px;
   }
   .ready-desc,

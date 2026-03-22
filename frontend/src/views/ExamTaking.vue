@@ -31,46 +31,57 @@
           <el-button type="danger" class="submit-btn" :loading="submitting" @click="confirmSubmit">主动交卷</el-button>
         </div>
       </aside>
-      <main class="center-panel glass-card">
+      <main class="center-panel glass-card" :class="{ 'all-mode': viewMode === 'all' }">
         <div v-if="questionsWithIndex.length === 0" class="empty-text">该考试暂无题目</div>
         <template v-else-if="viewMode === 'single'">
           <div v-if="currentQuestion" class="single-wrap">
-            <div class="q-stem-box">
-              <div class="q-title">
-                <span class="q-no">{{ currentQuestion.displayNumber }}.</span>
-                <span class="q-content">{{ currentQuestion.content }}</span>
-                <el-tag class="q-type" size="small">{{ typeName(currentQuestion.type) }}</el-tag>
+            <div class="single-content">
+              <div class="q-stem-box">
+                <div class="q-meta-line">{{ questionMeta(currentQuestion) }}</div>
+                <div class="q-title">
+                  <span class="q-no">{{ currentQuestion.displayNumber }}.</span>
+                  <span class="q-content">{{ currentQuestion.content }}</span>
+                  <el-tag class="q-type" size="small">{{ typeName(currentQuestion.type) }}</el-tag>
+                </div>
               </div>
+              <template v-if="normalizeType(currentQuestion.type) === 'SUBJECTIVE'">
+                <el-input
+                  v-model="currentQuestion.selectedAnswer"
+                  type="textarea"
+                  :rows="7"
+                  placeholder="请输入你的答案..."
+                  class="answer-input"
+                />
+              </template>
+              <template v-else-if="normalizeType(currentQuestion.type) === 'JUDGE'">
+                <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group">
+                  <el-radio class="option-row" label="T">
+                    <span class="option-key">T</span>
+                    <span class="option-text">正确 (True)</span>
+                  </el-radio>
+                  <el-radio class="option-row" label="F">
+                    <span class="option-key">F</span>
+                    <span class="option-text">错误 (False)</span>
+                  </el-radio>
+                </el-radio-group>
+              </template>
+              <template v-else-if="isMultipleType(currentQuestion.type)">
+                <el-checkbox-group v-model="currentQuestion.selectedAnswerArray" class="options-group">
+                  <el-checkbox class="option-row" v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
+                    <span class="option-key">{{ opt.key }}</span>
+                    <span class="option-text">{{ opt.text }}</span>
+                  </el-checkbox>
+                </el-checkbox-group>
+              </template>
+              <template v-else>
+                <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group">
+                  <el-radio class="option-row" v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
+                    <span class="option-key">{{ opt.key }}</span>
+                    <span class="option-text">{{ opt.text }}</span>
+                  </el-radio>
+                </el-radio-group>
+              </template>
             </div>
-            <template v-if="normalizeType(currentQuestion.type) === 'SUBJECTIVE'">
-              <el-input
-                v-model="currentQuestion.selectedAnswer"
-                type="textarea"
-                :rows="7"
-                placeholder="请输入你的答案..."
-                class="answer-input"
-              />
-            </template>
-            <template v-else-if="normalizeType(currentQuestion.type) === 'JUDGE'">
-              <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group">
-                <el-radio label="T">正确 (True)</el-radio>
-                <el-radio label="F">错误 (False)</el-radio>
-              </el-radio-group>
-            </template>
-            <template v-else-if="isMultipleType(currentQuestion.type)">
-              <el-checkbox-group v-model="currentQuestion.selectedAnswerArray" class="options-group">
-                <el-checkbox v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
-                </el-checkbox>
-              </el-checkbox-group>
-            </template>
-            <template v-else>
-              <el-radio-group v-model="currentQuestion.selectedAnswer" class="options-group">
-                <el-radio v-for="opt in parseOptions(currentQuestion)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
-                </el-radio>
-              </el-radio-group>
-            </template>
             <div class="single-footer">
               <el-button class="nav-btn" size="large" :disabled="currentIndex <= 0" @click="prevQuestion">上一题</el-button>
               <el-button class="nav-btn" size="large" type="primary" :disabled="currentIndex >= questionsWithIndex.length - 1" @click="nextQuestion">下一题</el-button>
@@ -79,6 +90,7 @@
         </template>
         <div v-else class="all-wrap">
           <div v-for="q in questionsWithIndex" :key="q.id" class="question-item glass-card">
+            <div class="q-meta-line">{{ questionMeta(q) }}</div>
             <div class="q-title">
               <span class="q-no">{{ q.displayNumber }}.</span>
               <span class="q-content">{{ q.content }}</span>
@@ -89,21 +101,29 @@
             </template>
             <template v-else-if="normalizeType(q.type) === 'JUDGE'">
               <el-radio-group v-model="q.selectedAnswer" class="options-group">
-                <el-radio label="T">正确 (True)</el-radio>
-                <el-radio label="F">错误 (False)</el-radio>
+                <el-radio class="option-row" label="T">
+                  <span class="option-key">T</span>
+                  <span class="option-text">正确 (True)</span>
+                </el-radio>
+                <el-radio class="option-row" label="F">
+                  <span class="option-key">F</span>
+                  <span class="option-text">错误 (False)</span>
+                </el-radio>
               </el-radio-group>
             </template>
             <template v-else-if="isMultipleType(q.type)">
               <el-checkbox-group v-model="q.selectedAnswerArray" class="options-group">
-                <el-checkbox v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-checkbox class="option-row" v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-checkbox>
               </el-checkbox-group>
             </template>
             <template v-else>
               <el-radio-group v-model="q.selectedAnswer" class="options-group">
-                <el-radio v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
-                  {{ opt.key }}. {{ opt.text }}
+                <el-radio class="option-row" v-for="opt in parseOptions(q)" :key="opt.key" :label="opt.key">
+                  <span class="option-key">{{ opt.key }}</span>
+                  <span class="option-text">{{ opt.text }}</span>
                 </el-radio>
               </el-radio-group>
             </template>
@@ -118,7 +138,7 @@
           <span class="legend-dot default"></span><span class="legend-text">未答</span>
         </div>
         <div v-if="singleQs.length > 0" class="group-block">
-          <div class="group-title">单选题</div>
+          <div class="group-title">单选题 <span class="group-count">{{ singleQs.length }}</span></div>
           <div class="answer-grid">
             <div
               v-for="q in singleQs"
@@ -130,7 +150,7 @@
           </div>
         </div>
         <div v-if="multipleQs.length > 0" class="group-block">
-          <div class="group-title">多选题</div>
+          <div class="group-title">多选题 <span class="group-count">{{ multipleQs.length }}</span></div>
           <div class="answer-grid">
             <div
               v-for="q in multipleQs"
@@ -142,7 +162,7 @@
           </div>
         </div>
         <div v-if="judgeQs.length > 0" class="group-block">
-          <div class="group-title">判断题</div>
+          <div class="group-title">判断题 <span class="group-count">{{ judgeQs.length }}</span></div>
           <div class="answer-grid">
             <div
               v-for="q in judgeQs"
@@ -154,7 +174,7 @@
           </div>
         </div>
         <div v-if="subjectiveQs.length > 0" class="group-block">
-          <div class="group-title">主观题</div>
+          <div class="group-title">主观题 <span class="group-count">{{ subjectiveQs.length }}</span></div>
           <div class="answer-grid">
             <div
               v-for="q in subjectiveQs"
@@ -212,7 +232,7 @@ const durationText = computed(() => {
   return '-';
 });
 
-const questionsWithIndex = computed(() => examQuestions.value.map((q, i) => ({ ...q, originalIndex: i, displayNumber: i + 1 })));
+const questionsWithIndex = computed(() => examQuestions.value);
 const singleQs = computed(() => questionsWithIndex.value.filter(q => normalizeType(q.type) === 'SINGLE'));
 const multipleQs = computed(() => questionsWithIndex.value.filter(q => normalizeType(q.type) === 'MULTIPLE'));
 const judgeQs = computed(() => questionsWithIndex.value.filter(q => normalizeType(q.type) === 'JUDGE'));
@@ -321,7 +341,7 @@ function handleVisibilityChange() {
 }
 
 function setupInitialAnswers(list) {
-  list.forEach(q => {
+  list.forEach((q, i) => {
     if (isMultipleType(q.type)) {
       q.selectedAnswerArray = [];
       q.selectedAnswer = '';
@@ -329,6 +349,8 @@ function setupInitialAnswers(list) {
       q.selectedAnswer = '';
       q.selectedAnswerArray = [];
     }
+    q.originalIndex = i;
+    q.displayNumber = i + 1;
   });
 }
 
@@ -361,6 +383,12 @@ function parseOptions(q) {
   return parseLabeledOptions(q.options || '');
 }
 
+function questionMeta(q) {
+  const score = Number(q?.score || 0);
+  const scoreText = Number.isFinite(score) && score > 0 ? `${score}分` : '未标分';
+  return `第 ${q?.displayNumber || '-'} 题 · ${typeName(q?.type)} · ${scoreText}`;
+}
+
 function jumpToQuestion(index) {
   currentIndex.value = index;
   viewMode.value = 'single';
@@ -377,20 +405,24 @@ function nextQuestion() {
 }
 
 function startCountdown(endTime) {
-  let end = endTime ? new Date(endTime).getTime() : 0;
-  if (!end && exam.value?.startTime && Number(exam.value?.durationInMinutes || 0) > 0) {
-    const start = new Date(exam.value.startTime).getTime();
-    if (start > 0) {
-      end = start + Number(exam.value.durationInMinutes) * 60 * 1000;
+  const durationMinutes = Number(exam.value?.durationInMinutes || 0);
+  if (Number.isFinite(durationMinutes) && durationMinutes > 0) {
+    countdownMs.value = durationMinutes * 60 * 1000;
+  } else {
+    const start = exam.value?.startTime ? new Date(exam.value.startTime).getTime() : 0;
+    const end = endTime ? new Date(endTime).getTime() : 0;
+    if (start > 0 && end > start) {
+      countdownMs.value = end - start;
     }
   }
-  if (!end) {
+  if (countdownMs.value <= 0) {
     countdownMs.value = 0;
     return;
   }
   const tick = () => {
-    countdownMs.value = end - Date.now();
+    countdownMs.value -= 1000;
     if (countdownMs.value <= 0) {
+      countdownMs.value = 0;
       clearInterval(timer);
       autoSubmit();
     }
@@ -465,35 +497,48 @@ async function submitExam(fromLeaveGuard = false) {
 
 <style scoped>
 .exam-taking-page {
-  min-height: 100vh;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(212, 224, 244, 0.92);
+  --glass-shadow: 0 14px 30px rgba(15, 23, 42, 0.06), 0 3px 10px rgba(148, 163, 184, 0.18);
+  min-height: calc(100vh - 12px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 10px;
+  gap: 16px;
+  padding: 16px 20px 20px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(1200px 520px at 6% 0%, rgba(96, 165, 250, 0.16), transparent 60%),
+    radial-gradient(1000px 560px at 92% -8%, rgba(56, 189, 248, 0.14), transparent 65%),
+    linear-gradient(180deg, rgba(248, 252, 255, 0.7), rgba(248, 252, 255, 0.58));
+}
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 24px;
 }
 .top-nav {
-  min-height: 56px;
-  border-radius: 14px;
+  min-height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 18px;
 }
 .nav-title {
-  font-size: 18px;
-  color: #0f172a;
+  font-size: 20px;
+  color: #1d1d1f;
   font-weight: 700;
 }
 .exam-container {
   display: grid;
-  grid-template-columns: 260px 1fr 300px;
-  gap: 20px;
-  height: calc(100vh - 100px);
-  padding: 0 20px 20px;
+  grid-template-columns: minmax(236px, 260px) 1fr minmax(268px, 292px);
+  gap: 18px;
+  min-height: 0;
+  flex: 1;
 }
 .left-panel {
-  border-radius: 16px;
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -501,7 +546,7 @@ async function submitExam(fromLeaveGuard = false) {
 .left-main {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 .exam-meta {
   display: flex;
@@ -512,10 +557,10 @@ async function submitExam(fromLeaveGuard = false) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
   border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
-  padding-bottom: 6px;
+  padding-bottom: 10px;
 }
 .meta-row strong {
   color: #0f172a;
@@ -549,10 +594,15 @@ async function submitExam(fromLeaveGuard = false) {
   font-size: 12px;
 }
 .clock-card {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 12px;
-  padding: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(212, 224, 244, 0.9);
+  border-radius: 16px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .clock-label {
   color: #64748b;
@@ -564,22 +614,26 @@ async function submitExam(fromLeaveGuard = false) {
   font-size: 30px;
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 .left-footer {
   margin-top: auto;
 }
 .submit-btn {
   width: 100%;
-  height: 50px;
-  font-size: 16px;
+  height: 48px;
+  font-size: 15px;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 .center-panel {
   min-width: 0;
-  border-radius: 16px;
-  padding: 20px;
-  overflow-y: auto;
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .empty-text {
   color: #64748b;
@@ -587,67 +641,159 @@ async function submitExam(fromLeaveGuard = false) {
 .single-wrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  min-height: 100%;
+  gap: 16px;
+}
+.single-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .all-wrap {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .question-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 18px;
+  border: 1px solid rgba(212, 224, 244, 0.88);
+  border-radius: 20px;
+  padding: 18px 18px 16px;
 }
 .q-stem-box {
-  background: rgba(241, 245, 249, 0.9);
-  border: 1px solid #dbe4f0;
-  border-radius: 12px;
+  background: rgba(248, 252, 255, 0.88);
+  border: 1px solid rgba(212, 224, 244, 0.92);
+  border-radius: 18px;
   padding: 14px 16px;
 }
 .q-title {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 12px;
+}
+.q-meta-line {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .q-no {
   color: #0a84ff;
   font-weight: 700;
+  font-size: 20px;
+  line-height: 1.38;
+  margin-top: -1px;
 }
 .q-content {
-  flex: 1;
   color: #0f172a;
-  line-height: 1.7;
+  line-height: 1.62;
+  font-size: 17px;
+  font-weight: 600;
 }
 .q-type {
-  margin-left: auto;
+  margin-top: 2px;
 }
 .options-group {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 4px 2px;
 }
-.options-group :deep(.el-radio),
-.options-group :deep(.el-checkbox) {
-  margin-bottom: 16px;
+.options-group :deep(.el-radio.option-row),
+.options-group :deep(.el-checkbox.option-row) {
+  width: 100%;
+  margin: 0;
   margin-right: 0;
+  border: 1px solid rgba(220, 230, 246, 0.95);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  transition: all 0.2s ease;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  min-height: 52px;
+  box-shadow: 0 6px 14px rgba(148, 163, 184, 0.08);
+}
+.options-group :deep(.el-radio.option-row:hover),
+.options-group :deep(.el-checkbox.option-row:hover) {
+  transform: translateY(-1px);
+  border-color: rgba(10, 132, 255, 0.24);
+}
+.options-group :deep(.el-radio__input),
+.options-group :deep(.el-checkbox__input) {
+  display: none;
+}
+.options-group :deep(.el-radio__label),
+.options-group :deep(.el-checkbox__label) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1e293b;
+  font-size: 16px;
+  line-height: 1.56;
+  padding: 0;
+  white-space: normal;
+}
+.options-group :deep(.is-checked.option-row) {
+  border-color: rgba(10, 132, 255, 0.38);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(239, 246, 255, 0.84));
+  box-shadow: 0 10px 18px rgba(10, 132, 255, 0.14);
+}
+.option-key {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1.5px solid rgba(191, 219, 254, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #64748b;
+}
+.options-group :deep(.is-checked.option-row .option-key) {
+  border-color: rgba(10, 132, 255, 0.72);
+  background: rgba(255, 255, 255, 0.98);
+  color: #0a84ff;
+  box-shadow: 0 6px 12px rgba(10, 132, 255, 0.18);
+}
+.option-text {
+  flex: 1;
+  margin-top: 0;
+  text-align: left;
 }
 .answer-input {
   margin-top: 4px;
 }
 .single-footer {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
+  margin-top: auto;
+  padding-top: 14px;
 }
 .nav-btn {
-  flex: 1;
   height: 46px;
   font-weight: 600;
+  border-radius: 16px;
+}
+.all-mode .all-wrap {
+  scrollbar-gutter: stable;
 }
 .right-panel {
-  border-radius: 16px;
-  padding: 16px;
+  padding: 18px 16px;
   overflow: auto;
 }
 .card-title {
@@ -693,6 +839,11 @@ async function submitExam(fromLeaveGuard = false) {
   margin-bottom: 10px;
   font-weight: 700;
 }
+.group-count {
+  color: #0a84ff;
+  margin-left: 6px;
+  font-weight: 700;
+}
 .answer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
@@ -704,18 +855,20 @@ async function submitExam(fromLeaveGuard = false) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  border: 1px solid #d1d1d6;
+  border-radius: 10px;
+  border: 1px solid rgba(209, 213, 219, 0.95);
   cursor: pointer;
   font-weight: 500;
   color: #1c1c1e;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.7);
   font-size: 14px;
+  transition: all 0.2s ease;
 }
 .grid-item.current {
   background: #0a84ff;
   border-color: #0a84ff;
   color: #fff;
+  box-shadow: 0 6px 14px rgba(10, 132, 255, 0.32);
 }
 .grid-item.answered {
   background: #dcfce7;
@@ -723,15 +876,41 @@ async function submitExam(fromLeaveGuard = false) {
   color: #15803d;
 }
 @media (max-width: 1280px) {
+  .exam-taking-page {
+    padding: 14px 14px 18px;
+  }
   .exam-container {
     grid-template-columns: 1fr;
-    height: auto;
+    min-height: auto;
   }
   .left-panel {
     min-height: 220px;
   }
+  .center-panel {
+    min-height: 520px;
+  }
   .clock-value {
     font-size: 24px;
+  }
+}
+@media (max-width: 760px) {
+  .center-panel {
+    padding: 18px 14px;
+  }
+  .single-footer {
+    grid-template-columns: 1fr;
+  }
+  .q-content {
+    font-size: 17px;
+  }
+  .options-group :deep(.el-radio__label),
+  .options-group :deep(.el-checkbox__label) {
+    font-size: 15px;
+  }
+  .option-key {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
   }
 }
 </style>

@@ -11,9 +11,7 @@
       </div>
       <div class="toolbar-right">
         <el-button type="primary" round @click="handleDownloadTemplate">下载导入模板</el-button>
-        <el-upload accept=".xlsx,.xls" :show-file-list="false" :before-upload="handleImport">
-          <el-button type="primary" round>批量导入题目</el-button>
-        </el-upload>
+        <el-button type="primary" plain round @click="openImportDialog">导入题库</el-button>
         <el-button type="primary" round :disabled="!searchCourse" @click="showAddQuestionDialog">新增题目</el-button>
       </div>
     </div>
@@ -125,6 +123,65 @@
         <el-button @click="answerPreviewVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="importDialogVisible" title="导入题库" width="760px">
+      <div class="quick-import-wrap">
+        <el-form label-width="92px">
+          <el-form-item label="导入课程">
+            <el-select v-model="importCourseId" placeholder="请选择课程" style="width: 100%;">
+              <el-option v-for="course in courses" :key="course.id" :label="course.courseName || `课程#${course.id}`" :value="course.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="导入方式">
+            <el-radio-group v-model="importMode">
+              <el-radio-button label="excel">Excel批量导入</el-radio-button>
+              <el-radio-button label="quick">Word/文本一键导入</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="importMode === 'excel'" label="上传文件">
+            <el-upload
+              accept=".xlsx,.xls"
+              :show-file-list="false"
+              :before-upload="handleExcelImportFile"
+            >
+              <el-button plain>选择 Excel</el-button>
+            </el-upload>
+            <span class="quick-file-name">{{ excelImportFileName || '未选择 Excel 文件' }}</span>
+          </el-form-item>
+          <el-form-item v-else label="上传文件">
+            <el-upload
+              accept=".docx,.txt"
+              :show-file-list="false"
+              :before-upload="handleQuickImportFile"
+            >
+              <el-button plain>选择 DOCX/TXT</el-button>
+            </el-upload>
+            <span class="quick-file-name">{{ quickImportFileName || '未选择文件（可仅粘贴文本）' }}</span>
+          </el-form-item>
+          <el-form-item v-if="importMode === 'quick'" label="粘贴内容">
+            <el-input
+              v-model="quickImportText"
+              type="textarea"
+              :rows="10"
+              placeholder="可直接粘贴 Word 题库文本，如：1.题干...A....B....【答案】B。解析：..."
+            />
+          </el-form-item>
+        </el-form>
+        <div v-if="importResult" class="quick-result">
+          <div class="quick-result-title">{{ importResult.message || '导入结果' }}</div>
+          <div class="quick-result-meta">
+            成功 {{ importResult.successCount || 0 }} 道，失败 {{ importResult.failedCount || 0 }} 道
+          </div>
+          <div v-if="importErrors.length" class="quick-result-errors">
+            <div v-for="(item, idx) in importErrors" :key="`err-${idx}`">- {{ item }}</div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">关闭</el-button>
+        <el-button :loading="importLoading" type="primary" @click="submitImport">开始导入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -137,7 +194,8 @@ import {
   createQuestion,
   deleteQuestion,
   downloadTemplate,
-  importQuestions
+  importQuestions,
+  quickImportQuestions
 } from '@/api/question';
 
 const courses = ref([]);
@@ -209,6 +267,20 @@ const submittingQuestion = ref(false);
 const questionFormRef = ref(null);
 const answerPreviewVisible = ref(false);
 const answerPreviewText = ref('');
+const importDialogVisible = ref(false);
+const importLoading = ref(false);
+const importMode = ref('excel');
+const excelImportFile = ref(null);
+const excelImportFileName = ref('');
+const quickImportText = ref('');
+const quickImportFile = ref(null);
+const quickImportFileName = ref('');
+const importResult = ref(null);
+const importErrors = computed(() => {
+  const list = importResult.value?.errors;
+  return Array.isArray(list) ? list.slice(0, 10) : [];
+});
+const importCourseId = ref(null);
 const questionForm = ref({
   type: 'SINGLE',
   content: '',
@@ -364,26 +436,95 @@ const handleDownloadTemplate = async () => {
   }
 };
 
-const handleImport = async (file) => {
-  if (!selectedCourseId.value) {
-    ElMessage.warning('请先选择要把题目导入到哪门课程');
+const openImportDialog = () => {
+  importDialogVisible.value = true;
+  importMode.value = 'excel';
+  importCourseId.value = searchCourse.value || courses.value[0]?.id || null;
+  excelImportFile.value = null;
+  excelImportFileName.value = '';
+  quickImportText.value = '';
+  quickImportFile.value = null;
+  quickImportFileName.value = '';
+  importResult.value = null;
+};
+
+const handleExcelImportFile = (file) => {
+  const name = String(file?.name || '').toLowerCase();
+  if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
+    ElMessage.warning('仅支持 .xlsx 或 .xls 文件');
     return false;
   }
-  const loading = ElLoading.service({
-    lock: true,
-    text: '正在导入题目，请稍候...',
-    background: 'rgba(255, 255, 255, 0.6)',
-  });
+  excelImportFile.value = file;
+  excelImportFileName.value = file.name;
+  return false;
+};
+
+const handleQuickImportFile = (file) => {
+  const name = String(file?.name || '').toLowerCase();
+  if (!name.endsWith('.docx') && !name.endsWith('.txt')) {
+    ElMessage.warning('仅支持 .docx 或 .txt 文件');
+    return false;
+  }
+  quickImportFile.value = file;
+  quickImportFileName.value = file.name;
+  return false;
+};
+
+const submitImport = async () => {
+  if (!importCourseId.value) {
+    ElMessage.warning('请先选择导入课程');
+    return;
+  }
+  importLoading.value = true;
   try {
-    await importQuestions(selectedCourseId.value, file);
-    ElMessage.success('导入成功');
-    await loadQuestions();
+    let result = null;
+    if (importMode.value === 'excel') {
+      if (!excelImportFile.value) {
+        ElMessage.warning('请先选择 Excel 文件');
+        return;
+      }
+      const loading = ElLoading.service({
+        lock: true,
+        text: '正在导入题目，请稍候...',
+        background: 'rgba(255, 255, 255, 0.6)',
+      });
+      try {
+        const raw = await importQuestions(importCourseId.value, excelImportFile.value);
+        result = {
+          message: raw?.message || '导入完成',
+          successCount: Number(raw?.count || 0),
+          failedCount: 0,
+          errors: []
+        };
+      } finally {
+        loading.close();
+      }
+    } else {
+      if (!quickImportFile.value && !String(quickImportText.value || '').trim()) {
+        ElMessage.warning('请上传文件或粘贴题库文本');
+        return;
+      }
+      result = await quickImportQuestions(importCourseId.value, {
+        text: quickImportText.value,
+        file: quickImportFile.value
+      });
+    }
+    importResult.value = result || {};
+    if ((result?.successCount || 0) > 0) {
+      ElMessage.success(`导入成功 ${result.successCount} 道题`);
+      await loadQuestions();
+      if (importMode.value === 'excel') {
+        excelImportFile.value = null;
+        excelImportFileName.value = '';
+      }
+    } else {
+      ElMessage.warning(result?.message || '未导入任何题目');
+    }
   } catch (error) {
     ElMessage.error(error.message || '导入失败');
   } finally {
-    loading.close();
+    importLoading.value = false;
   }
-  return false;
 };
 </script>
 
@@ -501,6 +642,37 @@ const handleImport = async (file) => {
   color: #1f2937;
   max-height: 60vh;
   overflow: auto;
+}
+.quick-import-wrap {
+  display: grid;
+  gap: 12px;
+}
+.quick-file-name {
+  margin-left: 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+.quick-result {
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(248, 252, 255, 0.86);
+}
+.quick-result-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+.quick-result-meta {
+  margin-top: 6px;
+  color: #334155;
+}
+.quick-result-errors {
+  margin-top: 8px;
+  max-height: 160px;
+  overflow: auto;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.6;
 }
 @media (max-width: 1100px) {
   .toolbar-left .el-select,

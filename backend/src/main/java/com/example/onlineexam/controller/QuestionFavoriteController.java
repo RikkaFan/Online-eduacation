@@ -8,7 +8,9 @@ import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,22 +32,20 @@ public class QuestionFavoriteController {
     public Map<String, Object> toggleFavorite(@PathVariable Long questionId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
+        List<QuestionFavorite> favorites = questionFavoriteRepository.findByUserIdAndQuestionId(userId, questionId);
+        if (!favorites.isEmpty()) {
+            questionFavoriteRepository.deleteAll(favorites);
+            return Map.<String, Object>of("favorited", false, "questionId", questionId);
+        }
 
-        return questionFavoriteRepository.findByUserIdAndQuestionId(userId, questionId)
-                .map(favorite -> {
-                    questionFavoriteRepository.delete(favorite);
-                    return Map.<String, Object>of("favorited", false, "questionId", questionId);
-                })
-                .orElseGet(() -> {
-                    Question question = questionRepository.findByIdAndDeletedFalse(questionId)
-                            .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
-                    QuestionFavorite favorite = new QuestionFavorite();
-                    favorite.setUserId(userId);
-                    favorite.setQuestion(question);
-                    favorite.setCreateTime(LocalDateTime.now());
-                    questionFavoriteRepository.save(favorite);
-                    return Map.<String, Object>of("favorited", true, "questionId", questionId);
-                });
+        Question question = questionRepository.findByIdAndDeletedFalse(questionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "题目不存在或已删除"));
+        QuestionFavorite favorite = new QuestionFavorite();
+        favorite.setUserId(userId);
+        favorite.setQuestion(question);
+        favorite.setCreateTime(LocalDateTime.now());
+        questionFavoriteRepository.save(favorite);
+        return Map.<String, Object>of("favorited", true, "questionId", questionId);
     }
 
     @GetMapping("/check/{questionId}")

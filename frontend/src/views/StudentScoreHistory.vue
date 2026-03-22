@@ -6,10 +6,18 @@
     </div>
     <el-card class="glass-card table-card" shadow="never">
       <el-table :data="scores" v-loading="loading" empty-text="暂无成绩记录" stripe>
+        <el-table-column label="课程名称" min-width="160">
+          <template #default="{ row }">{{ row.exam?.course?.courseName || '-' }}</template>
+        </el-table-column>
         <el-table-column label="考试名称" min-width="180">
           <template #default="{ row }">{{ row.exam?.title || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="score" label="得分" width="120" align="center" />
+        <el-table-column label="作答用时" width="140" align="center">
+          <template #default="{ row }">{{ formatDuration(row.actualDurationSeconds) }}</template>
+        </el-table-column>
+        <el-table-column label="得分/满分" width="130" align="center">
+          <template #default="{ row }">{{ scoreWithTotal(row) }}</template>
+        </el-table-column>
         <el-table-column label="交卷时间" min-width="180">
           <template #default="{ row }">{{ formatDateTime(row.submittedAt) }}</template>
         </el-table-column>
@@ -47,7 +55,27 @@ onMounted(async () => {
 function goReview(row) {
   const examId = row?.examId || row?.exam?.id;
   if (!examId) return;
-  router.push('/student/exam-review/' + examId);
+  router.push({ name: 'StudentExamReview', params: { id: examId } });
+}
+
+function formatDuration(seconds) {
+  const sec = Number(seconds || 0);
+  if (!Number.isFinite(sec) || sec <= 0) return '-';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}时${m}分${s}秒`;
+  if (m > 0) return `${m}分${s}秒`;
+  return `${s}秒`;
+}
+
+function scoreWithTotal(row) {
+  const score = row?.score;
+  const total = row?.exam?.totalScore;
+  if (score == null && total == null) return '-/-';
+  const left = score == null ? '-' : score;
+  const right = total == null ? '-' : total;
+  return `${left}/${right}`;
 }
 
 function formatDateTime(v) {

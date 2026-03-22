@@ -174,6 +174,44 @@ export async function importQuestions(courseId, file) {
   return response.text();
 }
 
+export async function quickImportQuestions(courseId, payload = {}) {
+  const formData = new FormData();
+  formData.append('courseId', String(courseId));
+  if (payload.text && String(payload.text).trim()) {
+    formData.append('text', String(payload.text));
+  }
+  if (payload.file) {
+    formData.append('file', payload.file);
+  }
+
+  const headers = getAuthHeaders();
+  delete headers['Content-Type'];
+
+  const response = await fetch(`${QUESTION_API_URL}/import/quick`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    let msg = `一键导入失败: ${response.status}`;
+    if (contentType.includes('application/json')) {
+      const data = await response.json().catch(() => ({}));
+      msg = data?.message ? `${msg} ${data.message}` : msg;
+    } else {
+      const text = await response.text();
+      if (text) msg = `${msg} ${text}`;
+    }
+    throw new Error(msg);
+  }
+
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  return { message: await response.text() };
+}
+
 export async function summonAiTutor(data) {
   const response = await fetch(AI_TUTOR_API_URL, {
     method: 'POST',
