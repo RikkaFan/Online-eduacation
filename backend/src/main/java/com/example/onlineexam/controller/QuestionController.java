@@ -17,6 +17,7 @@ import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import com.example.onlineexam.security.UserDetailsImpl;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -81,6 +84,7 @@ public class QuestionController {
 
     @PostMapping("/{questionId}/favorite")
     @PreAuthorize("hasRole('STUDENT')")
+    @Transactional
     public Map<String, Object> toggleFavoriteCompat(@PathVariable Long questionId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
@@ -89,12 +93,16 @@ public class QuestionController {
             return Map.<String, Object>of("favorited", false, "questionId", questionId);
         }
         Question question = questionRepository.findByIdAndDeletedFalse(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "题目不存在或已删除"));
         QuestionFavorite favorite = new QuestionFavorite();
         favorite.setUserId(userId);
         favorite.setQuestion(question);
         favorite.setCreateTime(LocalDateTime.now());
-        questionFavoriteRepository.save(favorite);
+        try {
+            questionFavoriteRepository.save(favorite);
+        } catch (DataIntegrityViolationException e) {
+            return Map.<String, Object>of("favorited", true, "questionId", questionId);
+        }
         return Map.<String, Object>of("favorited", true, "questionId", questionId);
     }
 
