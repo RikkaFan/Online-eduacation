@@ -6,9 +6,11 @@ import com.example.onlineexam.repository.QuestionFavoriteRepository;
 import com.example.onlineexam.repository.QuestionRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,12 +31,12 @@ public class QuestionFavoriteController {
 
     @PostMapping("/{questionId}")
     @PreAuthorize("hasRole('STUDENT')")
+    @Transactional
     public Map<String, Object> toggleFavorite(@PathVariable Long questionId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
-        List<QuestionFavorite> favorites = questionFavoriteRepository.findByUserIdAndQuestionId(userId, questionId);
-        if (!favorites.isEmpty()) {
-            questionFavoriteRepository.deleteAll(favorites);
+        int removed = questionFavoriteRepository.deleteByUserIdAndQuestionId(userId, questionId);
+        if (removed > 0) {
             return Map.<String, Object>of("favorited", false, "questionId", questionId);
         }
 
@@ -44,7 +46,11 @@ public class QuestionFavoriteController {
         favorite.setUserId(userId);
         favorite.setQuestion(question);
         favorite.setCreateTime(LocalDateTime.now());
-        questionFavoriteRepository.save(favorite);
+        try {
+            questionFavoriteRepository.save(favorite);
+        } catch (DataIntegrityViolationException e) {
+            return Map.<String, Object>of("favorited", true, "questionId", questionId);
+        }
         return Map.<String, Object>of("favorited", true, "questionId", questionId);
     }
 

@@ -2,6 +2,7 @@ package com.example.onlineexam.repository;
 
 import com.example.onlineexam.model.QuestionFavorite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,4 +17,8 @@ public interface QuestionFavoriteRepository extends JpaRepository<QuestionFavori
 
     @Query("select count(qf) > 0 from QuestionFavorite qf where qf.userId = :userId and qf.question.id = :questionId and qf.question.deleted = false")
     boolean existsByUserIdAndQuestionId(@Param("userId") Long userId, @Param("questionId") Long questionId);
+
+    @Modifying
+    @Query("delete from QuestionFavorite qf where qf.userId = :userId and qf.question.id = :questionId")
+    int deleteByUserIdAndQuestionId(@Param("userId") Long userId, @Param("questionId") Long questionId);
 }
