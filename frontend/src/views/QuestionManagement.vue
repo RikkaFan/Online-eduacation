@@ -318,10 +318,10 @@ const showAddQuestionDialog = () => {
 
 const rowTypeName = (type) => {
   const normalized = normalizeType(type);
-  if (normalized === 'MULTIPLE') return '多选';
+  if (normalized === 'MULTIPLE') return '多选题';
   if (normalized === 'JUDGE') return '判断题';
   if (normalized === 'SUBJECTIVE') return '主观题';
-  return '单选';
+  return '单选题';
 };
 
 const typeTagType = (type) => {
