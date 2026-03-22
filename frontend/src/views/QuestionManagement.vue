@@ -439,7 +439,7 @@ const handleDownloadTemplate = async () => {
 const openImportDialog = () => {
   importDialogVisible.value = true;
   importMode.value = 'excel';
-  importCourseId.value = searchCourse.value || courses.value[0]?.id || null;
+  importCourseId.value = null;
   excelImportFile.value = null;
   excelImportFileName.value = '';
   quickImportText.value = '';
@@ -473,6 +473,17 @@ const handleQuickImportFile = (file) => {
 const submitImport = async () => {
   if (!importCourseId.value) {
     ElMessage.warning('请先选择导入课程');
+    return;
+  }
+  const course = courses.value.find(item => Number(item?.id) === Number(importCourseId.value));
+  const courseName = course?.courseName || `课程#${importCourseId.value}`;
+  try {
+    await ElMessageBox.confirm(`将把题目导入到《${courseName}》，是否继续？`, '确认导入课程', {
+      confirmButtonText: '继续导入',
+      cancelButtonText: '取消',
+      type: 'warning',
+    });
+  } catch {
     return;
   }
   importLoading.value = true;
@@ -512,6 +523,7 @@ const submitImport = async () => {
     importResult.value = result || {};
     if ((result?.successCount || 0) > 0) {
       ElMessage.success(`导入成功 ${result.successCount} 道题`);
+      searchCourse.value = Number(importCourseId.value);
       await loadQuestions();
       if (importMode.value === 'excel') {
         excelImportFile.value = null;

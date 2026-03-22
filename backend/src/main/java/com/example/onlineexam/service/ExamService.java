@@ -76,6 +76,7 @@ public class ExamService {
         List<Question> selectedQuestions = new ArrayList<>();
         if (questionIds != null && !questionIds.isEmpty()) {
             selectedQuestions = questionRepository.findAllByIdInAndDeletedFalse(questionIds);
+            ensureQuestionsBelongToCourse(selectedQuestions, courseId);
         } else if (exam.getQuestions() != null && !exam.getQuestions().isEmpty()) {
             Set<Long> ids = exam.getQuestions().stream()
                     .map(Question::getId)
@@ -83,6 +84,7 @@ public class ExamService {
                     .collect(Collectors.toSet());
             if (!ids.isEmpty()) {
                 selectedQuestions = questionRepository.findAllByIdInAndDeletedFalse(ids);
+                ensureQuestionsBelongToCourse(selectedQuestions, courseId);
             }
         } else if (hasTypedRule(exam)) {
             List<Question> allQuestions = questionRepository.findByCourseIdAndDeletedFalse(courseId);
@@ -104,6 +106,15 @@ public class ExamService {
         exam.setTotalScore(calculateTotalScore(exam, selectedQuestions));
 
         return examRepository.save(exam);
+    }
+
+    private void ensureQuestionsBelongToCourse(List<Question> questions, Long courseId) {
+        if (questions == null || questions.isEmpty()) return;
+        boolean hasForeignQuestion = questions.stream()
+                .anyMatch(question -> question == null || question.getCourseId() == null || !courseId.equals(question.getCourseId()));
+        if (hasForeignQuestion) {
+            throw new RuntimeException("所选题目包含非当前课程题目，请刷新后重试");
+        }
     }
 
     public Exam updateExam(Long id, Exam examDetails) {
