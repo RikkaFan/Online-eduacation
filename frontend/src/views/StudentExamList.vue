@@ -3,13 +3,13 @@
     <div class="glass-card page-hero">
       <div class="hero-left">
         <h2>考试列表</h2>
-        <div class="hero-sub">查看考试安排、状态与进入入口</div>
+        <div class="hero-sub">仅展示你已选课程的考试安排、状态与进入入口</div>
       </div>
     </div>
     <div class="glass-card list-card">
       <div class="list-head-row">
-        <span>课程名称</span>
-        <span>课程</span>
+        <span>考试名称</span>
+        <span>所属课程</span>
         <span>日期</span>
         <span>倒计时</span>
         <span>状态</span>
@@ -35,7 +35,13 @@
             </div>
           </div>
         </template>
-        <el-empty v-else description="当前暂无考试" :image-size="84" />
+        <el-empty
+          v-else
+          :description="hasEnrolledCourse ? '已选课程暂无考试' : '请先到“我的课程”选课后查看考试'"
+          :image-size="84"
+        >
+          <el-button v-if="!hasEnrolledCourse" type="primary" round @click="goCourses">前往我的课程</el-button>
+        </el-empty>
       </div>
     </div>
   </div>
@@ -46,22 +52,26 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Calendar } from '@element-plus/icons-vue';
-import { getAllExamsByAllCourses } from '@/api/examTaking';
+import { getEnrolledExams } from '@/api/examTaking';
+import { getMyEnrolledCourses } from '@/api/course';
 import { getMyScores } from '@/api/score';
 
 const router = useRouter();
 const exams = ref([]);
 const loading = ref(false);
+const hasEnrolledCourse = ref(true);
 
 onMounted(async () => {
   loading.value = true;
   try {
-    const [allExams, myScores] = await Promise.all([
-      getAllExamsByAllCourses(),
+    const [allExams, myScores, enrolledCourses] = await Promise.all([
+      getEnrolledExams(),
       getMyScores().catch(() => []),
+      getMyEnrolledCourses().catch(() => []),
     ]);
+    hasEnrolledCourse.value = Array.isArray(enrolledCourses) && enrolledCourses.length > 0;
     const submittedExamIds = new Set((myScores || []).map(s => s?.exam?.id).filter(Boolean));
-    exams.value = (allExams || []).map(exam => ({
+    exams.value = (allExams || []).sort((a, b) => new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime()).map(exam => ({
       ...exam,
       submitted: submittedExamIds.has(exam.id),
     }));
@@ -116,26 +126,32 @@ function formatCountdown(exam) {
 function enterExam(id) {
   router.push(`/student/exam-ready/${id}`);
 }
+function goCourses() {
+  router.push('/student/courses');
+}
 </script>
 
 <style scoped>
 .student-exam-list {
+  --glass-border: rgba(212, 224, 244, 0.95);
+  --glass-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   padding: 8px 4px 0;
 }
 .page-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 112px;
-  padding: 0 32px;
-  border-radius: 20px !important;
+  min-height: 126px;
+  padding: 0 34px;
+  border-radius: 22px !important;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(212, 224, 244, 0.95);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px) saturate(170%);
 }
 .page-hero::before {
   content: '';
@@ -153,21 +169,23 @@ function enterExam(id) {
 .hero-left h2 {
   margin: 0;
   color: #0f172a;
-  font-size: 22px;
+  font-size: 24px;
 }
 .hero-sub {
-  margin-top: 6px;
+  margin-top: 8px;
   color: #64748b;
   font-size: 13px;
 }
 .list-card {
-  border-radius: 20px !important;
-  padding: 24px;
+  border-radius: 22px !important;
+  padding: 20px;
   min-height: 456px;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(212, 224, 244, 0.95);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px) saturate(170%);
+  background: rgba(255, 255, 255, 0.84);
 }
 .list-head-row {
   display: grid;
@@ -194,10 +212,15 @@ function enterExam(id) {
   gap: 18px;
   align-items: center;
   padding: 16px 18px;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(212, 224, 244, 0.92);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.exam-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
 }
 .row-cell {
   display: flex;
@@ -235,7 +258,7 @@ function enterExam(id) {
     gap: 8px;
   }
   .page-hero {
-    min-height: 96px;
+    min-height: 104px;
     padding: 0 20px;
   }
 }

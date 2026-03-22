@@ -37,6 +37,12 @@ public class ExamController {
         return examService.getExamsByCourse(courseId);
     }
 
+    @GetMapping("/students/exams")
+    @PreAuthorize("hasRole('STUDENT')")
+    public List<Exam> getEnrolledExamsForStudent() {
+        return examService.getEnrolledExamsForStudent();
+    }
+
     @GetMapping("/exams/{id}")
     public ResponseEntity<?> getExamById(@PathVariable Long id) {
         Exam exam = examService.getExamById(id)

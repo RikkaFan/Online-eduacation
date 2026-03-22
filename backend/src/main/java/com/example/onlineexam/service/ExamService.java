@@ -1,8 +1,10 @@
 package com.example.onlineexam.service;
 
 import com.example.onlineexam.model.Course;
+import com.example.onlineexam.model.CourseEnrollment;
 import com.example.onlineexam.model.Exam;
 import com.example.onlineexam.model.Question;
+import com.example.onlineexam.repository.CourseEnrollmentRepository;
 import com.example.onlineexam.repository.CourseRepository;
 import com.example.onlineexam.repository.ExamRepository;
 import com.example.onlineexam.repository.ExamResultRepository;
@@ -35,6 +37,9 @@ public class ExamService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private CourseEnrollmentRepository courseEnrollmentRepository;
+
+    @Autowired
     private QuestionRepository questionRepository;
 
     @Autowired
@@ -51,7 +56,31 @@ public class ExamService {
             }
             return examRepository.findByCourse_IdAndCourse_TeacherId(courseId, current.getId());
         }
+        if (current != null && isStudentOnly()) {
+            boolean enrolled = courseEnrollmentRepository.findByCourse_IdAndStudentId(courseId, current.getId())
+                    .map(item -> "ENROLLED".equals(item.getStatus()))
+                    .orElse(false);
+            if (!enrolled) {
+                return List.of();
+            }
+        }
         return examRepository.findByCourse_Id(courseId);
+    }
+
+    public List<Exam> getEnrolledExamsForStudent() {
+        UserDetailsImpl current = getCurrentUser();
+        if (current == null || !isStudentOnly()) {
+            return List.of();
+        }
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByStudentIdAndStatusOrderByUpdateTimeDesc(current.getId(), "ENROLLED");
+        Set<Long> courseIds = enrollments.stream()
+                .map(item -> item.getCourse() == null ? null : item.getCourse().getId())
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        if (courseIds.isEmpty()) {
+            return List.of();
+        }
+        return examRepository.findByCourse_IdIn(courseIds);
     }
 
     public Optional<Exam> getExamById(Long id) {
@@ -59,6 +88,15 @@ public class ExamService {
         UserDetailsImpl current = getCurrentUser();
         if (current != null && isTeacherOnly()) {
             return examOptional.filter(exam -> exam.getCourse() != null && current.getId().equals(exam.getCourse().getTeacherId()));
+        }
+        if (current != null && isStudentOnly()) {
+            return examOptional.filter(exam -> {
+                Long courseId = exam.getCourse() == null ? null : exam.getCourse().getId();
+                if (courseId == null) return false;
+                return courseEnrollmentRepository.findByCourse_IdAndStudentId(courseId, current.getId())
+                        .map(item -> "ENROLLED".equals(item.getStatus()))
+                        .orElse(false);
+            });
         }
         return examOptional;
     }
@@ -230,6 +268,17 @@ public class ExamService {
         if (auth == null) return false;
         for (GrantedAuthority authority : auth.getAuthorities()) {
             if ("ROLE_TEACHER".equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isStudentOnly() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_STUDENT".equals(authority.getAuthority())) {
                 return true;
             }
         }

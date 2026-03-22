@@ -7,9 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findByCourse_Id(Long courseId);
+    List<Exam> findByCourse_IdIn(Set<Long> courseIds);
     List<Exam> findByCourse_IdAndCourse_TeacherId(Long courseId, Long teacherId);
     boolean existsByIdAndCourse_TeacherId(Long examId, Long teacherId);
     long countByCourse_TeacherId(Long teacherId);

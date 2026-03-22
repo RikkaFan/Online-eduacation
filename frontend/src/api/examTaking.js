@@ -1,6 +1,5 @@
 import { API_BASE, getAuthHeaders } from './request';
 import { getCourses } from './course';
-
 const EXAM_API = `${API_BASE}/api`;
 
 // 获取某课程下的考试列表
@@ -16,7 +15,18 @@ export async function getExamsByCourse(courseId) {
   return res.json();
 }
 
-// 聚合获取所有课程下的考试列表（学生端用于“全部考试”视图）
+export async function getEnrolledExams() {
+  const res = await fetch(`${EXAM_API}/students/exams`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取已选课程考试失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
 export async function getAllExamsByAllCourses() {
   const courses = await getCourses();
   const tasks = courses.map(c => getExamsByCourse(c.id).then(list => list.map(e => ({ ...e, course: e.course || c }))));

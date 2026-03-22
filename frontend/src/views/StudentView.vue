@@ -10,13 +10,13 @@
             <el-icon><House /></el-icon>
             <span>控制台首页</span>
           </el-menu-item>
-          <el-menu-item index="/student/exams">
-            <el-icon><Position /></el-icon>
-            <span>考试列表</span>
-          </el-menu-item>
           <el-menu-item index="/student/courses">
             <el-icon><Notebook /></el-icon>
             <span>我的课程</span>
+          </el-menu-item>
+          <el-menu-item index="/student/exams">
+            <el-icon><Position /></el-icon>
+            <span>考试列表</span>
           </el-menu-item>
           <el-menu-item index="/student/scores">
             <el-icon><DataAnalysis /></el-icon>
