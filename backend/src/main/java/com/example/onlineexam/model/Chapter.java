@@ -1,5 +1,6 @@
 package com.example.onlineexam.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,4 +23,15 @@ public class Chapter {
     private String content;
 
     private Integer sortOrder;
+
+    private String materialName;
+
+    private String materialContentType;
+
+    private Long materialSize;
+
+    @Lob
+    @JsonIgnore
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] materialData;
 }

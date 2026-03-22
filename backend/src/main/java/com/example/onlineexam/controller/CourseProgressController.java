@@ -4,6 +4,7 @@ import com.example.onlineexam.model.Chapter;
 import com.example.onlineexam.model.ChapterProgress;
 import com.example.onlineexam.repository.ChapterProgressRepository;
 import com.example.onlineexam.repository.ChapterRepository;
+import com.example.onlineexam.repository.CourseEnrollmentRepository;
 import com.example.onlineexam.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,9 @@ public class CourseProgressController {
     @Autowired
     private ChapterProgressRepository chapterProgressRepository;
 
+    @Autowired
+    private CourseEnrollmentRepository courseEnrollmentRepository;
+
     @PostMapping("/chapters/{chapterId}/complete")
     @PreAuthorize("hasRole('STUDENT')")
     public Map<String, Object> completeChapter(@PathVariable Long chapterId) {
@@ -32,6 +36,14 @@ public class CourseProgressController {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
+        Long courseId = chapter.getCourse() == null ? null : chapter.getCourse().getId();
+        boolean enrolled = courseId != null
+                && courseEnrollmentRepository.findByCourse_IdAndStudentId(courseId, userId)
+                .map(item -> "ENROLLED".equals(item.getStatus()))
+                .orElse(false);
+        if (!enrolled) {
+            throw new org.springframework.security.access.AccessDeniedException("请先选课后再打卡");
+        }
 
         if (!chapterProgressRepository.existsByUserIdAndChapterId(userId, chapter.getId())) {
             ChapterProgress progress = new ChapterProgress();
@@ -49,6 +61,12 @@ public class CourseProgressController {
     public Map<String, Object> getCourseProgress(@PathVariable Long courseId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
+        boolean enrolled = courseEnrollmentRepository.findByCourse_IdAndStudentId(courseId, userId)
+                .map(item -> "ENROLLED".equals(item.getStatus()))
+                .orElse(false);
+        if (!enrolled) {
+            return Map.of("total", 0, "completed", 0, "percentage", 0D);
+        }
 
         long total = chapterRepository.countByCourse_Id(courseId);
         long completed = chapterProgressRepository.countCompletedByUserIdAndCourseId(userId, courseId);

@@ -15,6 +15,44 @@ export async function getCourses() {
   return response.json();
 }
 
+export async function getMyEnrolledCourses() {
+  const response = await fetch(`${API_URL}/enrolled/me`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`获取已选课程失败: ${response.status} ${errText}`);
+  }
+
+  return response.json();
+}
+
+export async function enrollCourse(courseId) {
+  const response = await fetch(`${API_URL}/${courseId}/enroll`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`选课失败: ${response.status} ${errText}`);
+  }
+  return response.json();
+}
+
+export async function unenrollCourse(courseId) {
+  const response = await fetch(`${API_URL}/${courseId}/enroll`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`退课失败: ${response.status} ${errText}`);
+  }
+  return response.json();
+}
+
 export async function createCourse(courseData) {
   const response = await fetch(API_URL, {
     method: 'POST',

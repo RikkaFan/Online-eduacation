@@ -66,3 +66,37 @@ export async function getCourseProgress(courseId) {
   }
   return res.json();
 }
+
+export async function uploadChapterMaterial(chapterId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const headers = getAuthHeaders();
+  delete headers['Content-Type'];
+  const res = await fetch(`${API}/chapters/${chapterId}/material`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`上传资料失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
+export async function downloadChapterMaterial(chapterId) {
+  const res = await fetch(`${API}/chapters/${chapterId}/material`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`下载资料失败: ${res.status} ${t}`);
+  }
+  const disposition = res.headers.get('content-disposition') || '';
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1] || '';
+  const fallback = disposition.match(/filename="?([^"]+)"?/i)?.[1] || 'course-material.bin';
+  const fileName = encoded ? decodeURIComponent(encoded) : fallback;
+  const blob = await res.blob();
+  return { blob, fileName };
+}

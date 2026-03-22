@@ -85,8 +85,20 @@
             <div class="chapter-main">
               <div class="chapter-item-title">{{ item.sortOrder || '-' }}. {{ item.title || '未命名课时' }}</div>
               <div class="chapter-item-content">{{ item.content || '-' }}</div>
+              <div class="chapter-material-row">
+                <span v-if="item.materialName" class="material-name">已上传资料：{{ item.materialName }}</span>
+                <span v-else class="material-empty">暂未上传资料</span>
+              </div>
             </div>
-            <el-button link type="danger" @click="handleDeleteChapter(item)">删除</el-button>
+            <div class="chapter-actions">
+              <el-upload
+                :show-file-list="false"
+                :before-upload="(file) => handleUploadChapterMaterial(item, file)"
+              >
+                <el-button link type="primary" :loading="uploadingChapterId === item.id">上传资料</el-button>
+              </el-upload>
+              <el-button link type="danger" @click="handleDeleteChapter(item)">删除</el-button>
+            </div>
           </div>
         </div>
       </el-card>
@@ -140,7 +152,7 @@
 import { ref, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCourses, createCourse, deleteCourse } from '@/api/course';
-import { getChapters, addChapter, deleteChapter } from '@/api/chapter';
+import { addChapter, deleteChapter, getChapters, uploadChapterMaterial } from '@/api/chapter';
 import { getEvaluations, getEvaluationStats } from '@/api/evaluation';
 
 const courses = ref([]);
@@ -150,6 +162,7 @@ const isSubmitting = ref(false);
 const chapterDrawerVisible = ref(false);
 const chapterLoading = ref(false);
 const chapterSubmitting = ref(false);
+const uploadingChapterId = ref(null);
 const currentCourse = ref(null);
 const chapters = ref([]);
 const evaluationDrawerVisible = ref(false);
@@ -329,6 +342,27 @@ async function handleDeleteChapter(chapter) {
   }
 };
 
+async function handleUploadChapterMaterial(chapter, file) {
+  if (!chapter?.id || !file) return false;
+  if (file.size > 10 * 1024 * 1024) {
+    ElMessage.warning('资料文件不能超过10MB');
+    return false;
+  }
+  uploadingChapterId.value = chapter.id;
+  try {
+    await uploadChapterMaterial(chapter.id, file);
+    ElMessage.success('资料上传成功');
+    if (currentCourse.value?.id) {
+      await loadChapters(currentCourse.value.id);
+    }
+  } catch (e) {
+    ElMessage.error(e.message || '资料上传失败');
+  } finally {
+    uploadingChapterId.value = null;
+  }
+  return false;
+}
+
 onMounted(() => {
   fetchCourses();
 });
@@ -436,6 +470,22 @@ function formatDateTime(value) {
   color: #64748B;
   white-space: pre-wrap;
   word-break: break-word;
+}
+.chapter-material-row {
+  margin-top: 8px;
+}
+.material-name {
+  color: #334155;
+  font-size: 12px;
+}
+.material-empty {
+  color: #94A3B8;
+  font-size: 12px;
+}
+.chapter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .evaluation-list {
   display: grid;

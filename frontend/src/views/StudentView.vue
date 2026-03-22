@@ -14,6 +14,10 @@
             <el-icon><Position /></el-icon>
             <span>考试列表</span>
           </el-menu-item>
+          <el-menu-item index="/student/courses">
+            <el-icon><Notebook /></el-icon>
+            <span>我的课程</span>
+          </el-menu-item>
           <el-menu-item index="/student/scores">
             <el-icon><DataAnalysis /></el-icon>
             <span>成绩查询</span>
@@ -62,7 +66,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import { DataAnalysis, EditPen, House, Position, Reading, UserFilled, Warning } from '@element-plus/icons-vue';
+import { DataAnalysis, EditPen, House, Notebook, Position, Reading, UserFilled, Warning } from '@element-plus/icons-vue';
 import UserProfileDialog from '@/views/UserProfileDialog.vue';
 
 const router = useRouter();

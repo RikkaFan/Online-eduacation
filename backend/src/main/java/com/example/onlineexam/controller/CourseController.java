@@ -24,6 +24,12 @@ public class CourseController {
         return courseService.getAllCourses();
     }
 
+    @GetMapping("/enrolled/me")
+    @PreAuthorize("hasRole('STUDENT')")
+    public List<Course> getMyEnrolledCourses() {
+        return courseService.getEnrolledCourses();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Course> getCourseById(@PathVariable Long id) {
         Course course = courseService.getCourseById(id)
@@ -61,5 +67,19 @@ public class CourseController {
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/enroll")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> enrollCourse(@PathVariable Long id) {
+        courseService.enrollCourse(id);
+        return ResponseEntity.ok(java.util.Map.of("message", "选课成功"));
+    }
+
+    @DeleteMapping("/{id}/enroll")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> unenrollCourse(@PathVariable Long id) {
+        courseService.unenrollCourse(id);
+        return ResponseEntity.ok(java.util.Map.of("message", "退课成功"));
     }
 }

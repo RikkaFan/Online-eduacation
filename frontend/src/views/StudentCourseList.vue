@@ -2,9 +2,15 @@
   <div class="student-course-list">
     <header class="dashboard-header">
       <h1>我的课程</h1>
+      <el-switch
+        v-model="onlyEnrolled"
+        inline-prompt
+        active-text="仅看已选"
+        inactive-text="全部课程"
+      />
     </header>
     <el-row :gutter="24">
-      <el-col :span="6" v-for="c in courses" :key="c.id" style="margin-bottom: 24px;">
+      <el-col :span="6" v-for="c in visibleCourses" :key="c.id" style="margin-bottom: 24px;">
         <el-card class="lms-course-card glass-card" shadow="hover">
           <div class="card-content">
             <h3 class="course-code">COURSE #{{ c.id }}</h3>
@@ -19,8 +25,21 @@
               <div class="progress-text">已完成 {{ c.progressData?.completed || 0 }} / {{ c.progressData?.total || 0 }} 课时</div>
             </div>
             <div class="card-actions">
-              <el-button type="primary" round @click="openLearningDrawer(c)">
+              <el-button v-if="isEnrolled(c.id)" type="primary" round @click="openLearningDrawer(c)">
                 {{ Number(c.progressData?.percentage || 0) > 0 ? '继续学习' : '开始学习' }}
+              </el-button>
+              <el-button v-else type="success" plain round :loading="courseOperatingId === c.id" @click="handleEnroll(c)">
+                立即选课
+              </el-button>
+              <el-button
+                v-if="isEnrolled(c.id)"
+                type="danger"
+                plain
+                round
+                :loading="courseOperatingId === c.id"
+                @click="handleUnenroll(c)"
+              >
+                退课
               </el-button>
             </div>
           </div>
@@ -48,6 +67,11 @@
           <div class="chapter-left">
             <div class="chapter-title">第 {{ index + 1 }} 节：{{ chapter.title || '未命名课时' }}</div>
             <div class="chapter-content">{{ chapter.content || '暂无课时内容' }}</div>
+            <div v-if="chapter.materialName" class="material-row">
+              <el-button link type="primary" :icon="Download" @click="handleDownloadMaterial(chapter)">
+                下载资料：{{ chapter.materialName }}
+              </el-button>
+            </div>
           </div>
           <div class="chapter-right">
             <el-tag v-if="isChapterCompleted(chapter.id)" type="success" effect="light" class="done-tag">
@@ -89,14 +113,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Select, StarFilled } from '@element-plus/icons-vue';
-import { getCourses } from '@/api/course';
-import { getChapters, completeChapter, getCourseProgress } from '@/api/chapter';
+import { Download, Select, StarFilled } from '@element-plus/icons-vue';
+import { enrollCourse, getCourses, getMyEnrolledCourses, unenrollCourse } from '@/api/course';
+import { completeChapter, downloadChapterMaterial, getChapters, getCourseProgress } from '@/api/chapter';
 import { submitEvaluation } from '@/api/evaluation';
 
 const courses = ref([]);
+const enrolledCourseIds = ref(new Set());
+const onlyEnrolled = ref(true);
+const courseOperatingId = ref(null);
 const learningDrawerVisible = ref(false);
 const chapterLoading = ref(false);
 const activeCourse = ref(null);
@@ -108,6 +135,10 @@ const submittingEvaluation = ref(false);
 const evaluationForm = ref({
   rating: 5,
   comment: '',
+});
+const visibleCourses = computed(() => {
+  if (!onlyEnrolled.value) return courses.value;
+  return courses.value.filter(item => enrolledCourseIds.value.has(item.id));
 });
 
 function progressDefaults() {
@@ -128,14 +159,56 @@ async function hydrateProgress(list) {
 
 onMounted(async () => {
   try {
-    const data = await getCourses();
-    const courseList = Array.isArray(data) ? data : [];
+    const [courseData, enrolledData] = await Promise.all([
+      getCourses(),
+      getMyEnrolledCourses().catch(() => []),
+    ]);
+    const courseList = Array.isArray(courseData) ? courseData : [];
+    const enrolled = Array.isArray(enrolledData) ? enrolledData : [];
+    enrolledCourseIds.value = new Set(enrolled.map(item => item.id));
     courses.value = await hydrateProgress(courseList);
   } catch (e) {
     courses.value = [];
     ElMessage.error(e.message || '加载课程失败');
   }
 });
+
+function isEnrolled(courseId) {
+  return enrolledCourseIds.value.has(courseId);
+}
+
+async function handleEnroll(course) {
+  if (!course?.id) return;
+  courseOperatingId.value = course.id;
+  try {
+    await enrollCourse(course.id);
+    enrolledCourseIds.value.add(course.id);
+    enrolledCourseIds.value = new Set(enrolledCourseIds.value);
+    ElMessage.success('选课成功');
+  } catch (e) {
+    ElMessage.error(e.message || '选课失败');
+  } finally {
+    courseOperatingId.value = null;
+  }
+}
+
+async function handleUnenroll(course) {
+  if (!course?.id) return;
+  courseOperatingId.value = course.id;
+  try {
+    await unenrollCourse(course.id);
+    enrolledCourseIds.value.delete(course.id);
+    enrolledCourseIds.value = new Set(enrolledCourseIds.value);
+    if (activeCourse.value?.id === course.id) {
+      learningDrawerVisible.value = false;
+    }
+    ElMessage.success('退课成功');
+  } catch (e) {
+    ElMessage.error(e.message || '退课失败');
+  } finally {
+    courseOperatingId.value = null;
+  }
+}
 
 function isChapterCompleted(chapterId) {
   return completedChapterIds.value.has(chapterId);
@@ -159,6 +232,10 @@ async function refreshCourseProgress(courseId) {
 }
 
 async function openLearningDrawer(course) {
+  if (!isEnrolled(course.id)) {
+    ElMessage.warning('请先选课后再开始学习');
+    return;
+  }
   activeCourse.value = course;
   learningDrawerVisible.value = true;
   chapterLoading.value = true;
@@ -222,6 +299,23 @@ async function submitCourseEvaluation() {
     submittingEvaluation.value = false;
   }
 }
+
+async function handleDownloadMaterial(chapter) {
+  if (!chapter?.id) return;
+  try {
+    const { blob, fileName } = await downloadChapterMaterial(chapter.id);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName || 'course-material.bin';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    ElMessage.error(e.message || '下载资料失败');
+  }
+}
 </script>
 
 <style>
@@ -238,7 +332,7 @@ async function submitCourseEvaluation() {
 .course-term { margin: 0; font-size: 12px; color: #64748B; }
 .progress-wrap { margin-top: 6px; }
 .progress-text { margin-top: 8px; color: #64748B; font-size: 12px; }
-.card-actions { margin-top: 4px; }
+.card-actions { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
 .learning-drawer :deep(.el-drawer__body) { background: rgba(248, 250, 252, 0.72); }
 .drawer-tools {
   margin-bottom: 12px;
@@ -263,4 +357,5 @@ async function submitCourseEvaluation() {
 }
 .chapter-right { display: flex; align-items: center; min-width: 130px; justify-content: flex-end; }
 .done-tag { display: inline-flex; align-items: center; gap: 4px; }
+.material-row { margin-top: 8px; }
 </style>
