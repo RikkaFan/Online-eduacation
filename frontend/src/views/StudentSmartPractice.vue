@@ -22,16 +22,45 @@
           </el-tag>
         </div>
         <div class="q-content">{{ question.content || '-' }}</div>
-        <el-radio-group v-model="answers[question.id]" :disabled="submitted" class="radio-group">
-          <el-radio
-            v-for="(op, idx) in optionItems(question.options)"
-            :key="`${question.id}-${idx}`"
-            :label="optionLabel(op)"
-            class="option-row"
-          >
-            {{ op }}
-          </el-radio>
-        </el-radio-group>
+        <template v-if="isSubjective(question)">
+          <el-input
+            v-model="answers[question.id]"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入你的作答内容"
+            :disabled="submitted"
+          />
+        </template>
+        <template v-else-if="isJudge(question)">
+          <el-radio-group v-model="answers[question.id]" :disabled="submitted" class="radio-group">
+            <el-radio label="T" class="option-row">T. 正确</el-radio>
+            <el-radio label="F" class="option-row">F. 错误</el-radio>
+          </el-radio-group>
+        </template>
+        <template v-else-if="isMultiple(question)">
+          <el-checkbox-group v-model="answers[question.id]" :disabled="submitted" class="radio-group">
+            <el-checkbox
+              v-for="(op, idx) in optionItems(question.options)"
+              :key="`${question.id}-${idx}`"
+              :label="optionLabel(op)"
+              class="option-row"
+            >
+              {{ op }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </template>
+        <template v-else>
+          <el-radio-group v-model="answers[question.id]" :disabled="submitted" class="radio-group">
+            <el-radio
+              v-for="(op, idx) in optionItems(question.options)"
+              :key="`${question.id}-${idx}`"
+              :label="optionLabel(op)"
+              class="option-row"
+            >
+              {{ op }}
+            </el-radio>
+          </el-radio-group>
+        </template>
         <div v-if="submitted" class="analysis-box">
           <div><span class="label">正确答案：</span><span class="right">{{ question.answer || '-' }}</span></div>
           <div><span class="label">解析：</span><span>{{ question.analysis || '-' }}</span></div>
@@ -54,7 +83,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { getCourses } from '@/api/course';
+import { getMyEnrolledCourses } from '@/api/course';
 import { generatePractice } from '@/api/question';
 import { parseOptionDisplayItems } from '@/utils/questionOptions';
 
@@ -73,14 +102,46 @@ function optionLabel(optionText) {
   return (optionText || '').split('.')[0]?.trim() || optionText;
 }
 
+function normalizeType(type) {
+  const t = String(type || '').trim().toUpperCase();
+  if (t === 'SINGLE' || t === 'SINGLE_CHOICE') return 'SINGLE';
+  if (t === 'MULTIPLE' || t === 'MULTIPLE_CHOICE') return 'MULTIPLE';
+  if (t === 'TRUE_FALSE' || t === 'JUDGE') return 'JUDGE';
+  if (t === 'SUBJECTIVE') return 'SUBJECTIVE';
+  return t;
+}
+
+function isMultiple(question) {
+  return normalizeType(question?.type) === 'MULTIPLE';
+}
+
+function isJudge(question) {
+  return normalizeType(question?.type) === 'JUDGE';
+}
+
+function isSubjective(question) {
+  return normalizeType(question?.type) === 'SUBJECTIVE';
+}
+
+function normalizeAnswerValue(question, value) {
+  if (isMultiple(question)) {
+    const arr = Array.isArray(value) ? value : String(value || '').split(',').map(v => v.trim()).filter(Boolean);
+    return arr.map(v => String(v).trim().toUpperCase()).sort().join(',');
+  }
+  return String(value || '').trim().toUpperCase();
+}
+
 function isCorrect(question) {
-  return String(answers.value[question.id] || '').trim().toUpperCase() === String(question.answer || '').trim().toUpperCase();
+  return normalizeAnswerValue(question, answers.value[question.id]) === normalizeAnswerValue(question, question.answer);
 }
 
 async function loadCourses() {
   try {
-    const data = await getCourses();
+    const data = await getMyEnrolledCourses();
     courses.value = Array.isArray(data) ? data : [];
+    if (!courses.value.length) {
+      ElMessage.warning('暂无已选课程，请先在“我的课程”选课');
+    }
   } catch (e) {
     ElMessage.error(e.message || '加载课程失败');
     courses.value = [];
@@ -96,7 +157,11 @@ async function onGenerate() {
   try {
     const data = await generatePractice(selectedCourseId.value, 10);
     questions.value = Array.isArray(data) ? data : [];
-    answers.value = {};
+    const answerInit = {};
+    questions.value.forEach((question) => {
+      answerInit[question.id] = isMultiple(question) ? [] : '';
+    });
+    answers.value = answerInit;
     submitted.value = false;
     ElMessage.success(`已生成 ${questions.value.length} 道练习题`);
   } catch (e) {
@@ -109,6 +174,15 @@ async function onGenerate() {
 
 function onSubmit() {
   if (questions.value.length === 0) return;
+  const hasEmpty = questions.value.some((question) => {
+    const val = answers.value[question.id];
+    if (isMultiple(question)) return !Array.isArray(val) || val.length === 0;
+    return String(val || '').trim() === '';
+  });
+  if (hasEmpty) {
+    ElMessage.warning('请先完成全部题目的作答');
+    return;
+  }
   submitted.value = true;
 }
 

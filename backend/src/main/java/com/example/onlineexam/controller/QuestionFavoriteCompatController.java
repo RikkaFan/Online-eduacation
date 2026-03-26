@@ -13,13 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/favorites")
-public class QuestionFavoriteController {
+@RequestMapping("/api/questions")
+public class QuestionFavoriteCompatController {
 
     @Autowired
     private QuestionFavoriteRepository questionFavoriteRepository;
@@ -27,17 +26,16 @@ public class QuestionFavoriteController {
     @Autowired
     private QuestionRepository questionRepository;
 
-    @PostMapping("/{questionId}")
+    @PostMapping("/{questionId}/favorite")
     @PreAuthorize("hasRole('STUDENT')")
     @Transactional
-    public Map<String, Object> toggleFavorite(@PathVariable Long questionId) {
+    public Map<String, Object> toggleFavoriteCompat(@PathVariable Long questionId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
         int removed = questionFavoriteRepository.deleteByUserIdAndQuestionId(userId, questionId);
         if (removed > 0) {
             return Map.<String, Object>of("favorited", false, "questionId", questionId);
         }
-
         Question question = questionRepository.findByIdAndDeletedFalse(questionId).orElse(null);
         if (question == null) {
             return Map.<String, Object>of(
@@ -58,19 +56,11 @@ public class QuestionFavoriteController {
         return Map.<String, Object>of("favorited", true, "questionId", questionId);
     }
 
-    @GetMapping("/check/{questionId}")
+    @GetMapping("/{questionId}/favorite/check")
     @PreAuthorize("hasRole('STUDENT')")
-    public boolean checkFavorite(@PathVariable Long questionId) {
+    public boolean checkFavoriteCompat(@PathVariable Long questionId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getId();
         return questionFavoriteRepository.existsByUserIdAndQuestionId(userId, questionId);
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('STUDENT')")
-    public List<QuestionFavorite> getFavorites() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = userDetails.getId();
-        return questionFavoriteRepository.findByUserIdOrderByCreateTimeDesc(userId);
     }
 }

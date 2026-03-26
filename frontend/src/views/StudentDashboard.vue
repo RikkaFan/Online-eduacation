@@ -62,12 +62,20 @@
               </div>
               <div class="exam-col time-col">{{ exam.displayTime }}</div>
               <div class="exam-col action-col">
-                <el-button class="entry-btn" size="small" type="primary" plain round @click="enterExam(exam.id)">进入</el-button>
+                <el-button
+                  class="entry-btn"
+                  size="small"
+                  type="primary"
+                  plain
+                  round
+                  :disabled="exam.actionDisabled"
+                  @click="enterExam(exam.id)"
+                >{{ exam.actionText }}</el-button>
               </div>
             </div>
           </div>
         </div>
-        <el-empty v-else description="近期没有待考安排" :image-size="80" />
+        <el-empty v-else description="近期没有考试记录" :image-size="80" />
       </div>
     </div>
   </div>
@@ -96,19 +104,52 @@ const stats = ref({
 });
 const loadingExams = ref(false);
 const upcomingExams = ref([]);
+const nowTimestamp = ref(Date.now());
 const allScores = ref([]);
 const availableCourses = ref([]);
 const selectedCourse = ref('');
 const chartRef = ref(null);
 let myChart = null;
+let examTimeTicker = null;
 
 const averageScoreText = computed(() => Number(stats.value.averageScore || 0).toFixed(1));
 const userName = computed(() => user.value?.username || '同学');
 const totalAnswered = computed(() => allScores.value.length || stats.value.attendedExams || 0);
-const upcomingExamsView = computed(() => upcomingExams.value.map(exam => ({
-  ...exam,
-  displayTime: formatDateTime(exam.startTime)
-})));
+const submittedExamIds = computed(() => new Set(
+  (allScores.value || []).map(item => item?.exam?.id).filter(Boolean)
+));
+const upcomingExamsView = computed(() => {
+  const now = nowTimestamp.value;
+  const source = upcomingExams.value || [];
+  const ongoing = source
+    .filter((exam) => getExamStatus(exam, now) === 'ongoing')
+    .sort((a, b) => {
+      const ta = a.endTime ? new Date(a.endTime).getTime() : Number.MAX_SAFE_INTEGER;
+      const tb = b.endTime ? new Date(b.endTime).getTime() : Number.MAX_SAFE_INTEGER;
+      return ta - tb;
+    });
+  if (ongoing.length > 0) {
+    return ongoing.slice(0, 6).map((exam) => ({
+      ...exam,
+      displayTime: formatDateTime(exam.startTime),
+      actionText: '进入',
+      actionDisabled: false,
+    }));
+  }
+  const completed = source
+    .filter((exam) => getExamStatus(exam, now) === 'completed')
+    .sort((a, b) => {
+      const ta = a.endTime ? new Date(a.endTime).getTime() : 0;
+      const tb = b.endTime ? new Date(b.endTime).getTime() : 0;
+      return tb - ta;
+    });
+  return completed.slice(0, 6).map((exam) => ({
+    ...exam,
+    displayTime: formatDateTime(exam.endTime || exam.startTime),
+    actionText: '完成',
+    actionDisabled: true,
+  }));
+});
 
 onMounted(async () => {
   const studentId = user.value?.id;
@@ -124,16 +165,12 @@ onMounted(async () => {
   loadingExams.value = true;
   try {
     const all = await getAllExamsByAllCourses();
-    const now = Date.now();
-    const list = (all || []).filter(exam => {
-      const endAt = exam.endTime ? new Date(exam.endTime).getTime() : Number.MAX_SAFE_INTEGER;
-      return now <= endAt;
-    }).sort((a, b) => {
+    const list = (all || []).sort((a, b) => {
       const ta = a.startTime ? new Date(a.startTime).getTime() : Number.MAX_SAFE_INTEGER;
       const tb = b.startTime ? new Date(b.startTime).getTime() : Number.MAX_SAFE_INTEGER;
       return ta - tb;
     });
-    upcomingExams.value = list.slice(0, 6);
+    upcomingExams.value = list;
   } catch (e) {
     ElMessage.error(e.message || '加载待考列表失败');
   } finally {
@@ -144,10 +181,17 @@ onMounted(async () => {
   initChart();
   renderChart();
   window.addEventListener('resize', handleChartResize);
+  examTimeTicker = window.setInterval(() => {
+    nowTimestamp.value = Date.now();
+  }, 10000);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleChartResize);
+  if (examTimeTicker) {
+    window.clearInterval(examTimeTicker);
+    examTimeTicker = null;
+  }
   if (myChart) {
     myChart.dispose();
     myChart = null;
@@ -265,7 +309,24 @@ function formatDateTime(value) {
   return date.toLocaleString();
 }
 
+function getExamStatus(exam, now = Date.now()) {
+  if (submittedExamIds.value.has(exam?.id)) return 'completed';
+  const startAt = exam?.startTime ? new Date(exam.startTime).getTime() : Number.MIN_SAFE_INTEGER;
+  const endAt = exam?.endTime ? new Date(exam.endTime).getTime() : Number.MAX_SAFE_INTEGER;
+  if (Number.isFinite(endAt) && now > endAt) return 'completed';
+  if (Number.isFinite(startAt) && now < startAt) return 'upcoming';
+  return 'ongoing';
+}
+
 function enterExam(id) {
+  const exam = upcomingExams.value.find(item => String(item.id) === String(id));
+  if (exam?.endTime) {
+    const endAt = new Date(exam.endTime).getTime();
+    if (Number.isFinite(endAt) && Date.now() > endAt) {
+      ElMessage.warning('该考试已结束，无法进入');
+      return;
+    }
+  }
   router.push(`/student/exam-ready/${id}`);
 }
 
@@ -459,7 +520,7 @@ function goScores() {
 }
 .exam-head-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
+  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 1fr) minmax(130px, 0.75fr);
   align-items: center;
   color: #8e8e93;
   font-size: 12px;
@@ -471,8 +532,8 @@ function goScores() {
 }
 .exam-head-date,
 .exam-head-entry {
-  justify-self: start;
-  padding-left: 6px;
+  justify-self: center;
+  padding-left: 0;
 }
 .exam-body-grid {
   display: grid;
@@ -483,7 +544,7 @@ function goScores() {
   padding: 16px 18px;
   border-radius: 14px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(140px, 140px) minmax(88px, 88px);
+  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 1fr) minmax(130px, 0.75fr);
   align-items: center;
   border: 1px solid rgba(212, 224, 244, 0.92);
   box-shadow: 0 4px 12px rgba(0,0,0,0.02);
@@ -512,13 +573,13 @@ function goScores() {
   color: #8E8E93;
   line-height: 1.45;
   white-space: nowrap;
-  justify-content: flex-start;
-  text-align: left;
-  padding-left: 6px;
+  justify-content: center;
+  text-align: center;
+  padding-left: 0;
 }
 .action-col {
-  justify-content: flex-start;
-  padding-left: 6px;
+  justify-content: center;
+  padding-left: 0;
 }
 .entry-btn {
   min-width: 58px;
