@@ -65,7 +65,7 @@
                     :min="0"
                     label="手动打分"
                     :precision="0"
-                    :disabled="activeTab === 'graded'"
+                    :disabled="false"
                   />
                   <el-button
                     type="success"
@@ -80,10 +80,10 @@
                   <el-button
                     type="primary"
                     :loading="Boolean(manualLoadingMap[q.id])"
-                    :disabled="activeTab === 'graded'"
+                    :disabled="false"
                     @click="handleManualGrade(q)"
                   >
-                    确认给分
+                    {{ activeTab === 'graded' ? '调整并保存' : '确认给分' }}
                   </el-button>
                 </div>
               </div>
