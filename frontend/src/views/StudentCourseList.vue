@@ -115,7 +115,7 @@ import { computed, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Download, Select, StarFilled } from '@element-plus/icons-vue';
 import { enrollCourse, getCourses, getMyEnrolledCourses, unenrollCourse } from '@/api/course';
-import { completeChapter, downloadChapterMaterial, getChapters, getCourseProgress } from '@/api/chapter';
+import { completeChapter, downloadChapterMaterial, getChapters, getCompletedChapterIds, getCourseProgress } from '@/api/chapter';
 import { submitEvaluation } from '@/api/evaluation';
 
 const courses = ref([]);
@@ -240,8 +240,12 @@ async function openLearningDrawer(course) {
   activeChapters.value = [];
   completedChapterIds.value = new Set();
   try {
-    const chapters = await getChapters(course.id);
+    const [chapters, completedRes] = await Promise.all([
+      getChapters(course.id),
+      getCompletedChapterIds(course.id).catch(() => ({ chapterIds: [] })),
+    ]);
     activeChapters.value = Array.isArray(chapters) ? chapters : [];
+    completedChapterIds.value = new Set(completedRes.chapterIds || []);
   } catch (e) {
     ElMessage.error(e.message || '加载课时失败');
   } finally {

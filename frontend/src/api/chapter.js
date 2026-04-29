@@ -67,6 +67,18 @@ export async function getCourseProgress(courseId) {
   return res.json();
 }
 
+export async function getCompletedChapterIds(courseId) {
+  const res = await fetch(`${API}/courses/${courseId}/completed-chapters`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`获取已完成课时失败: ${res.status} ${t}`);
+  }
+  return res.json();
+}
+
 export async function uploadChapterMaterial(chapterId, file) {
   const formData = new FormData();
   formData.append('file', file);

@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -77,5 +78,20 @@ public class CourseProgressController {
                 "completed", completed,
                 "percentage", percentage
         );
+    }
+
+    @GetMapping("/courses/{courseId}/completed-chapters")
+    @PreAuthorize("hasRole('STUDENT')")
+    public Map<String, Object> getCompletedChapterIds(@PathVariable Long courseId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = userDetails.getId();
+        boolean enrolled = courseEnrollmentRepository.findByCourse_IdAndStudentId(courseId, userId)
+                .map(item -> "ENROLLED".equals(item.getStatus()))
+                .orElse(false);
+        if (!enrolled) {
+            return Map.of("chapterIds", List.of());
+        }
+        List<Long> chapterIds = chapterProgressRepository.findCompletedChapterIdsByUserIdAndCourseId(userId, courseId);
+        return Map.of("chapterIds", chapterIds);
     }
 }
