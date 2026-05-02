@@ -3,6 +3,7 @@ package com.example.onlineexam.controller;
 import com.example.onlineexam.model.Role;
 import com.example.onlineexam.model.User;
 import com.example.onlineexam.payload.request.LoginRequest;
+import com.example.onlineexam.payload.request.ResetPasswordRequest;
 import com.example.onlineexam.payload.request.SignupRequest;
 import com.example.onlineexam.payload.response.JwtResponse;
 import com.example.onlineexam.payload.response.MessageResponse;
@@ -70,12 +71,24 @@ public class AuthController {
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
 
+        String normalizedEmail = signUpRequest.getEmail() == null ? null : signUpRequest.getEmail().trim();
+        if (normalizedEmail != null && !normalizedEmail.isEmpty()) {
+            if (Boolean.TRUE.equals(userRepository.existsByEmail(normalizedEmail))) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Error: Email is already taken!"));
+            }
+        } else {
+            normalizedEmail = null;
+        }
+
         // Create new user's account
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
         String department = signUpRequest.getDepartment();
         user.setDepartment(department == null || department.trim().isEmpty() ? "未分配" : department.trim());
+        user.setEmail(normalizedEmail);
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
@@ -111,5 +124,31 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is required."));
+        }
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is required."));
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: New password is required."));
+        }
+
+        User user = userRepository.findByUsernameAndEmail(
+                request.getUsername().trim(), request.getEmail().trim())
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username and email do not match!"));
+        }
+
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("Password reset successfully!"));
     }
 }

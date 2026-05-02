@@ -84,7 +84,7 @@
             <input type="checkbox" v-model="rememberMe" class="ios-switch" />
             记住账号
           </label>
-          <a href="#" class="forgot-password">忘记密码？</a>
+          <router-link to="/forgot-password" class="forgot-password">忘记密码？</router-link>
         </div>
 
         <button type="submit" class="login-button" :disabled="isLoginDisabled">
@@ -94,7 +94,7 @@
       </form>
 
       <div class="register-prompt">
-        还没有账号？ <a href="#">立即注册</a>
+        还没有账号？ <router-link to="/register">立即注册</router-link>
       </div>
     </div>
   </div>

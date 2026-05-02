@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/store/auth';
 import Login from '@/views/Login.vue';
+import Register from '@/views/Register.vue';
+import ForgotPassword from '@/views/ForgotPassword.vue';
 import Dashboard from '@/views/Dashboard.vue';
 import CourseManagement from '@/views/CourseManagement.vue';
 import QuestionManagement from '@/views/QuestionManagement.vue';
@@ -26,6 +28,16 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register,
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
   },
   {
     path: '/dashboard',
